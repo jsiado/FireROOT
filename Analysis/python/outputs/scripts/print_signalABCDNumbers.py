@@ -76,4 +76,4 @@ for p in s_pointsToScan:
         print(formatABCD(sumHistStack(getattr(f, 'bkg__'+ch+'__'+p)), ref=ref))
         print('_'*50)
         print('Data')
-        print(formatABCD(getattr(f, 'data__'+ch), isdata=True))
+        print(formatABCD(getattr(f, 'data__'+ch+'__'+p), isdata=True))
