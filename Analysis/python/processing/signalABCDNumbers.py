@@ -17,33 +17,8 @@ sdml = SigDatasetMapLoader()
 sigDS_2mu2e, sigSCALE_2mu2e = sdml.fetch('2mu2e')
 sigDS_4mu, sigSCALE_4mu = sdml.fetch('4mu')
 
-def formatABCD(h, isdata=False):
-    a = '{:.3E}'.format(h.GetBinContent(2,2))
-    b = '{:.3E}'.format(h.GetBinContent(2,1))
-    c = '{:.3E}'.format(h.GetBinContent(1,2))
-    d = '{:.3E}'.format(h.GetBinContent(1,1))
 
-    """
-    c | a
-    -----
-    d | b
-    """
-
-    res = 'C:{} | A:{}'.format(c, a)
-    res += '\n'+len(res)*'-'+'\n'
-    res += 'D:{} | B:{}'.format(d, b)
-    res += '\n'
-
-    if isdata:
-        res = '\n'.join([
-            'C:{} | A:{}'.format(c, 'BLINDED'),
-            '-'*25,
-            'D:{} | B:{}'.format(d, b),
-        ])
-
-    return res
-
-
+pointsToScan = [1, 0.1, 0.05, 0.01]
 
 class MyEvents(Events):
     def __init__(self, files=None, type='MC'):
@@ -54,8 +29,12 @@ class MyEvents(Events):
         passCosmic = all(map(lambda lj: lj.passCosmicVeto(event), [LJ0, LJ1]))
 
         if not passCosmic: return
+
+        metric_ = []
         for lj in [LJ0, LJ1]:
-            if lj.isMuonType() and lj.minTkD0()<0.1: return
+            if lj.isMuonType():
+                metric_.append( lj.minTkD0() )
+        metric = min(metric_)*10 # mm
 
         for chan in ['2mu2e', '4mu']:
             if aux['channel'] == chan:
@@ -65,6 +44,12 @@ class MyEvents(Events):
                 if '{}/ABCD0w'.format(chan) in self.Histos:
                     self.Histos['{}/ABCD0w'.format(chan)].Fill( abs(DeltaPhi(LJ0.p4, LJ1.p4)),
                                                               1-min([LJ0.pfiso(), LJ1.pfiso()]) )
+                for metricval in pointsToScan:
+                    name_ = '{}/ABCD/{}'.format(chan, str(metricval).replace('.', 'p'))
+                    if name_ in self.Histos and metric>metricval:
+                        self.Histos[name_].Fill( abs(DeltaPhi(LJ0.p4, LJ1.p4)),
+                                                1-min([LJ0.pfiso(), LJ1.pfiso()]), aux['wgt'])
+
 
 # ________________________________________________________
 sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300'.split('|')
@@ -76,7 +61,10 @@ SigHists4mu = OrderedDict()
 for ds in sampleSig:
     events_ = MyEvents(files=sigDS_4mu[ds], type='MC')
     events_.setScale(sigSCALE_4mu[ds])
-    events_.Histos['4mu/ABCD'] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1])
+    events_.Histos['4mu/ABCD'] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1], name=ds+'__4mu')
+    for v in pointsToScan:
+        name_ = '4mu/ABCD/{}'.format(str(v).replace('.', 'p'))
+        events_.Histos[name_] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1], name='{}__4mu__{}'.format(ds, str(v).replace('.', 'p')))
     events_.process()
     SigHists4mu[ds] = events_.Histos
 
@@ -85,7 +73,10 @@ SigHists2mu2e = OrderedDict()
 for ds in sampleSig:
     events_ = MyEvents(files=sigDS_2mu2e[ds], type='MC')
     events_.setScale(sigSCALE_2mu2e[ds])
-    events_.Histos['2mu2e/ABCD'] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1])
+    events_.Histos['2mu2e/ABCD'] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1], name=ds+'__2mu2e')
+    for v in pointsToScan:
+        name_ = '2mu2e/ABCD/{}'.format(str(v).replace('.', 'p'))
+        events_.Histos[name_] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1], name='{}__2mu2e__{}'.format(ds, str(v).replace('.', 'p')))
     events_.process()
     SigHists2mu2e[ds] = events_.Histos
 
@@ -99,6 +90,9 @@ for ds, files in bkgDS.items():
     for chan in ['2mu2e', '4mu']:
         events_.Histos['{}/ABCD'.format(chan)] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1])
         events_.Histos['{}/ABCD0w'.format(chan)] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1])
+        for v in pointsToScan:
+            name_ = '{}/ABCD/{}'.format(chan, str(v).replace('.', 'p'))
+            events_.Histos[name_] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1])
     events_.process()
     BkgHists[ds] = events_.histos
 log.info('background MC done')
@@ -110,7 +104,11 @@ _files = []
 for ds in dataDS: _files.extend(dataDS[ds])
 events_ = MyEvents(files=_files, type='DATA')
 for chan in ['2mu2e', '4mu']:
-    events_.Histos['{}/ABCD'.format(chan)] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1])
+    events_.Histos['{}/ABCD'.format(chan)] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1], name='data__{}'.format(chan))
+    for v in pointsToScan:
+        name_ = '{}/ABCD/{}'.format(chan, str(v).replace('.', 'p'))
+        events_.Histos[name_] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1], name='data__{}__{}'.format(chan, str(v).replace('.', 'p')))
+
 events_.process()
 DataHists = events_.histos
 log.info('data done')
@@ -127,49 +125,56 @@ log.info('saving to {}'.format(outname))
 
 f = root_open(outname, 'recreate')
 
-print('#'*50)
-print('4mu'.center(50, ' '))
-print('#'*50)
-for ds in SigHists4mu:
-    print(ds)
-    print(formatABCD(SigHists4mu[ds]['4mu/ABCD']))
-print('_'*50)
+
+for ds, hs in SigHists4mu.items():
+    hs['4mu/ABCD'].Write()
+    for v in pointsToScan:
+        name_ = '4mu/ABCD/{}'.format(str(v).replace('.', 'p'))
+        hs[name_].Write()
+
 CatHists = mergeHistsFromMapping(extractHistByName(BkgHists, '4mu/ABCD'), bkgMAP, bkgCOLORS)
 hstack = ROOT.HistStack(list(CatHists.values()), name='bkg__4mu', drawstyle='pfc')
 hstacksum = sumHistStack(hstack)
-print('Background')
-print(formatABCD(hstacksum))
 hstack.Write()
+for v in pointsToScan:
+    vstr = str(v).replace('.', 'p')
+    CatHists = mergeHistsFromMapping(extractHistByName(BkgHists, '4mu/ABCD/'+vstr), bkgMAP, bkgCOLORS)
+    hstack = ROOT.HistStack(list(CatHists.values()), name='bkg__4mu__'+vstr, drawstyle='pfc')
+    hstacksum = sumHistStack(hstack)
+    hstack.Write()
 CatHists = mergeHistsFromMapping(extractHistByName(BkgHists, '4mu/ABCD0w'), bkgMAP, bkgCOLORS)
 hstack = ROOT.HistStack(list(CatHists.values()), name='bkg__4mu0w', drawstyle='pfc')
 hstack.Write()
 
-print('_'*50)
-print('Data')
-print(formatABCD(DataHists['4mu/ABCD'], isdata=True))
+DataHists['4mu/ABCD'].Write()
+for v in pointsToScan:
+    vstr = str(v).replace('.', 'p')
+    DataHists['4mu/ABCD/'+vstr].Write()
 
-print('\n\n')
+for ds, hs in SigHists2mu2e.items():
+    hs['2mu2e/ABCD'].Write()
+    for v in pointsToScan:
+        name_ = '2mu2e/ABCD/{}'.format(str(v).replace('.', 'p'))
+        hs[name_].Write()
 
-print('#'*50)
-print('2mu2e'.center(50, ' '))
-print('#'*50)
-for ds in SigHists2mu2e:
-    print(ds)
-    print(formatABCD(SigHists2mu2e[ds]['2mu2e/ABCD']))
-print('_'*50)
 CatHists = mergeHistsFromMapping(extractHistByName(BkgHists, '2mu2e/ABCD'), bkgMAP, bkgCOLORS)
 hstack = ROOT.HistStack(list(CatHists.values()), name='bkg__2mu2e', drawstyle='pfc')
 hstacksum = sumHistStack(hstack)
-print('Background')
-print(formatABCD(hstacksum))
 hstack.Write()
+for v in pointsToScan:
+    vstr = str(v).replace('.', 'p')
+    CatHists = mergeHistsFromMapping(extractHistByName(BkgHists, '2mu2e/ABCD/'+vstr), bkgMAP, bkgCOLORS)
+    hstack = ROOT.HistStack(list(CatHists.values()), name='bkg__2mu2e__'+vstr, drawstyle='pfc')
+    hstacksum = sumHistStack(hstack)
+    hstack.Write()
 CatHists = mergeHistsFromMapping(extractHistByName(BkgHists, '2mu2e/ABCD0w'), bkgMAP, bkgCOLORS)
 hstack = ROOT.HistStack(list(CatHists.values()), name='bkg__2mu2e0w', drawstyle='pfc')
 hstack.Write()
 
-print('_'*50)
-print('Data')
-print(formatABCD(DataHists['2mu2e/ABCD'], isdata=True))
+DataHists['2mu2e/ABCD'].Write()
+for v in pointsToScan:
+    vstr = str(v).replace('.', 'p')
+    DataHists['2mu2e/ABCD/'+vstr].Write()
 
 f.Close()
 log.info('done.')
