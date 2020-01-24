@@ -11,6 +11,7 @@ log = log[__name__]
 
 dml = DatasetMapLoader()
 dataDS, dataMAP = dml.fetch('data')
+bkgDS, bkgMAP, bkgSCALE = dml.fetch('bkg')
 
 sdml = SigDatasetMapLoader()
 sigDS_2mu2e, sigSCALE_2mu2e = sdml.fetch('2mu2e')
@@ -47,26 +48,38 @@ class MyEvents(Events):
                     )
 
 histCollection = [
-    {
-        'name': 'maxTkPtSum',
-        'binning': (50, 0, 20),
-        'title': 'maxTkSum;max#sum p_{T} [GeV];counts/0.4GeV',
-    },
+    # {
+    #     'name': 'maxTkPtSum',
+    #     'binning': (50, 0, 20),
+    #     'title': 'maxTkSum;max#sum p_{T} [GeV];counts/0.4GeV',
+    # },
     {
         'name': 'minPfIso05',
         'binning': (50, 0, 0.5),
         'title': 'minIso;minIso_{LJ};counts/0.01',
     },
-    {
-        'name': 'ljpairmass',
-        'binning': (50, 0, 200),
-        'title': 'lepton-jet pair mass;M_{LJ0,LJ1}[GeV];counts/4GeV'
-    }
+    # {
+    #     'name': 'ljpairmass',
+    #     'binning': (50, 0, 200),
+    #     'title': 'lepton-jet pair mass;M_{LJ0,LJ1}[GeV];counts/4GeV'
+    # }
 ]
 
+### backgrounds
+BkgHists = {}
+for ds, files in bkgDS.items():
+    events_ = MyEvents(files=files, type='MC')
+    events_.setScale(bkgSCALE[ds])
+    for chan in ['2mu2e', '4mu']:
+        for hinfo in histCollection:
+            events_.bookHisto('{}/{}'.format(chan, hinfo['name']), ROOT.Hist(*hinfo['binning'], title=hinfo['title'], drawstyle='hist', fillstyle='solid', linewidth=0, legendstyle='F'))
+    events_.process()
+    BkgHists[ds] = events_.histos
+log.info('background MC done')
 
 # ________________________________________________________
 sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300'.split('|')
+sampleSig.extend( 'mXX-100_mA-5_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|') )
 
 ### signal 4mu
 SigHists4mu = {}
@@ -116,6 +129,14 @@ for hs in SigHists2mu2e.values():
         h.Write()
 for h in DataHists.values():
     h.Write()
+
+for chan in ['2mu2e', '4mu']:
+    for hinfo in histCollection:
+        histName = '{}/{}'.format(chan, hinfo['name'])
+        CatHists = mergeHistsFromMapping(extractHistByName(BkgHists, histName), bkgMAP, bkgCOLORS)
+        hstack = ROOT.HistStack(list(CatHists.values()), name='bkgs__{}__{}'.format(chan, hinfo['name']), title=hinfo['title'], drawstyle='HIST')
+        hstack.Write()
+
 f.Close()
 
 log.info('done.')
