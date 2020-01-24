@@ -43,6 +43,10 @@ class LeptonJetMix(object):
         if self.isEgmType(): return True
         if self.isMuonType(): return self.qSum()==0
 
+    def isMuonCharged(self):
+        if self.isEgmType(): return True
+        if self.isMuonType(): return self.qSum()!=0
+
     def dRcosmicDSA(self, event):
         return [event.dsamuons[i].deltaRCosmicDSA for i in self.pfcand_dsamuonIdx]
 
@@ -101,13 +105,25 @@ class LeptonJetMix(object):
 
         return True
 
+    def passChargedSelection(self, event):
+        if self.p4.pt()<30: return False
+        if self.minTwoTrackDist()>=50: return False
+        if not self.isMuonCharged(): return False
+        # if not self.passCosmicVeto(event): return False
+        # if self.pfiso()>=0.12: return False
+        # if self.maxTrackNormChi2()>=2: return False
+        # if self.isMuonType() and self.minTkD0()>0 and self.minTkD0()<=0.1: return False
+
+        return True
 
 
 class Events(object):
-    def __init__(self, files=None, type='MC'):
+    def __init__(self, files=None, type='MC',
+                chargedlj=False):
 
         if type.upper() not in ['MC', 'DATA']: raise ValueError("Argument `type` need to be MC/DATA")
         self.Type = type
+        self.ChargedLJ = chargedlj
 
         if not files: raise ValueError("Argument `files` need to be non-empty")
         if isinstance(files, str): files = [files,]
@@ -173,11 +189,17 @@ class Events(object):
                 aux['wgt'] *= self.LookupWeight.GetBinContent(self.LookupWeight.GetXaxis().FindBin(event.trueInteractionNum)) ## pileup correction
 
 
-            leptonjets = [lj for lj in event.leptonjets if lj.passSelection(event)]
+            leptonjets = [lj for lj in event.leptonjets]
             if len(leptonjets)<2: continue
             sorted(leptonjets, key=lambda lj: lj.p4.pt(), reverse=True)
             LJ0 = leptonjets[0]
             LJ1 = leptonjets[1]
+            if self.ChargedLJ:
+                if not LJ0.passChargedSelection(event): continue
+                if not LJ1.passChargedSelection(event): continue
+            else:
+                if not LJ0.passSelection(event): continue
+                if not LJ1.passSelection(event): continue
 
             if LJ0.isMuonType() and LJ1.isMuonType(): aux['channel'] = '4mu'
             elif LJ0.isMuonType() and LJ1.isEgmType(): aux['channel'] = '2mu2e'
