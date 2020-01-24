@@ -71,9 +71,11 @@ for hinfo in histCollection:
             histName = '{}__{}__{}'.format(s, chan, hinfo['name'])
             h = getattr(f, histName).Clone()
             h.xaxis.SetRange(1, h.nbins()+1)
-            h.title = s
+            h.title = s+' (norm.)'
+            h.Scale(1./h.Integral())
             h.drawstyle = 'hist pmc plc'
             h.legendstyle = 'L'
+            h.linewidth = 2
             hs.append(h)
             legend.AddEntry(h)
 
