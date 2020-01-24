@@ -19,10 +19,14 @@ sigDS_4mu, sigSCALE_4mu = sdml.fetch('4mu')
 
 
 pointsToScan = [1, 0.1, 0.05, 0.01]
+requireChargedLj = True
+## print out global variables
+print("Points to scan:", pointsToScan)
+print("Charged Lepton-jets only:", requireChargedLj)
 
 class MyEvents(Events):
-    def __init__(self, files=None, type='MC'):
-        super(MyEvents, self).__init__(files=files, type=type)
+    def __init__(self, files=None, type='MC', **kwargs):
+        super(MyEvents, self).__init__(files=files, type=type, **kwargs)
 
     def processEvent(self, event, aux):
         LJ0, LJ1 = aux['lj0'], aux['lj1']
@@ -59,7 +63,7 @@ from collections import OrderedDict
 ### signal 4mu
 SigHists4mu = OrderedDict()
 for ds in sampleSig:
-    events_ = MyEvents(files=sigDS_4mu[ds], type='MC')
+    events_ = MyEvents(files=sigDS_4mu[ds], type='MC', chargedlj=requireChargedLj)
     events_.setScale(sigSCALE_4mu[ds])
     events_.Histos['4mu/ABCD'] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1], name=ds+'__4mu')
     for v in pointsToScan:
@@ -71,7 +75,7 @@ for ds in sampleSig:
 ### signal 2mu2e
 SigHists2mu2e = OrderedDict()
 for ds in sampleSig:
-    events_ = MyEvents(files=sigDS_2mu2e[ds], type='MC')
+    events_ = MyEvents(files=sigDS_2mu2e[ds], type='MC', chargedlj=requireChargedLj)
     events_.setScale(sigSCALE_2mu2e[ds])
     events_.Histos['2mu2e/ABCD'] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1], name=ds+'__2mu2e')
     for v in pointsToScan:
@@ -85,7 +89,7 @@ log.info('signal done.')
 ### backgrounds
 BkgHists = {}
 for ds, files in bkgDS.items():
-    events_ = MyEvents(files=files, type='MC')
+    events_ = MyEvents(files=files, type='MC', chargedlj=requireChargedLj)
     events_.setScale(bkgSCALE[ds])
     for chan in ['2mu2e', '4mu']:
         events_.Histos['{}/ABCD'.format(chan)] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1])
@@ -102,7 +106,7 @@ log.info('background MC done')
 DataHists = {}
 _files = []
 for ds in dataDS: _files.extend(dataDS[ds])
-events_ = MyEvents(files=_files, type='DATA')
+events_ = MyEvents(files=_files, type='DATA', chargedlj=requireChargedLj)
 for chan in ['2mu2e', '4mu']:
     events_.Histos['{}/ABCD'.format(chan)] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1], name='data__{}'.format(chan))
     for v in pointsToScan:
