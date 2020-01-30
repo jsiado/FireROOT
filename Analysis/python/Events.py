@@ -132,7 +132,7 @@ class Events(object):
         ### register collections ###
         # self.Chain.define_collection('pvs', prefix='pv_', size='pv_n')
         # self.Chain.define_collection('electrons', prefix='electron_', size='electron_n')
-        # self.Chain.define_collection('muons', prefix='muon_', size='muon_n')
+        self.Chain.define_collection('muons', prefix='muon_', size='muon_n')
         self.Chain.define_collection('dsamuons', prefix='dsamuon_', size='dsamuon_n')
         # self.Chain.define_collection('photons', prefix='photon_', size='photon_n')
         # self.Chain.define_collection('cosmiconelegs', prefix='cosmiconeleg_', size='cosmiconeleg_n')
