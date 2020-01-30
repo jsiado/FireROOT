@@ -5,14 +5,12 @@ from FireROOT.Analysis.Utils import *
 from rootpy.plotting import Hist, HistStack, Legend, Canvas
 from rootpy.io import root_open
 
-inname = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/ljLxySig.root')
-outdir = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/plots/ljLxySig')
+inname = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/ljLxySigDist.root')
+outdir = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/plots/ljLxySigDist')
 if not os.path.isdir(outdir): os.makedirs(outdir)
 
 from rootpy.plotting.style import set_style
 set_style(MyStyle())
-
-
 
 c = Canvas()
 
@@ -24,30 +22,26 @@ samples.extend( 'mXX-100_mA-5_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|') )
 histCollection = [
     {
         'name': 'lxysig',
-        'binning': (50, 0, 50),
+        'binning': (20, 0, 20),
         'title': 'muon-type lepton-jet lxy significance;L_{xy}/#sigma_{L_{lxy}};counts/1',
     },
     {
-        'name': 'lxy',
-        'binning': (50, 0, 50),
-        'title': 'muon-type lepton-jet lxy;L_{xy};counts/1cm',
-    },
-    {
-        'name': 'dxysig',
+        'name': 'lxysig1',
         'binning': (20, 0, 20),
-        'title': 'lepton-jet max d0 significance;max d0/#sigma_{d0};counts/2',
+        'title': 'muon-type lepton-jet lxy significance(min d0Sig>1);L_{xy}/#sigma_{L_{lxy}};counts/1',
     },
     {
-        'name': 'dxysigmin',
+        'name': 'lxysig2',
         'binning': (20, 0, 20),
-        'title': 'lepton-jet min d0 significance;min d0/#sigma_{d0};counts/2',
+        'title': 'muon-type lepton-jet lxy significance(min d0Sig>1, minIso<0.03);L_{xy}/#sigma_{L_{lxy}};counts/1',
     },
     {
-        'name': 'dxy',
-        'binning': (50, 0, 5),
-        'title': 'lepton-jet max d0;max d0 [cm];counts/0.2cm'
-    }
+        'name': 'lxysig3',
+        'binning': (20, 0, 20),
+        'title': 'muon-type lepton-jet lxy significance(min d0Sig>1, minIso<0.1, #Delta#phi>#pi/2);L_{xy}/#sigma_{L_{lxy}};counts/1',
+    },
 ]
+
 
 
 for hinfo in histCollection:
@@ -76,8 +70,8 @@ for hinfo in histCollection:
             histName = '{}__{}__{}'.format(s, chan, hinfo['name'])
             h = getattr(f, histName).Clone()
             h.xaxis.SetRange(1, h.nbins()+1)
-            h.title = s+' (norm.)'
-            h.Scale(1./h.Integral())
+            h.title = s#+' (norm.)'
+            # h.Scale(1./h.Integral())
             h.drawstyle = 'hist pmc plc'
             h.legendstyle = 'L'
             h.linewidth = 2

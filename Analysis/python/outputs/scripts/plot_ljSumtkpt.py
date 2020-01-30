@@ -13,15 +13,30 @@ from rootpy.plotting.style import set_style
 set_style(MyStyle())
 
 histCollection = [
-    # {
-    #     'name': 'maxTkPtSum',
-    #     'binning': (50, 0, 20),
-    #     'title': 'maxTkSum;max#sum p_{T} [GeV];counts/0.4GeV',
-    # },
+    {
+        'name': 'maxTkPtSum',
+        'binning': (50, 0, 50),
+        'title': 'maxTkSum;max#sum p_{T} [GeV];counts/1GeV',
+    },
+    {
+        'name': 'muonTypeTkPtSum',
+        'binning': (50, 0, 50),
+        'title': 'muonTypeTkPtSum;#sum p_{T} [GeV];counts/1GeV',
+    },
     {
         'name': 'minPfIso05',
         'binning': (50, 0, 0.5),
         'title': 'minIso;minIso_{LJ};counts/0.01',
+    },
+    {
+        'name': 'maxPfIso05',
+        'binning': (50, 0, 1),
+        'title': 'maxIso;maxIso_{LJ};counts/0.02',
+    },
+    {
+        'name': 'weightedPfIso05',
+        'binning': (50, 0, 1),
+        'title': 'weightedIso;weighted Iso_{LJ};counts/0.02',
     },
     # {
     #     'name': 'ljpairmass',
@@ -64,8 +79,8 @@ for hinfo in histCollection:
             histName = '{}__{}__{}'.format(s, chan, hinfo['name'])
             h = getattr(f, histName).Clone()
             h.xaxis.SetRange(1, h.nbins()+1)
-            h.title = s + ' (norm.)'
-            h.Scale(1./h.Integral())
+            h.title = s #+ ' (norm.)'
+            # h.Scale(1./h.Integral())
             h.drawstyle = 'hist pmc plc'
             h.legendstyle = 'L'
             h.linewidth = 2
