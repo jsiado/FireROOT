@@ -24,32 +24,27 @@ class MyEvents(Events):
     def processEvent(self, event, aux):
         LJ0, LJ1 = aux['lj0'], aux['lj1']
         passCosmic = all(map(lambda lj: lj.passCosmicVeto(event), [LJ0, LJ1]))
-        # passIso = all(map(lambda lj: not (lj.pfiso()>=0.12), [LJ0, LJ1]))
 
         if not passCosmic: return
-        for lj in [LJ0, LJ1]:
-            if lj.isMuonType() and lj.minTkD0()<0.1: return
+        # for lj in [LJ0, LJ1]:
+        #     if lj.isMuonType() and lj.minTkD0()<0.1: return
 
         for chan in ['2mu2e', '4mu']:
             if aux['channel'] == chan:
                 if '{}/isodphi'.format(chan) in self.Histos:
                     self.Histos['{}/isodphi'.format(chan)]['x'].append( abs(DeltaPhi(LJ0.p4, LJ1.p4)) )
-                    self.Histos['{}/isodphi'.format(chan)]['y'].append( min([LJ0.pfiso(), LJ1.pfiso()]) )
+                    self.Histos['{}/isodphi'.format(chan)]['y'].append( max([LJ0.pfiso(), LJ1.pfiso()]) )
                 if '{}/invmdphi'.format(chan) in self.Histos:
                     self.Histos['{}/invmdphi'.format(chan)]['x'].append( abs(DeltaPhi(LJ0.p4, LJ1.p4)) )
                     self.Histos['{}/invmdphi'.format(chan)]['y'].append( (LJ0.p4+LJ1.p4).M() )
-                if self.Type == 'DATA' and chan == '2mu2e':
-                    if abs(DeltaPhi(LJ0.p4, LJ1.p4)) < 0.5 and min([LJ0.pfiso(), LJ1.pfiso()]) > 0.2:
-                        print('{}:{}:{}'.format(event.run, event.lumi, event.event))
-
 
 
 graphCollection = [
     {
         'name': 'isodphi',
-        'title': ';|#Delta#phi_{LJ}|;minIso',
+        'title': ';|#Delta#phi_{LJ}|;maxIso',
         'xlim': (0, ROOT.Math.Pi()),
-        'ymax': {'2mu2e': 0.75, '4mu': 0.5},
+        'ymax': {'2mu2e': 1, '4mu': 1},
     },
     # {
     #     'name': 'invmdphi',
@@ -74,6 +69,7 @@ log.info('data done')
 
 # ________________________________________________________
 sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300'.split('|')
+sampleSig.extend( 'mXX-100_mA-5_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|') )
 
 ### signal 4mu
 SigHists4mu = {}

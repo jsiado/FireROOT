@@ -44,15 +44,15 @@ class MyEvents(Events):
             if aux['channel'] == chan:
                 if '{}/ABCD'.format(chan) in self.Histos:
                     self.Histos['{}/ABCD'.format(chan)].Fill( abs(DeltaPhi(LJ0.p4, LJ1.p4)),
-                                                              1-min([LJ0.pfiso(), LJ1.pfiso()]), aux['wgt'])
+                                                              1-max([LJ0.pfiso(), LJ1.pfiso()]), aux['wgt'])
                 if '{}/ABCD0w'.format(chan) in self.Histos:
                     self.Histos['{}/ABCD0w'.format(chan)].Fill( abs(DeltaPhi(LJ0.p4, LJ1.p4)),
-                                                              1-min([LJ0.pfiso(), LJ1.pfiso()]) )
+                                                              1-max([LJ0.pfiso(), LJ1.pfiso()]) )
                 for metricval in pointsToScan:
                     name_ = '{}/ABCD/{}'.format(chan, str(metricval).replace('.', 'p'))
                     if name_ in self.Histos and metric>metricval:
                         self.Histos[name_].Fill( abs(DeltaPhi(LJ0.p4, LJ1.p4)),
-                                                1-min([LJ0.pfiso(), LJ1.pfiso()]), aux['wgt'])
+                                                1-max([LJ0.pfiso(), LJ1.pfiso()]), aux['wgt'])
 
 
 # ________________________________________________________
@@ -65,10 +65,10 @@ SigHists4mu = OrderedDict()
 for ds in sampleSig:
     events_ = MyEvents(files=sigDS_4mu[ds], type='MC', chargedlj=requireChargedLj)
     events_.setScale(sigSCALE_4mu[ds])
-    events_.Histos['4mu/ABCD'] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1], name=ds+'__4mu')
+    events_.Histos['4mu/ABCD'] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.85, 1], name=ds+'__4mu')
     for v in pointsToScan:
         name_ = '4mu/ABCD/{}'.format(str(v).replace('.', 'p'))
-        events_.Histos[name_] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1], name='{}__4mu__{}'.format(ds, str(v).replace('.', 'p')))
+        events_.Histos[name_] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.85, 1], name='{}__4mu__{}'.format(ds, str(v).replace('.', 'p')))
     events_.process()
     SigHists4mu[ds] = events_.Histos
 
@@ -86,17 +86,27 @@ for ds in sampleSig:
 
 log.info('signal done.')
 
+
+
+def maxIsoBoundary(ch):
+    """different boundary value for different channel"""
+    if ch == '2mu2e': return 0.9
+    if ch == '4mu': return 0.85
+
+
+
+
 ### backgrounds
 BkgHists = {}
 for ds, files in bkgDS.items():
     events_ = MyEvents(files=files, type='MC', chargedlj=requireChargedLj)
     events_.setScale(bkgSCALE[ds])
     for chan in ['2mu2e', '4mu']:
-        events_.Histos['{}/ABCD'.format(chan)] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1])
-        events_.Histos['{}/ABCD0w'.format(chan)] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1])
+        events_.Histos['{}/ABCD'.format(chan)] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, maxIsoBoundary(chan), 1])
+        events_.Histos['{}/ABCD0w'.format(chan)] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, maxIsoBoundary(chan), 1])
         for v in pointsToScan:
             name_ = '{}/ABCD/{}'.format(chan, str(v).replace('.', 'p'))
-            events_.Histos[name_] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1])
+            events_.Histos[name_] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, maxIsoBoundary(chan), 1])
     events_.process()
     BkgHists[ds] = events_.histos
 log.info('background MC done')
@@ -108,10 +118,10 @@ _files = []
 for ds in dataDS: _files.extend(dataDS[ds])
 events_ = MyEvents(files=_files, type='DATA', chargedlj=requireChargedLj)
 for chan in ['2mu2e', '4mu']:
-    events_.Histos['{}/ABCD'.format(chan)] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1], name='data__{}'.format(chan))
+    events_.Histos['{}/ABCD'.format(chan)] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, maxIsoBoundary(chan), 1], name='data__{}'.format(chan))
     for v in pointsToScan:
         name_ = '{}/ABCD/{}'.format(chan, str(v).replace('.', 'p'))
-        events_.Histos[name_] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, 0.9, 1], name='data__{}__{}'.format(chan, str(v).replace('.', 'p')))
+        events_.Histos[name_] = ROOT.Hist2D([0, M_PI/2, M_PI], [0, maxIsoBoundary(chan), 1], name='data__{}__{}'.format(chan, str(v).replace('.', 'p')))
 
 events_.process()
 DataHists = events_.histos

@@ -33,12 +33,27 @@ class MyEvents(Events):
             if aux['channel'] == chan:
                 if '{}/maxTkPtSum'.format(chan) in self.Histos:
                     self.Histos['{}/maxTkPtSum'.format(chan)].Fill(
-                        max([LJ0.tkPtSum08, LJ1.tkPtSum08]),
+                        max([LJ0.tkPtRawSum05, LJ1.tkPtRawSum05]),
                         aux['wgt']
                     )
+                if '{}/muonTypeTkPtSum'.format(chan) in self.Histos:
+                    for lj in [LJ0, LJ1]:
+                        if not lj.isMuonType(): continue
+                        self.Histos['{}/muonTypeTkPtSum'.format(chan)].Fill(
+                            lj.tkPtRawSum05, aux['wgt'] )
                 if '{}/minPfIso05'.format(chan) in self.Histos:
                     self.Histos['{}/minPfIso05'.format(chan)].Fill(
                         min([LJ0.pfiso(), LJ1.pfiso()]),
+                        aux['wgt']
+                    )
+                if '{}/maxPfIso05'.format(chan) in self.Histos:
+                    self.Histos['{}/maxPfIso05'.format(chan)].Fill(
+                        max([LJ0.pfiso(), LJ1.pfiso()]),
+                        aux['wgt']
+                    )
+                if '{}/weightedPfIso05'.format(chan) in self.Histos:
+                    self.Histos['{}/weightedPfIso05'.format(chan)].Fill(
+                        ((LJ0.pfiso()*LJ0.p4.pt() + LJ1.pfiso()*LJ1.p4.pt())/(LJ0.p4.pt()+LJ1.p4.pt())),
                         aux['wgt']
                     )
                 if '{}/ljpairmass'.format(chan) in self.Histos:
@@ -48,15 +63,30 @@ class MyEvents(Events):
                     )
 
 histCollection = [
-    # {
-    #     'name': 'maxTkPtSum',
-    #     'binning': (50, 0, 20),
-    #     'title': 'maxTkSum;max#sum p_{T} [GeV];counts/0.4GeV',
-    # },
+    {
+        'name': 'maxTkPtSum',
+        'binning': (50, 0, 50),
+        'title': 'maxTkSum;max#sum p_{T} [GeV];counts/1GeV',
+    },
+    {
+        'name': 'muonTypeTkPtSum',
+        'binning': (50, 0, 50),
+        'title': 'muonTypeTkPtSum;#sum p_{T} [GeV];counts/1GeV',
+    },
     {
         'name': 'minPfIso05',
         'binning': (50, 0, 0.5),
         'title': 'minIso;minIso_{LJ};counts/0.01',
+    },
+    {
+        'name': 'maxPfIso05',
+        'binning': (50, 0, 1),
+        'title': 'maxIso;maxIso_{LJ};counts/0.02',
+    },
+    {
+        'name': 'weightedPfIso05',
+        'binning': (50, 0, 1),
+        'title': 'weightedIso;weighted Iso_{LJ};counts/0.02',
     },
     # {
     #     'name': 'ljpairmass',
@@ -136,7 +166,3 @@ for chan in ['2mu2e', '4mu']:
         CatHists = mergeHistsFromMapping(extractHistByName(BkgHists, histName), bkgMAP, bkgCOLORS)
         hstack = ROOT.HistStack(list(CatHists.values()), name='bkgs__{}__{}'.format(chan, hinfo['name']), title=hinfo['title'], drawstyle='HIST')
         hstack.Write()
-
-f.Close()
-
-log.info('done.')
