@@ -9,10 +9,6 @@ logging.getLogger('rootpy.tree.chain').setLevel(logging.WARNING)
 logging.getLogger('rootpy.interactive.rootwait').setLevel(logging.ERROR)
 
 
-DeltaPhi = ROOT.Math.VectorUtil.DeltaPhi
-DeltaR = ROOT.Math.VectorUtil.DeltaR
-
-
 class LeptonJetMix(object):
 
     def nPFMu(self):
@@ -96,6 +92,7 @@ class LeptonJetMix(object):
 
     def passSelection(self, event):
         if self.p4.pt()<30: return False
+        if abs(self.p4.eta())>2.4: return False
         if self.minTwoTrackDist()>=50: return False
         if not self.isNeutral(): return False
         # if not self.passCosmicVeto(event): return False
@@ -107,6 +104,7 @@ class LeptonJetMix(object):
 
     def passChargedSelection(self, event):
         if self.p4.pt()<30: return False
+        if abs(self.p4.eta())>2.4: return False
         if self.minTwoTrackDist()>=50: return False
         if not self.isMuonCharged(): return False
         # if not self.passCosmicVeto(event): return False
@@ -117,13 +115,43 @@ class LeptonJetMix(object):
         return True
 
 
+class ProxyMuonMix(object):
+
+    def isPFMuon(self):
+        return self.type==3
+
+    def isDSA(self):
+        return self.type==8
+
+    def pfiso(self):
+        return 1-self.pfIsolationNoPU05
+
+    def muon(self, event):
+        if self.isPFMuon():
+            return event.muons[self.refIdx]
+        if self.isDSA():
+            return event.dsamuons[self.refIdx]
+
+    def d0(self, event):
+        return self.muon(event).d0
+
+    def d0sig(self, event):
+        return self.muon(event).d0Sig
+
+    def passSelection(self):
+        if self.p4.pt()<30: return False
+        if abs(self.p4.eta())>2.4: return False
+        return True
+
+
 class Events(object):
-    def __init__(self, files=None, type='MC',
-                chargedlj=False):
+    def __init__(self, files=None, type='MC', maxevents=-1, channel=['4mu', '2mu2e'], chargedlj=False):
 
         if type.upper() not in ['MC', 'DATA']: raise ValueError("Argument `type` need to be MC/DATA")
         self.Type = type
         self.ChargedLJ = chargedlj
+        self.MaxEvents = maxevents
+        self.Channel = channel
 
         if not files: raise ValueError("Argument `files` need to be non-empty")
         if isinstance(files, str): files = [files,]
@@ -136,10 +164,10 @@ class Events(object):
         self.Chain.define_collection('dsamuons', prefix='dsamuon_', size='dsamuon_n')
         # self.Chain.define_collection('photons', prefix='photon_', size='photon_n')
         # self.Chain.define_collection('cosmiconelegs', prefix='cosmiconeleg_', size='cosmiconeleg_n')
-        # self.Chain.define_collection('ak4jets', prefix='akjet_ak4PFJetsCHS', size='akjet_ak4PFJetsCHS_n')
-        # self.Chain.define_collection('hftagscores', prefix='hftagscore_', size='hftagscore_n')
+        self.Chain.define_collection('ak4jets', prefix='akjet_ak4PFJetsCHS_', size='akjet_ak4PFJetsCHS_n')
+        self.Chain.define_collection('hftagscores', prefix='hftagscore_', size='hftagscore_n')
         self.Chain.define_collection('leptonjets', prefix='pfjet_', size='pfjet_n', mix=LeptonJetMix)
-        # self.Chain.define_collection('ljsources', prefix='ljsource_', size='ljsource_n')
+        self.Chain.define_collection('ljsources', prefix='ljsource_', size='ljsource_n')
 
         self.Chain.define_object('hlt', prefix='HLT_')
         self.Chain.define_object('metfilters', prefix='metfilters_')
@@ -173,6 +201,7 @@ class Events(object):
     def process(self):
 
         for i, event in enumerate(self.Chain):
+            if self.MaxEvents>0 and i>self.MaxEvents: break
 
             ## trigger ##
             if not any([getattr(event.hlt, t) for t in self.Triggers]): continue
@@ -191,7 +220,7 @@ class Events(object):
 
             leptonjets = [lj for lj in event.leptonjets]
             if len(leptonjets)<2: continue
-            sorted(leptonjets, key=lambda lj: lj.p4.pt(), reverse=True)
+            leptonjets.sort(key=lambda lj: lj.p4.pt(), reverse=True)
             LJ0 = leptonjets[0]
             LJ1 = leptonjets[1]
             if self.ChargedLJ:
@@ -222,7 +251,200 @@ class Events(object):
     def histos(self):
         return self.Histos
 
+    @property
+    def channel(self):
+        return self.Channel
 
 
 
 
+class MuonTypeLJEvents(object):
+    def __init__(self, files=None, type='MC', maxevents=-1):
+        if type.upper() not in ['MC', 'DATA']: raise ValueError("Argument `type` need to be MC/DATA")
+        self.Type = type
+        self.MaxEvents = maxevents
+
+        if not files: raise ValueError("Argument `files` need to be non-empty")
+        if isinstance(files, str): files = [files,]
+        self.Chain = TreeChain('ffNtuplizer/ffNtuple', files)
+
+        ## register collections ###
+        self.Chain.define_collection('pvs', prefix='pv_', size='pv_n')
+        self.Chain.define_collection('muons', prefix='muon_', size='muon_n')
+        self.Chain.define_collection('dsamuons', prefix='dsamuon_', size='dsamuon_n')
+        self.Chain.define_collection('ak4jets', prefix='akjet_ak4PFJetsCHS_', size='akjet_ak4PFJetsCHS_n')
+        self.Chain.define_collection('leptonjets', prefix='pfjet_', size='pfjet_n', mix=LeptonJetMix)
+
+        self.Chain.define_object('hlt', prefix='HLT_')
+        self.Chain.define_object('metfilters', prefix='metfilters_')
+        self.Chain.define_object('cosmicveto', prefix='cosmicveto_')
+
+        self.Histos = {}
+
+        self.LookupWeight = root_open(os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/data/puWeights_10x_56ifb.root')).Get('puWeights')
+        self.Scale = 1.
+
+    def bookHisto(self, name, hist):
+        self.Histos[name] = hist
+
+    def setScale(self, scale):
+        self.Scale = scale
+
+    def process(self):
+
+        for i, event in enumerate(self.Chain):
+
+            if self.MaxEvents>0 and i>self.MaxEvents: break
+
+            ## event-level mask ##
+            if not event.cosmicveto.result: continue
+            if not event.metfilters.PrimaryVertexFilter: continue
+
+            aux = {}
+            ## event weight ##
+            aux['wgt'] = self.Scale
+            if self.Type == 'MC':
+                aux['wgt'] *= event.weight # gen weight
+                aux['wgt'] *= self.LookupWeight.GetBinContent(self.LookupWeight.GetXaxis().FindBin(event.trueInteractionNum)) ## pileup correction
+
+            leptonjets = [lj for lj in event.leptonjets if lj.passSelection(event)]
+            leptonjets.sort(key=lambda lj:lj.p4.pt(), reverse=True)
+            leptonjets = leptonjets[:2]
+            muontypeljs = [lj for lj in leptonjets if lj.isMuonType()]
+            egmtypeljs = [lj for lj in leptonjets if lj.isEgmType()]
+            # if not muontypeljs: continue
+
+            aux['muontype'] = muontypeljs
+            aux['egmtype'] = egmtypeljs
+            aux['leptonjets'] = leptonjets
+
+            looseMuonIdx, mediumMuonIdx = [], []
+            for i, mu in enumerate(event.muons):
+                if mu.p4.pt()<5: continue
+                if abs(mu.p4.eta())>2.4: continue
+                if (mu.selectors&(1<<0))!=(1<<0): continue # ID-loose
+                if (mu.selectors&(1<<7))!=(1<<7): continue # Iso-loose
+                looseMuonIdx.append(i)
+                if (mu.selectors&(1<<1))!=(1<<1): continue # ID-medium
+                mediumMuonIdx.append(i)
+
+            if not mediumMuonIdx: continue
+            muonpairs = []
+            for m in mediumMuonIdx:
+                for l in looseMuonIdx:
+                    if m == l: continue
+                    if (l, m) in muonpairs: continue
+                    muonpairs.append( (m,l) )
+            if not muonpairs: continue
+
+            aux['muonpairs'] = muonpairs
+
+            self.processEvent(event, aux)
+
+    def processEvent(self, event, aux):
+        """To be override by daughter class"""
+        pass
+
+    @property
+    def histos(self):
+        return self.Histos
+
+
+class ProxyEvents(object):
+    def __init__(self, files=None, type='MC', maxevents=-1, channel=['4mu', '2mu2e']):
+        if type.upper() not in ['MC', 'DATA']:
+            raise ValueError("Argument `type` need to be MC/DATA")
+        self.Type = type
+        self.MaxEvents = maxevents
+        self.Channel = channel
+        if not files:
+            raise ValueError("Argument `files` need to be non-empty")
+        if isinstance(files, str): files = [files,]
+        self.Chain = TreeChain('ffNtuplizer/ffNtuple', files)
+
+        ### register collections ###
+        self.Chain.define_collection('muons', prefix='muon_', size='muon_n')
+        self.Chain.define_collection('dsamuons', prefix='dsamuon_', size='dsamuon_n')
+        self.Chain.define_collection('ak4jets', prefix='akjet_ak4PFJetsCHS_', size='akjet_ak4PFJetsCHS_n')
+        self.Chain.define_collection('leptonjets', prefix='pfjet_', size='pfjet_n', mix=LeptonJetMix)
+        self.Chain.define_collection('proxymuons', prefix='proxymuon_', size='proxymuon_n', mix=ProxyMuonMix)
+        self.Chain.define_collection('hftagscores', prefix='hftagscore_', size='hftagscore_n')
+        self.Chain.define_collection('ljsources', prefix='ljsource_', size='ljsource_n')
+
+        self.Chain.define_object('hlt', prefix='HLT_')
+        self.Chain.define_object('metfilters', prefix='metfilters_')
+        self.Chain.define_object('cosmicveto', prefix='cosmicveto_')
+
+        self.Triggers = [
+            "DoubleL2Mu23NoVtx_2Cha",
+            "DoubleL2Mu23NoVtx_2Cha_NoL2Matched",
+            "DoubleL2Mu23NoVtx_2Cha_CosmicSeed",
+            "DoubleL2Mu23NoVtx_2Cha_CosmicSeed_NoL2Matched",
+            "DoubleL2Mu25NoVtx_2Cha_Eta2p4",
+            "DoubleL2Mu25NoVtx_2Cha_CosmicSeed_Eta2p4",
+        ]
+
+        self.Histos = {}
+
+        self.LookupWeight = root_open(os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/data/puWeights_10x_56ifb.root')).Get('puWeights')
+        self.Scale = 1.
+
+    def setTriggers(self, triggers):
+        self.Triggers = triggers
+    def addTrigger(self, trigger):
+        self.Triggers.append(trigger)
+
+    def bookHisto(self, name, hist):
+        self.Histos[name] = hist
+
+    def setScale(self, scale):
+        self.Scale = scale
+
+    def process(self):
+
+        for i, event in enumerate(self.Chain):
+            if self.MaxEvents>0 and i>self.MaxEvents: break
+
+            ## trigger ##
+            if not any([getattr(event.hlt, t) for t in self.Triggers]): continue
+
+            ## event-level mask ##
+            if not event.cosmicveto.result: continue
+            if not event.metfilters.PrimaryVertexFilter: continue
+
+            aux = {}
+            ## event weight ##
+            aux['wgt'] = self.Scale
+            if self.Type == 'MC':
+                aux['wgt'] *= event.weight # gen weight
+                aux['wgt'] *= self.LookupWeight.GetBinContent(self.LookupWeight.GetXaxis().FindBin(event.trueInteractionNum)) ## pileup correction
+
+
+            if not event.proxymuons: continue
+            aux['proxy'] = sorted(event.proxymuons, key=lambda mu: mu.p4.pt(), reverse=True)[0]
+            if not aux['proxy'].passSelection(): continue
+
+            leptonjets = [lj for lj in event.leptonjets]
+            if not leptonjets: continue
+            leptonjets.sort(key=lambda lj: lj.p4.pt(), reverse=True)
+            aux['lj'] = leptonjets[0]
+            if not aux['lj'].passSelection(event): continue
+
+            if aux['lj'].isMuonType(): aux['channel'] = '4mu'
+            elif aux['lj'].isEgmType(): aux['channel'] = '2mu2e'
+            else: continue
+
+            self.processEvent(event, aux)
+
+
+    def processEvent(self, event, aux):
+        """To be override by daughter class"""
+        pass
+
+    @property
+    def histos(self):
+        return self.Histos
+
+    @property
+    def channel(self):
+        return self.Channel

@@ -15,6 +15,8 @@ multisub = lambda a, b: map(operator.sub, a, b)
 
 
 M_PI = ROOT.Math.Pi()
+DeltaPhi = ROOT.Math.VectorUtil.DeltaPhi
+DeltaR = ROOT.Math.VectorUtil.DeltaR
 
 def mergeHistsFromMapping(hists, mapping, fillcolors=None):
     """
@@ -113,6 +115,7 @@ def MyStyle():
     style.SetTextFont(font)
     style.SetLegendFont(font)
     style.SetPalette(112) # ROOT.kViridis
+    style.SetErrorX()
     return style
 
 
