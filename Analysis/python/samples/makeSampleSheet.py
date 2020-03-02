@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 """generate data sample list, until proper sample management tool show up.
-TODO: fix for rootpy, not yet working
 """
 
 from __future__ import print_function
@@ -9,13 +8,16 @@ import json
 import os
 from datetime import datetime
 from os.path import basename, join, relpath
+from multiprocessing import Pool, TimeoutError
 
+from rootpy.io import root_open
 from FireROOT.Analysis.samples.eospaths import *
 from FireROOT.Analysis.commonhelpers import eosfindfile, eosls
 
 parser = argparse.ArgumentParser(description="produce data ntuple files")
 parser.add_argument("datatype", type=str, nargs=1, choices=["sigmc", "bkgmc", "data"], help="Type of dataset",)
-parser.add_argument("--skim", action='store_true', help="make ntuple files from skimmed samples. Only valid when datatype is data/bkgmc")
+parser.add_argument("--skim", action='store_true', default=False, help="make ntuple files from skimmed samples. Only valid when datatype is data/bkgmc")
+parser.add_argument("--eventregion", "-r", default='all', type=str, choices=['all', 'proxy', 'muonType'])
 args = parser.parse_args()
 
 
@@ -58,15 +60,14 @@ def latest_files(parentPathOfTimestamps, pattern=None):
         return []
 
 
-def generate_data_files(skim=False):
-    print("[generate_data_files(skim={})]".format(skim))
-    _dirmap = EOSPATHS_DATA_SKIM if skim else EOSPATH_DATA
-    return {k: latest_files(v) for k, v in _dirmap.items()}
+def generate_data_files(filedict=EOSPATHS_DATA):
+    print("[generate_data_files()]")
+    return {k: latest_files(v) for k, v in filedict.items()}
 
 
-def generate_background_files(skim=False, forscale=False):
-    print("[generate_background_files(skim={}, forscale={})]".format(skim, forscale))
-    _dirmap = EOSPATHS_BKGSKIM if skim else EOSPATHS_BKG
+def generate_background_files(eospathdict=EOSPATHS_BKG, forscale=False):
+    print("[generate_background_files(forscale={})]".format(forscale))
+    _dirmap = eospathdict
     if forscale:
         _dirmap = EOSPATHS_BKGAOD
 
@@ -88,8 +89,8 @@ def generate_background_files(skim=False, forscale=False):
         for tag in _dirmap[group]:
             generated[group][tag] = []
             for path in _dirmap[group][tag]:
-                if forscale is False:
-                    if (maxts - last_submit_timestamp(path)).seconds > 60*60: continue
+                # if forscale is False:
+                #     if (maxts - last_submit_timestamp(path)).seconds > 60*60: continue
                 generated[group][tag].extend(latest_files(path, pattern='*ffNtuple*.root'))
 
     return generated
@@ -97,31 +98,21 @@ def generate_background_files(skim=False, forscale=False):
 
 def remove_empty_file(filepath):
     """given a file, if the tree has non-zero number of events, return filepath"""
-    import uproot
-    f_ = uproot.open(filepath)
-    key_ = f_.allkeys(filtername=lambda k: k.endswith(b"ffNtuple"))
-    if key_ and uproot.open(filepath)[key_[0]].numentries != 0:
-        return filepath
-    else:
+    try:
+        f = root_open(filepath)
+        t = f.ffNtuplizer.ffNtuple
+        return filepath if t.get_entries() else None
+    except:
         return None
 
 
 def remove_empty_files(filelist):
     """given a list of files, return all files with a tree of non-zero number of events"""
-    import concurrent.futures
-    cleanlist = []
-    with concurrent.futures.ProcessPoolExecutor(max_workers=12) as executor:
-        futures = {executor.submit(remove_empty_file, f): f for f in filelist}
-        for future in concurrent.futures.as_completed(futures):
-            filename = futures[future]
-            try:
-                res = future.result()
-                if res:
-                    cleanlist.append(res)
-            except Exception as e:
-                print(">> Fail to get numEvents for {}".format(filename))
-                print(str(e))
-    return cleanlist
+    pool = Pool(processes=12)
+    res = pool.map(remove_empty_file, filelist)
+    res = [f for f in res if f]
+    pool.close()
+    return res
 
 
 def clean_background_files(filedict):
@@ -152,25 +143,17 @@ def processed_genwgt_sum(ntuplefile):
 
 def total_genwgt_sum(filelist):
     """Given a list of ntuple files, return the total sum of gen weights"""
-    import concurrent.futures
-    numsum = 0
-    with concurrent.futures.ProcessPoolExecutor(max_workers=12) as executor:
-        futures = {executor.submit(processed_genwgt_sum, f): f for f in filelist}
-        for future in concurrent.futures.as_completed(futures):
-            filename = futures[future]
-            try:
-                numsum += future.result()
-            except Exception as e:
-                print(">> Fail to get genwgts for {}".format(filename))
-                print(str(e))
-    return numsum
+    pool = Pool(processes=12)
+    res = pool.map(processed_genwgt_sum, filelist)
+    pool.close()
+    return sum(res)
 
 
 def generate_background_scale(filedict):
     """parse all files to get number of events processed => scale
         scale = xsec/#genwgtsum, scale*lumi-> gen weight
     """
-    from FireHydrant.Samples.xsecs import BKG_XSEC
+    from FireROOT.Analysis.samples.xsecs import BKG_XSEC
 
     generated = dict()
     print('[generate_background_scale]')
@@ -181,16 +164,23 @@ def generate_background_scale(filedict):
         for tag in filedict[group]:
             xsec = BKG_XSEC[group][tag]
             sumgenwgt = total_genwgt_sum(filedict[group][tag])
-            generated[group][tag] = xsec / sumgenwgt
+            try:
+                generated[group][tag] = xsec / sumgenwgt
             # nevents = total_event_number(filedict[group][tag])
             # generated[group][tag] = xsec / nevents
+            except ZeroDivisionError:
+                print(group, tag, 'has zero sum gen weight, scale set as 0')
+                generated[group][tag] = 0
 
     return generated
 
 
-def generate_signal_files():
+def generate_signal_files(filedicts):
     """generate private signal file list json"""
     print("[generate_signal_files]")
+
+    EOSPATH_SIG, EOSPATH_SIG2 = filedicts
+
     paramsubdirs = eosls(EOSPATH_SIG)
     json_4mu, json_2mu2e = {}, {}
     for subdir in paramsubdirs:
@@ -229,23 +219,15 @@ def processed_event_number(ntuplefile):
 
 def total_event_number(filelist):
     """Given a list of ntuple files, return the total number of events processed"""
-    import concurrent.futures
-    numevents = 0
-    with concurrent.futures.ProcessPoolExecutor(max_workers=12) as executor:
-        futures = {executor.submit(processed_event_number, f): f for f in filelist}
-        for future in concurrent.futures.as_completed(futures):
-            filename = futures[future]
-            try:
-                numevents += future.result()
-            except Exception as e:
-                print(">> Fail to get numEvents for {}".format(filename))
-                print(str(e))
-    return numevents
+    pool = Pool(processes=12)
+    res = pool.map(processed_event_number, filelist)
+    pool.close()
+    return sum(res)
 
 
 def generate_signal_scale(fl_4mu, fl_2mu2e):
 
-    from FireHydrant.Samples.signalnumbers import genfiltereff, genxsec, darkphotonbr
+    from FireROOT.Analysis.samples.signalnumbers import genfiltereff, genxsec, darkphotonbr
     print("[generate_signal_scale]")
 
     filelists = {}
@@ -318,67 +300,118 @@ def stage_out_json(outfn, datasets, shortcutdir, shortcutfn):
 
 if __name__ == "__main__":
 
-    outdir = join(os.getenv('FH_BASE'), 'FireHydrant/Samples/store')
-    shortcutdir = join(os.getenv('FH_BASE'), 'FireHydrant/Samples/latest')
+    outdir = join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/samples/store')
+    shortcutdir = join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/samples/latest')
     if not os.path.isdir(outdir): os.makedirs(outdir)
     if not os.path.isdir(shortcutdir): os.makedirs(shortcutdir)
 
     if args.datatype[0] == "data":
         if args.skim:
-            datasets = generate_data_files(skim=True)
+            datasets = generate_data_files(filedict=EOSPATHS_DATA_SKIM)
             outfn = join(outdir, "skimmed_control_data2018_{}.json".format(datetime.now().strftime('%y%m%d')))
             shortcutfn = join(shortcutdir, 'skimmed_control_data2018.json')
         else:
-            datasets = generate_data_files()
-            outfn = join(outdir, "control_data2018_{}.json".format(datetime.now().strftime('%y%m%d')))
-            shortcutfn = join(shortcutdir, 'control_data2018.json')
+            if args.eventregion=='all':
+                datasets = generate_data_files()
+                outfn = join(outdir, "control_data2018_{}.json".format(datetime.now().strftime('%y%m%d')))
+                shortcutfn = join(shortcutdir, 'control_data2018.json')
+            if args.eventregion=='proxy':
+                datasets = generate_data_files(filedict=EOSPATHS_DATA_PROXY)
+                outfn = join(outdir, "proxy_data2018_{}.json".format(datetime.now().strftime('%y%m%d')))
+                shortcutfn = join(shortcutdir, 'proxy_data2018.json')
 
         stage_out_json(outfn, datasets, shortcutdir, shortcutfn)
 
     if args.datatype[0] == "bkgmc":
         if args.skim:
-            datasets = generate_background_files(skim=True)
+            datasets = generate_background_files(eospathdict=EOSPATHS_BKGSKIM)
             outfn = join(outdir, "skimmed_backgrounds_{}.json".format(datetime.now().strftime('%y%m%d')))
             shortcutfn = join(shortcutdir, 'skimmed_backgrounds.json')
             stage_out_json(outfn, datasets, shortcutdir, shortcutfn)
 
-            datasetsForscale = generate_background_files(skim=True, forscale=True)
+            datasetsForscale = generate_background_files(eospathdict=EOSPATHS_BKGSKIM, forscale=True)
             scales = generate_background_scale(datasetsForscale)
             outfn = join(outdir, "skimmed_backgrounds_scale_{}.json".format(datetime.now().strftime('%y%m%d')))
             shortcutfn = join(shortcutdir, 'skimmed_backgrounds_scale.json')
             stage_out_json(outfn, scales, shortcutdir, shortcutfn)
         else:
-            datasets_ = generate_data_files()
+            if args.eventregion=='muonType':
+                datasets = generate_background_files(eospathdict=EOSPATHS_BKGS_MUONTYPE)
+                outfn = join(outdir, "muontype_backgrounds_{}.json".format(datetime.now().strftime('%y%m%d')))
+                shortcutfn = join(shortcutdir, 'muontype_backgrounds.json')
+                stage_out_json(outfn, datasets, shortcutdir, shortcutfn)
 
-            scales = generate_background_scale(datasets_)
-            outfn = join(outdir, "backgrounds_scale_{}.json".format(datetime.now().strftime('%y%m%d')))
-            shortcutfn = join(shortcutdir, 'backgrounds_scale.json')
-            stage_out_json(outfn, datasets, shortcutdir, shortcutfn)
+                scales = generate_background_scale(datasets)
+                outfn = join(outdir, "muontype_backgrounds_scale_{}.json".format(datetime.now().strftime('%y%m%d')))
+                shortcutfn = join(shortcutdir, 'muontype_backgrounds_scale.json')
+                stage_out_json(outfn, scales, shortcutdir, shortcutfn)
 
-            datasets = clean_background_files(datasets_)
-            outfn = join(outdir, "backgrounds_{}.json".format(datetime.now().strftime('%y%m%d')))
-            shortcutfn = join(shortcutdir, 'backgrounds.json')
-            stage_out_json(outfn, datasets, shortcutdir, shortcutfn)
+            if args.eventregion=='proxy':
+                datasets = generate_background_files(eospathdict=EOSPATHS_BKGS_PROXY)
+                outfn = join(outdir, "proxy_backgrounds_{}.json".format(datetime.now().strftime('%y%m%d')))
+                shortcutfn = join(shortcutdir, 'proxy_backgrounds.json')
+                stage_out_json(outfn, datasets, shortcutdir, shortcutfn)
+
+                scales = generate_background_scale(datasets)
+                outfn = join(outdir, "proxy_backgrounds_scale_{}.json".format(datetime.now().strftime('%y%m%d')))
+                shortcutfn = join(shortcutdir, 'proxy_backgrounds_scale.json')
+                stage_out_json(outfn, scales, shortcutdir, shortcutfn)
+
+            if args.eventregion=='all':
+                datasets_ = generate_background_files()
+
+                scales = generate_background_scale(datasets_)
+                outfn = join(outdir, "backgrounds_scale_{}.json".format(datetime.now().strftime('%y%m%d')))
+                shortcutfn = join(shortcutdir, 'backgrounds_scale.json')
+                stage_out_json(outfn, datasets, shortcutdir, shortcutfn)
+
+                datasets = clean_background_files(datasets_)
+                outfn = join(outdir, "backgrounds_{}.json".format(datetime.now().strftime('%y%m%d')))
+                shortcutfn = join(shortcutdir, 'backgrounds.json')
+                stage_out_json(outfn, datasets, shortcutdir, shortcutfn)
 
 
     if args.datatype[0] == "sigmc":
-        ds_4mu, ds_2mu2e = generate_signal_files()
+        if args.eventregion == 'all':
+            ds_4mu, ds_2mu2e = generate_signal_files( (EOSPATH_SIG, EOSPATH_SIG2) )
 
-        outfn = join(outdir, "signal_4mu_{}.json".format(datetime.now().strftime('%y%m%d')))
-        shortcutfn = join(shortcutdir, 'signal_4mu.json')
-        stage_out_json(outfn, ds_4mu, shortcutdir, shortcutfn)
+            outfn = join(outdir, "signal_4mu_{}.json".format(datetime.now().strftime('%y%m%d')))
+            shortcutfn = join(shortcutdir, 'signal_4mu.json')
+            stage_out_json(outfn, ds_4mu, shortcutdir, shortcutfn)
 
-        outfn = join(outdir, "signal_2mu2e_{}.json".format(datetime.now().strftime('%y%m%d')))
-        shortcutfn = join(shortcutdir, 'signal_2mu2e.json')
-        stage_out_json(outfn, ds_2mu2e, shortcutdir, shortcutfn)
+            outfn = join(outdir, "signal_2mu2e_{}.json".format(datetime.now().strftime('%y%m%d')))
+            shortcutfn = join(shortcutdir, 'signal_2mu2e.json')
+            stage_out_json(outfn, ds_2mu2e, shortcutdir, shortcutfn)
 
-        ## signal scales
-        scale_4mu, scale_2mu2e = generate_signal_scale(ds_4mu, ds_2mu2e)
+            ## signal scales
+            scale_4mu, scale_2mu2e = generate_signal_scale(ds_4mu, ds_2mu2e)
 
-        outfn = join(outdir, "signal_4mu_scale_{}.json".format(datetime.now().strftime('%y%m%d')))
-        shortcutfn = join(shortcutdir, 'signal_4mu_scale.json')
-        stage_out_json(outfn, scale_4mu, shortcutdir, shortcutfn)
+            outfn = join(outdir, "signal_4mu_scale_{}.json".format(datetime.now().strftime('%y%m%d')))
+            shortcutfn = join(shortcutdir, 'signal_4mu_scale.json')
+            stage_out_json(outfn, scale_4mu, shortcutdir, shortcutfn)
 
-        outfn = join(outdir, "signal_2mu2e_scale_{}.json".format(datetime.now().strftime('%y%m%d')))
-        shortcutfn = join(shortcutdir, 'signal_2mu2e_scale.json')
-        stage_out_json(outfn, scale_2mu2e, shortcutdir, shortcutfn)
+            outfn = join(outdir, "signal_2mu2e_scale_{}.json".format(datetime.now().strftime('%y%m%d')))
+            shortcutfn = join(shortcutdir, 'signal_2mu2e_scale.json')
+            stage_out_json(outfn, scale_2mu2e, shortcutdir, shortcutfn)
+
+        if args.eventregion == 'proxy':
+            ds_4mu, ds_2mu2e = generate_signal_files( (EOSPATH_SIG_PROXY, EOSPATH_SIG2_PROXY) )
+
+            outfn = join(outdir, "proxy_signal_4mu_{}.json".format(datetime.now().strftime('%y%m%d')))
+            shortcutfn = join(shortcutdir, 'proxy_signal_4mu.json')
+            stage_out_json(outfn, ds_4mu, shortcutdir, shortcutfn)
+
+            outfn = join(outdir, "proxy_signal_2mu2e_{}.json".format(datetime.now().strftime('%y%m%d')))
+            shortcutfn = join(shortcutdir, 'proxy_signal_2mu2e.json')
+            stage_out_json(outfn, ds_2mu2e, shortcutdir, shortcutfn)
+
+            ## signal scales
+            scale_4mu, scale_2mu2e = generate_signal_scale(ds_4mu, ds_2mu2e)
+
+            outfn = join(outdir, "proxy_signal_4mu_scale_{}.json".format(datetime.now().strftime('%y%m%d')))
+            shortcutfn = join(shortcutdir, 'proxy_signal_4mu_scale.json')
+            stage_out_json(outfn, scale_4mu, shortcutdir, shortcutfn)
+
+            outfn = join(outdir, "proxy_signal_2mu2e_scale_{}.json".format(datetime.now().strftime('%y%m%d')))
+            shortcutfn = join(shortcutdir, 'proxy_signal_2mu2e_scale.json')
+            stage_out_json(outfn, scale_2mu2e, shortcutdir, shortcutfn)
