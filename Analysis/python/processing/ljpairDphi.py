@@ -1,36 +1,82 @@
 #!/usr/bin/env python
-from __future__ import print_function
+import math
+
 from FireROOT.Analysis.Events import *
 from FireROOT.Analysis.Utils import *
-from FireROOT.Analysis.DatasetMapLoader import DatasetMapLoader, SigDatasetMapLoader
-
-from rootpy.logger import log
-log = log[__name__]
-
-dml = DatasetMapLoader()
-dataDS, dataMAP = dml.fetch('data')
-bkgDS, bkgMAP, bkgSCALE = dml.fetch('bkg')
-
-sdml = SigDatasetMapLoader()
-sigDS_2mu2e, sigSCALE_2mu2e = sdml.fetch('2mu2e')
-sigDS_4mu, sigSCALE_4mu = sdml.fetch('4mu')
 
 
 class MyEvents(Events):
-    def __init__(self, files=None, type='MC'):
-        super(MyEvents, self).__init__(files=files, type=type)
+    def __init__(self, files=None, type='MC', maxevents=-1, channel=['2mu2e', '4mu']):
+        super(MyEvents, self).__init__(files=files, type=type, maxevents=maxevents, channel=channel)
 
     def processEvent(self, event, aux):
+        if aux['channel'] not in self.Channel: return
+        chan = aux['channel']
+        cutflowbin = 5
+
+        self.Histos['{}/cutflow'.format(chan)].Fill(cutflowbin, aux['wgt']); cutflowbin+=1
+
         LJ0, LJ1 = aux['lj0'], aux['lj1']
         passCosmic = all(map(lambda lj: lj.passCosmicVeto(event), [LJ0, LJ1]))
 
         if not passCosmic: return
+        self.Histos['{}/cutflow'.format(chan)].Fill(cutflowbin, aux['wgt']); cutflowbin+=1
 
-        for chan in ['2mu2e', '4mu']:
-            if aux['channel'] == chan:
-                histToFill = '{}/dphi'.format(chan)
-                if histToFill in self.Histos:
-                    self.Histos[histToFill].Fill(abs(DeltaPhi(LJ0.p4, LJ1.p4)), aux['wgt'])
+        dphi = abs(DeltaPhi(LJ0.p4, LJ1.p4))
+        maxpfiso = max([LJ0.pfiso(), LJ1.pfiso()])
+        njet = sum([1 for j in event.ak4jets if j.jetid and j.p4.pt()>max([LJ0.p4.pt(), LJ1.p4.pt()]) and abs(j.p4.eta())<2.4])
+        ## displacement cut
+        mind0sigs = []
+        for lj in [LJ0, LJ1]:
+            if lj.isMuonType() and not math.isnan(lj.pfcand_tkD0SigMin):
+                mind0sigs.append(lj.pfcand_tkD0SigMin)
+
+        # metric_d0sig = {'2mu2e': 2, '4mu': 1}
+        metric_d0sig = {'2mu2e': 2, '4mu': 0.5}
+        metric_pfiso = {'2mu2e': 0.15, '4mu': 0.15}
+
+        self.Histos['{}/d0sig'.format(chan)].Fill(max(mind0sigs), aux['wgt'])
+        if max(mind0sigs)<metric_d0sig[chan]: return
+        self.Histos['{}/cutflow'.format(chan)].Fill(cutflowbin, aux['wgt']); cutflowbin+=1
+
+        self.Histos['{}/dphi'.format(chan)].Fill(dphi, aux['wgt'])
+        self.Histos['{}/njet'.format(chan)].Fill(njet, aux['wgt'])
+        self.Histos['{}/iso'.format(chan)].Fill(maxpfiso, aux['wgt'])
+
+        if njet==0:
+            self.Histos['{}/dphi_0jet'.format(chan)].Fill(dphi, aux['wgt'])
+        else:
+            self.Histos['{}/dphi_0jetInv'.format(chan)].Fill(dphi, aux['wgt'])
+
+        if chan=='2mu2e':
+            if njet>0: return
+            else: self.Histos['{}/cutflow'.format(chan)].Fill(cutflowbin, aux['wgt']); cutflowbin+=1
+
+        if maxpfiso<metric_pfiso[chan]:
+            self.Histos['{}/dphi_siso'.format(chan)].Fill(dphi, aux['wgt'])
+
+            self.Histos['{}/cutflow'.format(chan)].Fill(cutflowbin, aux['wgt']); cutflowbin+=1
+            if dphi>math.pi/2:
+                self.Histos['{}/cutflow'.format(chan)].Fill(cutflowbin, aux['wgt']); cutflowbin+=1
+
+        else:
+            self.Histos['{}/dphi_sisoInv'.format(chan)].Fill(dphi, aux['wgt'])
+
+    def postProcess(self):
+        super(MyEvents, self).postProcess()
+
+        for ch in self.Channel:
+            xaxis = self.Histos['{}/cutflow'.format(ch)].axis(0)
+
+            labels = [ch, 'ljcosmicveto_pass', 'd0sig_pass']
+            if ch=='2mu2e': labels.append('njet_eq0')
+            labels.extend(['maxljiso_pass', 'ljpairdphi_pass'])
+
+            for i, s in enumerate(labels, start=6):
+                xaxis.SetBinLabel(i, s)
+                # binNum., labAngel, labSize, labAlign, labColor, labFont, labText
+                xaxis.ChangeLabel(i, 315, -1, 11, -1, -1, s)
+
 
 
 histCollection = [
@@ -39,83 +85,40 @@ histCollection = [
         'binning': (20, 0, M_PI),
         'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/20'
     },
+    {
+        'name': 'iso',
+        'binning': (50, 0, 1),
+        'title': 'max lepton-jet isolation;isolation;counts/0.02'
+    },
+    {
+        'name': 'njet',
+        'binning': (5, 0, 5),
+        'title': 'num. of AK4Jets;num.AK4jet;counts/1'
+    },
+    {
+        'name': 'd0sig',
+        'binning': (50, 0, 10),
+        'title': 'max lepton-jet min d0 significance;d0/#sigma_{d0};counts/0.2'
+    },
+    {
+        'name': 'dphi_0jet',
+        'binning': (20, 0, M_PI),
+        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/20'
+    },
+    {
+        'name': 'dphi_0jetInv',
+        'binning': (20, 0, M_PI),
+        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/20'
+    },
+    {
+        'name': 'dphi_siso',
+        'binning': (20, 0, M_PI),
+        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/20'
+    },
+    {
+        'name': 'dphi_sisoInv',
+        'binning': (20, 0, M_PI),
+        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/20'
+    },
 ]
 
-
-### backgrounds
-BkgHists = {}
-for ds, files in bkgDS.items():
-    events_ = MyEvents(files=files, type='MC')
-    events_.setScale(bkgSCALE[ds])
-    for chan in ['2mu2e', '4mu']:
-        for hinfo in histCollection:
-            events_.bookHisto('{}/{}'.format(chan, hinfo['name']), ROOT.Hist(*hinfo['binning'], title=hinfo['title'], drawstyle='hist', fillstyle='solid', linewidth=0, legendstyle='F'))
-    events_.process()
-    BkgHists[ds] = events_.histos
-log.info('background MC done')
-
-
-
-# ________________________________________________________
-sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300'.split('|')
-sampleSig.extend( 'mXX-100_mA-5_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|') )
-
-### signal 4mu
-SigHists4mu = {}
-for ds in sampleSig:
-    events_ = MyEvents(files=sigDS_4mu[ds], type='MC')
-    events_.setScale(sigSCALE_4mu[ds])
-    for hinfo in histCollection:
-        events_.bookHisto('4mu/{}'.format(hinfo['name']), ROOT.Hist(*hinfo['binning'], name='{}__4mu__{}'.format(ds, hinfo['name']), title=hinfo['title'], drawstyle='hist', legendstyle='L'))
-    events_.process()
-    SigHists4mu[ds] = events_.histos
-
-### signal 2mu2e
-SigHists2mu2e = {}
-for ds in sampleSig:
-    events_ = MyEvents(files=sigDS_2mu2e[ds], type='MC')
-    events_.setScale(sigSCALE_2mu2e[ds])
-    for hinfo in histCollection:
-        events_.bookHisto('2mu2e/{}'.format(hinfo['name']), ROOT.Hist(*hinfo['binning'], name='{}__2mu2e__{}'.format(ds, hinfo['name']), title=hinfo['title'], drawstyle='hist', legendstyle='L'))
-    events_.process()
-    SigHists2mu2e[ds] = events_.histos
-log.info('signal MC done')
-
-
-
-# ________________________________________________________
-### data
-DataHists = {}
-_files = []
-for ds in dataDS: _files.extend(dataDS[ds])
-events_ = MyEvents(files=_files, type='DATA')
-for chan in ['2mu2e', '4mu']:
-    for hinfo in histCollection:
-        events_.bookHisto('{}/{}'.format(chan, hinfo['name']), ROOT.Hist(*hinfo['binning'], name='data__{}__{}'.format(chan, hinfo['name']), title=hinfo['title'], drawstyle='hist e1', legendstyle='LEP'))
-events_.process()
-DataHists = events_.histos
-log.info('data done')
-
-
-from rootpy.io import root_open
-import os
-
-outname = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/{}.root'.format(__file__.split('.')[0]))
-log.info('saving to {}'.format(outname))
-
-f = root_open(outname, 'recreate')
-for hs in SigHists4mu.values():
-    for h in hs.values():
-        h.Write()
-for hs in SigHists2mu2e.values():
-    for h in hs.values():
-        h.Write()
-for h in DataHists.values():
-    h.Write()
-
-for chan in ['2mu2e', '4mu']:
-    for hinfo in histCollection:
-        histName = '{}/{}'.format(chan, hinfo['name'])
-        CatHists = mergeHistsFromMapping(extractHistByName(BkgHists, histName), bkgMAP, bkgCOLORS)
-        hstack = ROOT.HistStack(list(CatHists.values()), name='bkgs__{}__{}'.format(chan, hinfo['name']), title=hinfo['title'], drawstyle='HIST')
-        hstack.Write()

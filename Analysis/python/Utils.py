@@ -164,7 +164,7 @@ def _limits_helper(x1, x2, a, b, snap=False):
 
 def get_limits(plottables,
                xpadding=0,
-               ypadding=0.1,
+               ypadding=0.2,
                xerror_in_padding=True,
                yerror_in_padding=True,
                snap=True,

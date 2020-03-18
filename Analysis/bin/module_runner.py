@@ -18,6 +18,7 @@ log = log[__name__]
 ## parser
 parser = argparse.ArgumentParser(description="module runner.")
 parser.add_argument("--dataset", "-d",  type=str, nargs='*',default='all', help='dataset type')
+parser.add_argument("--sigparam", "-p",  type=str, nargs='*',default=None, help='signal parameters')
 parser.add_argument("--module", "-m", type=str, help='module path')
 parser.add_argument("--outname", "-o", type=str, default=None, help='output ROOT file name')
 parser.add_argument("--maxevents", "-n", type=int, default=-1, help='max number of events to run')
@@ -31,9 +32,10 @@ def args_sanity(args):
         bkg, sig, data = True, True, True
     elif 'mc' in args.dataset:
         bkg, sig = True, True
-    elif 'bkg' in args.dataset: bkg = True
-    elif 'sig' in args.dataset: sig = True
-    elif 'data' in args.dataset: data = True
+    else:
+        if 'bkg' in args.dataset: bkg = True
+        if 'sig' in args.dataset: sig = True
+        if 'data' in args.dataset: data = True
 
     ## module
     moduleBase = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/processing')
@@ -73,7 +75,9 @@ if __name__ == '__main__':
                             ROOT.Hist(*hinfo['binning'], title=hinfo['title'],
                                 drawstyle='hist', fillstyle='solid', linewidth=0, legendstyle='F')
                             )
+                events_.Histos['{}/cutflow'.format(chan)].decorate(fillstyle='solid', linewidth=0, legendstyle='F')
             events_.process()
+            events_.postProcess()
             BkgHists[ds] = events_.histos
         log.info('background MC done')
 
@@ -85,7 +89,9 @@ if __name__ == '__main__':
 
         sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300'.split('|')
         sampleSig.extend( 'mXX-100_mA-5_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|') )
-        
+        if args.sigparam:
+            sampleSig = args.sigparam
+
         ### signal 4mu
         SigHists4mu = {}
         for ds in sampleSig:
@@ -96,9 +102,12 @@ if __name__ == '__main__':
                         ROOT.Hist(*hinfo['binning'], name='{}__4mu__{}'.format(ds, hinfo['name']),
                             title=hinfo['title'], drawstyle='hist', legendstyle='L')
                         )
+            events_.Histos['4mu/cutflow'].name='{}__4mu__cutflow'.format(ds)
+            events_.Histos['4mu/cutflow'].legendstyle='L'
             events_.process()
+            events_.postProcess()
             SigHists4mu[ds] = events_.histos
-        
+
         ### signal 2mu2e
         SigHists2mu2e = {}
         for ds in sampleSig:
@@ -109,7 +118,10 @@ if __name__ == '__main__':
                         ROOT.Hist(*hinfo['binning'], name='{}__2mu2e__{}'.format(ds, hinfo['name']),
                             title=hinfo['title'], drawstyle='hist', legendstyle='L')
                         )
+            events_.Histos['2mu2e/cutflow'].name='{}__2mu2e__cutflow'.format(ds)
+            events_.Histos['2mu2e/cutflow'].legendstyle='L'
             events_.process()
+            events_.postProcess()
             SigHists2mu2e[ds] = events_.histos
         log.info('signal MC done')
 
@@ -126,14 +138,17 @@ if __name__ == '__main__':
                         ROOT.Hist(*hinfo['binning'], name='data__{}__{}'.format(chan, hinfo['name']),
                             title=hinfo['title'], drawstyle='hist e1', legendstyle='LEP')
                         )
+            events_.Histos['{}/cutflow'.format(chan)].name = 'data__{}__cutflow'.format(chan)
+            events_.Histos['{}/cutflow'.format(chan)].decorate(drawstyle='hist e1', legendstyle='LEP')
         events_.process()
+        events_.postProcess()
         DataHists = events_.histos
         log.info('data done')
 
 
-    
+
     log.info('saving to {}'.format(outname))
-    
+
     f = root_open(outname, args.create)
     if runsig:
         try:
@@ -142,15 +157,21 @@ if __name__ == '__main__':
         except:
             pass
         f.ch4mu.sig.cd()
-        for hs in SigHists4mu.values():
+        for ds, hs in SigHists4mu.items():
+            try: f.ch4mu.sig.mkdir(ds)
+            except: pass
+            getattr(f.ch4mu.sig, ds).cd()
             for h in hs.values():
-                h.name = h.name.replace('4mu__', '')
+                h.name = h.name.replace('{}__4mu__'.format(ds), '')
                 if args.create=='update': h.Write('', ROOT.TObject.kOverwrite)
                 else: h.Write()
         f.ch2mu2e.sig.cd()
-        for hs in SigHists2mu2e.values():
+        for ds, hs in SigHists2mu2e.items():
+            try: f.ch2mu2e.sig.mkdir(ds)
+            except: pass
+            getattr(f.ch2mu2e.sig, ds).cd()
             for h in hs.values():
-                h.name = h.name.replace('2mu2e__', '')
+                h.name = h.name.replace('{}__2mu2e__'.format(ds), '')
                 if args.create=='update': h.Write('', ROOT.TObject.kOverwrite)
                 else: h.Write()
 
@@ -166,7 +187,7 @@ if __name__ == '__main__':
             h.name = name
             if args.create=='update': h.Write('', ROOT.TObject.kOverwrite)
             else: h.Write()
-    
+
     if runbkg:
         try:
             f.mkdir('ch4mu/bkg', recurse=True)
@@ -175,10 +196,21 @@ if __name__ == '__main__':
             pass
         for chan in ['2mu2e', '4mu']:
             getattr(f, 'ch{}'.format(chan)).bkg.cd()
-            for hinfo in imp.histCollection:
-                histName = '{}/{}'.format(chan, hinfo['name'])
+
+            nameTitles = [] # get unique (name,title)
+            for ds, hs in BkgHists.items():
+                for k, h in hs.items():
+                    if not k.startswith(chan): continue
+                    nameTitles.append(
+                        ( k.split('/')[-1],
+                          ';'.join([h.title, h.axis(0).GetTitle(), h.axis(1).GetTitle()]) )
+                    )
+            nameTitles = list(set(nameTitles))
+
+            for n, t in nameTitles:
+                histName = '{}/{}'.format(chan, n)
                 CatHists = mergeHistsFromMapping(extractHistByName(BkgHists, histName), bkgMAP, bkgCOLORS)
-                hstack = ROOT.HistStack(list(CatHists.values()), name='{}'.format(hinfo['name']), title=hinfo['title'], drawstyle='HIST')
+                hstack = ROOT.HistStack(list(CatHists.values()), name=n, title=t, drawstyle='HIST')
                 if args.create=='update': hstack.Write('', ROOT.TObject.kOverwrite)
                 else: hstack.Write()
     f.Close()

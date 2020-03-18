@@ -9,7 +9,7 @@ from rootpy.io import root_open
 ## parser
 parser = argparse.ArgumentParser(description="module plotter.")
 parser.add_argument("--inname", "-i", type=str, default=None, help='input ROOT file name')
-parser.add_argument("--normsig", dest='normsig', action='store_true', help='Normalize signal distributions')
+parser.add_argument("--normsig", "-r", type=float, default=-1, help='Normalize signal distributions')
 parser.add_argument("--dataset", "-d", type=str, default='mc', choices=['data', 'mc'], help='dataset to plot')
 parser.add_argument("--subdir", "-s", type=str, default=None, choices=['proxy',], help='subdir modules, DEFAULT None')
 
@@ -36,13 +36,13 @@ def get_unique_histnames(fname):
 
 
 if __name__ ==  '__main__':
-    
+
     infile = os.path.join(inputdir, args.inname+'.root')
     outdir = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/plots/')
     if args.subdir: outdir = os.path.join(outdir, args.subdir)
     outdir = os.path.join(outdir, args.inname)
     if not os.path.isdir(outdir): os.makedirs(outdir)
-    
+
     from rootpy.plotting.style import set_style
     set_style(MyStyle())
 
@@ -76,10 +76,10 @@ if __name__ ==  '__main__':
                             if not xmax: xmax = h.xaxis.GetBinUpEdge(h.nbins()+1)
                             else: xmax = max(xmax, h.xaxis.GetBinUpEdge(h.nbins()+1))
                     stackError = ErrorBandFromHistStack(hstack)
-        
+
                     hs.append(hstack)
                     hs.append(stackError)
-        
+
                     for h in hstack: legItems.append(h)
                     legItems.append(stackError)
 
@@ -100,20 +100,24 @@ if __name__ ==  '__main__':
 
             ## sig
             if hasattr(channelDir, 'sig'):
-                for k in channelDir.sig.keys():
-                    if k.name.split('__')[-1]!=hname: continue
+                for ds in channelDir.sig.keys():
+                    dsdir = getattr(channelDir.sig, ds.name)
+                    h=None
+                    for k in dsdir.keys():
+                        if k.name!=hname: continue
+                        h = getattr(dsdir, k.name).Clone()
+                    if h is None: continue
 
-                    h = getattr(channelDir.sig, k.name).Clone()
                     if not htitle: htitle = h.title
                     if h.overflow()!=0:
                         drawOverflow=True
                         h.xaxis.SetRange(1, h.nbins()+1)
                         if not xmax: xmax = h.xaxis.GetBinUpEdge(h.nbins()+1)
                         else: xmax = max(xmax, h.xaxis.GetBinUpEdge(h.nbins()+1))
-                    h.title = k.name.split('__')[0]
-                    if args.normsig:
+                    h.title = ds.name
+                    if args.normsig>0:
                         h.title += ' (norm.)'
-                        h.Scale(1./h.Integral())
+                        h.Scale(1.*args.normsig/h.Integral())
                     h.drawstyle = 'hist pmc plc'
                     h.legendstyle = 'L'
                     h.linewidth = 2
@@ -131,7 +135,7 @@ if __name__ ==  '__main__':
             title = TitleAsLatex('[{}] {}'.format(chan.replace('mu', '#mu'), htitle.split(';')[0]))
             title.Draw()
             draw_labels('59.74 fb^{-1} (13 TeV)', cms_position='left', extra_text='work-in-progress')
-    
+
             c.SaveAs('{}/{}__{}_{}.pdf'.format(outdir, args.dataset, chan, hname))
             c.Clear()
 

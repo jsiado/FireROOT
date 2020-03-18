@@ -62,6 +62,20 @@ genfiltereff['4mu'] = {
 }
 
 
+## update efficiency numbers from central samples
+genfiltereff['2mu2e'].update({
+    (500, 1.2, 0.3): 0.7330,
+    (500, 1.2,   3): 0.7341,
+    (500, 1.2,  30): 0.7353,
+    (500, 1.2, 300): 0.5000,
+})
+
+genfiltereff['4mu'].update({
+    (500, 1.2, 0.3): 0.7554,
+    (500, 1.2, 150): 0.6894,
+    (500, 1.2, 300): 0.5138,
+})
+
 ## gen xsec
 """
 mXX : value [fb]

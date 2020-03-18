@@ -40,7 +40,8 @@ class MyEvents(ProxyEvents):
 
         self.Histos['{}/proxyd0sig'.format(chan)].Fill(proxy.d0sig(event), aux['wgt'])
         self.Histos['{}/maxd0sig'.format(chan)].Fill(max(mind0sigs), aux['wgt'])
-        if max(mind0sigs)<1: return
+        # if max(mind0sigs)<1: return
+        if max(mind0sigs)<0.5: return
 
         self.Histos['{}/proxyiso'.format(chan)].Fill(proxy.pfiso(), aux['wgt'])
         if proxy.pfiso()<0.1: return
