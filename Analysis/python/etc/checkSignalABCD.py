@@ -39,8 +39,8 @@ def checkAll(dphiCut=math.pi/2, channel='both'):
         print('channel: 4mu'.center(50, ' '))
         print('#'*50)
         for s in sampleSig:
-            h_sIso = getattr(f_signal.ch4mu.sig, s+'__dphi_siso')
-            h_sIsoInv = getattr(f_signal.ch4mu.sig, s+'__dphi_sisoInv')
+            h_sIso = getattr(f_signal.ch4mu.sig, s).dphi_siso
+            h_sIsoInv = getattr(f_signal.ch4mu.sig, s).dphi_sisoInv
             print('>>', s)
             print(dumpABCD(ab=h_sIsoInv, cd=h_sIso, val=dphiCut))
             print()
@@ -59,8 +59,8 @@ def checkAll(dphiCut=math.pi/2, channel='both'):
         print('channel: 2mu2e'.center(50, ' '))
         print('#'*50)
         for s in sampleSig:
-            h_sIso = getattr(f_signal.ch2mu2e.sig, s+'__dphi_siso')
-            h_sIsoInv = getattr(f_signal.ch2mu2e.sig, s+'__dphi_sisoInv')
+            h_sIso = getattr(f_signal.ch2mu2e.sig, s).dphi_siso
+            h_sIsoInv = getattr(f_signal.ch2mu2e.sig, s).dphi_sisoInv
             print('>>', s)
             print(dumpABCD(ab=h_sIsoInv, cd=h_sIso, val=dphiCut))
             print()
