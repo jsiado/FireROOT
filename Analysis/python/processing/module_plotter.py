@@ -94,6 +94,7 @@ if __name__ ==  '__main__':
                         if not xmax: xmax = h.xaxis.GetBinUpEdge(h.nbins()+1)
                         else: xmax = max(xmax, h.xaxis.GetBinUpEdge(h.nbins()+1))
                     h.title = 'data'
+                    h.SetBinContent(h.nbins(), h.GetBinContent(h.nbins())+h.overflow())
                     h.legendstyle = 'LEP'
                     hs.append(h)
                     legItems.append(h)
@@ -128,9 +129,9 @@ if __name__ ==  '__main__':
             legend = Legend(legItems, pad=c, margin=0.1, entryheight=0.02, textsize=12)
 
             xmin_, xmax_, ymin_, ymax_ = get_limits(hs)
-            if drawOverflow and xmax: xmax_ = xmax
+            if drawOverflow and xmax is not None: xmax_ = xmax
             if args.dataset=='mc': draw(hs, pad=c, xlimits=(xmin_, xmax_), logy=True)
-            elif args.dataset=='data': draw(hs, pad=c, xlimits=(xmin_, xmax_), ylimits=(0, ymax_), logy=False)
+            elif args.dataset=='data': draw(hs, pad=c, xlimits=(xmin_, xmax_), logy=False, ylimits=(0, ymax_), )
             legend.Draw()
             title = TitleAsLatex('[{}] {}'.format(chan.replace('mu', '#mu'), htitle.split(';')[0]))
             title.Draw()

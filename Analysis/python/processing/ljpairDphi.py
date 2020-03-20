@@ -31,7 +31,6 @@ class MyEvents(Events):
             if lj.isMuonType() and not math.isnan(lj.pfcand_tkD0SigMin):
                 mind0sigs.append(lj.pfcand_tkD0SigMin)
 
-        # metric_d0sig = {'2mu2e': 2, '4mu': 1}
         metric_d0sig = {'2mu2e': 2, '4mu': 0.5}
         metric_pfiso = {'2mu2e': 0.15, '4mu': 0.15}
 

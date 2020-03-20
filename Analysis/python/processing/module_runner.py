@@ -23,6 +23,7 @@ parser.add_argument("--module", "-m", type=str, help='module path')
 parser.add_argument("--outname", "-o", type=str, default=None, help='output ROOT file name')
 parser.add_argument("--maxevents", "-n", type=int, default=-1, help='max number of events to run')
 parser.add_argument("--create", "-c", type=str, default='recreate', choices=['recreate', 'update'], help='update output by')
+parser.add_argument("--proxy", action='store_true', help='run proxy events')
 args = parser.parse_args()
 
 def args_sanity(args):
@@ -46,13 +47,16 @@ def args_sanity(args):
     return bkg, sig, data
 
 runbkg, runsig, rundata = args_sanity(args)
-imp = __import__('FireROOT.Analysis.processing.{}'.format(args.module), fromlist=['MyEvents', 'histCollection'])
+_modulebase = 'FireROOT.Analysis.processing'
+if args.proxy: _modulebase = 'FireROOT.Analysis.processing.proxy'
+imp = __import__('{}.{}'.format(_modulebase, args.module), fromlist=['MyEvents', 'histCollection'])
 
 
 
 if __name__ == '__main__':
 
     outdir = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/')
+    if args.proxy: outdir = os.paht.join(outdir, 'proxy')
     if not os.path.isdir(outdir): os.makedirs(outdir)
     if args.outname:
         outname = os.path.join(outdir, '{}.root'.format(args.outname))
@@ -61,9 +65,15 @@ if __name__ == '__main__':
     if args.create == 'update' and not os.path.isfile(outname):
         sys.exit('UPDATE was used not file not recreated yet.')
 
-    if runbkg or rundata: dml = DatasetMapLoader()
+    if not args.proxy and (runbkg or rundata): dml = DatasetMapLoader()
     if runbkg:
-        bkgDS, bkgMAP, bkgSCALE = dml.fetch('bkg')
+        if args.proxy:
+            from FireROOT.Analysis.DatasetMapLoader import ProxyEventsBkgDatasetMapLoader
+            PROXYDIR = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/samples/merged/proxy')
+            dml = ProxyEventsBkgDatasetMapLoader(proxydir=PROXYDIR)
+            bkgDS, bkgMAP, bkgSCALE = dml.fetch()
+        else:
+            bkgDS, bkgMAP, bkgSCALE = dml.fetch('bkg')
 
         BkgHists = {}
         for ds, files in bkgDS.items():
@@ -82,7 +92,11 @@ if __name__ == '__main__':
         log.info('background MC done')
 
     if runsig:
-        sdml = SigDatasetMapLoader()
+        if args.proxy:
+            from FireROOT.Analysis.DatasetMapLoader import ProxyEventsSigDatasetMapLoader
+            sdml = ProxyEventsSigDatasetMapLoader()
+        else:
+            sdml = SigDatasetMapLoader()
         sigDS_2mu2e, sigSCALE_2mu2e = sdml.fetch('2mu2e')
         sigDS_4mu, sigSCALE_4mu = sdml.fetch('4mu')
 
@@ -126,11 +140,19 @@ if __name__ == '__main__':
         log.info('signal MC done')
 
     if rundata:
-        dataDS, dataMAP = dml.fetch('data')
+        if args.proxy:
+            from FireROOT.Analysis.DatasetMapLoader import ProxyEventsDataDatasetMapLoader
+            PROXYDIR = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/samples/merged/proxy')
+            ddml = ProxyEventsDataDatasetMapLoader(proxydir=PROXYDIR)
+            dataDS, dataMAP = ddml.fetch()
+        else:
+            dataDS, dataMAP = dml.fetch('data')
 
         DataHists = {}
         _files = []
-        for ds in dataDS: _files.extend(dataDS[ds])
+        for ds in dataDS:
+            if isinstance(dataDS[ds], str): _files.append(dataDS[ds])
+            else: _files.extend(dataDS[ds])
         events_ = imp.MyEvents(files=_files, type='DATA', maxevents=args.maxevents, channel=['2mu2e', '4mu'])
         for chan in events_.channel:
             for hinfo in imp.histCollection:

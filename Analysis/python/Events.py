@@ -219,7 +219,7 @@ class Events(object):
 
             for ch in self.Channel: self.Histos['{}/cutflow'.format(ch)].Fill(1, aux['wgt'])
 
-            ## 2 leptonjets in channel definitino ##
+            ## 2 leptonjets in channel definition ##
             leptonjets = [lj for lj in event.leptonjets]
             if len(leptonjets)<2: continue
             leptonjets.sort(key=lambda lj: lj.p4.pt(), reverse=True)
@@ -369,74 +369,29 @@ class MuonTypeLJEvents(object):
         return self.Histos
 
 
-class ProxyEvents(object):
+class ProxyEvents(Events):
     def __init__(self, files=None, type='MC', maxevents=-1, channel=['4mu', '2mu2e']):
-        if type.upper() not in ['MC', 'DATA']:
-            raise ValueError("Argument `type` need to be MC/DATA")
-        self.Type = type
-        self.MaxEvents = maxevents
-        self.Channel = channel
-        if not files:
-            raise ValueError("Argument `files` need to be non-empty")
-        if isinstance(files, str): files = [files,]
-        self.Chain = TreeChain('ffNtuplizer/ffNtuple', files)
-
-        ### register collections ###
-        self.Chain.define_collection('muons', prefix='muon_', size='muon_n')
-        self.Chain.define_collection('dsamuons', prefix='dsamuon_', size='dsamuon_n')
-        self.Chain.define_collection('ak4jets', prefix='akjet_ak4PFJetsCHS_', size='akjet_ak4PFJetsCHS_n')
-        self.Chain.define_collection('leptonjets', prefix='pfjet_', size='pfjet_n', mix=LeptonJetMix)
+        super(ProxyEvents, self).__init__(files=files, type=type, maxevents=maxevents, channel=channel)
         self.Chain.define_collection('proxymuons', prefix='proxymuon_', size='proxymuon_n', mix=ProxyMuonMix)
-        self.Chain.define_collection('hftagscores', prefix='hftagscore_', size='hftagscore_n')
-        self.Chain.define_collection('ljsources', prefix='ljsource_', size='ljsource_n')
-
-        self.Chain.define_object('hlt', prefix='HLT_')
-        self.Chain.define_object('metfilters', prefix='metfilters_')
-        self.Chain.define_object('cosmicveto', prefix='cosmicveto_')
-
-        self.Triggers = [
-            "DoubleL2Mu23NoVtx_2Cha",
-            "DoubleL2Mu23NoVtx_2Cha_NoL2Matched",
-            "DoubleL2Mu23NoVtx_2Cha_CosmicSeed",
-            "DoubleL2Mu23NoVtx_2Cha_CosmicSeed_NoL2Matched",
-            "DoubleL2Mu25NoVtx_2Cha_Eta2p4",
-            "DoubleL2Mu25NoVtx_2Cha_CosmicSeed_Eta2p4",
-        ]
-
-        self.Histos = {}
-
-        self.LookupWeight = root_open(os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/data/puWeights_10x_56ifb.root')).Get('puWeights')
-        self.Scale = 1.
-
-    def setTriggers(self, triggers):
-        self.Triggers = triggers
-    def addTrigger(self, trigger):
-        self.Triggers.append(trigger)
-
-    def bookHisto(self, name, hist):
-        self.Histos[name] = hist
-
-    def setScale(self, scale):
-        self.Scale = scale
 
     def process(self):
 
         for i, event in enumerate(self.Chain):
             if self.MaxEvents>0 and i>self.MaxEvents: break
 
-            ## trigger ##
-            if not any([getattr(event.hlt, t) for t in self.Triggers]): continue
-
-            ## event-level mask ##
-            if not event.cosmicveto.result: continue
-            if not event.metfilters.PrimaryVertexFilter: continue
-
-            aux = {}
             ## event weight ##
+            aux = {}
             aux['wgt'] = self.Scale
             if self.Type == 'MC':
                 aux['wgt'] *= event.weight # gen weight
                 aux['wgt'] *= self.LookupWeight.GetBinContent(self.LookupWeight.GetXaxis().FindBin(event.trueInteractionNum)) ## pileup correction
+
+            for ch in self.Channel: self.Histos['{}/cutflow'.format(ch)].Fill(0, aux['wgt'])
+
+            ## trigger ##
+            if not any([getattr(event.hlt, t) for t in self.Triggers]): continue
+
+            for ch in self.Channel: self.Histos['{}/cutflow'.format(ch)].Fill(1, aux['wgt'])
 
 
             if not event.proxymuons: continue
@@ -453,20 +408,26 @@ class ProxyEvents(object):
             elif aux['lj'].isEgmType(): aux['channel'] = '2mu2e'
             else: continue
 
+            for ch in self.Channel: self.Histos['{}/cutflow'.format(ch)].Fill(2, aux['wgt'])
+
+            ## event-level mask ##
+            if not event.metfilters.PrimaryVertexFilter: continue
+            for ch in self.Channel: self.Histos['{}/cutflow'.format(ch)].Fill(3, aux['wgt'])
+
+            if not event.cosmicveto.result: continue
+            for ch in self.Channel: self.Histos['{}/cutflow'.format(ch)].Fill(4, aux['wgt'])
+
+
             self.processEvent(event, aux)
 
-
-    def processEvent(self, event, aux):
-        """To be override by daughter class"""
-        pass
-
-    @property
-    def histos(self):
-        return self.Histos
-
-    @property
-    def channel(self):
-        return self.Channel
+    def postProcess(self):
+        labels = ['total', 'trigger_pass', 'leptonjetProxyMuon', 'pv_good', 'cosmicveto_pass']
+        for ch in self.Channel:
+            xaxis = self.Histos['{}/cutflow'.format(ch)].axis(0)
+            for i, s in enumerate(labels, start=1):
+                xaxis.SetBinLabel(i, s)
+                # binNum., labAngel, labSize, labAlign, labColor, labFont, labText
+                xaxis.ChangeLabel(i, 315, -1, 11, -1, -1, s)
 
 
 
