@@ -311,6 +311,55 @@ class ProxyEventsSigDatasetMapLoader:
         return self.get_datasets(which), self.get_scales(which)
 
 
+class CentralSignalMapLoader:
+    def __init__(self, debug=True):
+        self.fSig4mu = json.load(open(join(SAMPLE_BASE, 'centralSig_4mu.json')))
+        self.fSig2mu2e = json.load(open(join(SAMPLE_BASE, 'centralSig_2mu2e.json')))
+        self.fScale4mu = json.load(open(join(SAMPLE_BASE, 'centralSigScale_4mu.json')))
+        self.fScale2mu2e = json.load(open(join(SAMPLE_BASE, 'centralSigScale_2mu2e.json')))
+        self.fLumi = LUMI
+        if debug:
+            print("CentralSignalMapLoader loading...")
+            print("+"*80)
+            print("@ 4mu   / scale -->", basename(os.readlink(join(SAMPLE_BASE, 'centralSig_4mu.json'))), '/', basename(os.readlink(join(SAMPLE_BASE, 'centralSigScale_4mu.json'))))
+            print("@ 2mu2e / scale -->", basename(os.readlink(join(SAMPLE_BASE, 'centralSig_2mu2e.json'))), '/', basename(os.readlink(join(SAMPLE_BASE, 'centralSigScale_2mu2e.json'))))
+            print("@ Lumi set as   --> {}/pb".format(LUMI))
+            print("+"*80)
+
+
+    def get_datasets(self, which):
+        res = {}
+        if which == "all":
+            res.update({'4mu/{}'.format(k): self.fSig4mu[k] for k in self.fSig4mu})
+            res.update({'2mu2e/{}'.format(k): self.fSig2mu2e[k] for k in self.fSig2mu2e})
+        elif which == "4mu":
+            res.update(self.fSig4mu)
+        elif which == "2mu2e":
+            res.update(self.fSig2mu2e)
+        else:
+            raise ValueError("`which` can only be all/4mu/2mu2e.")
+        return res
+
+    def get_scales(self, which):
+        res = {}
+        if which == "all":
+            res.update({'4mu/{}'.format(k): self.fScale4mu[k] for k in self.fScale4mu})
+            res.update({'2mu2e/{}'.format(k): self.fScale2mu2e[k] for k in self.fScale2mu2e})
+        elif which == "4mu":
+            res.update(self.fScale4mu)
+        elif which == "2mu2e":
+            res.update(self.fScale2mu2e)
+        else:
+            raise ValueError("`which` can only be all/4mu/2mu2e.")
+
+        scaled = {k: self.fLumi/1e3 * v for k, v in res.items()}
+
+        return scaled
+
+    def fetch(self, which="all"):
+        return self.get_datasets(which), self.get_scales(which)
+
+
 
 if __name__ == "__main__":
 

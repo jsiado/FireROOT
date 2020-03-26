@@ -40,7 +40,13 @@ def args_sanity(args):
 
     ## module
     moduleBase = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/processing')
-    allmodules = [fn.split('.')[0] for fn in os.listdir(moduleBase) if os.path.isfile(fn) and not fn.startswith('_') and fn.endswith('.py')]
+    if args.proxy: moduleBase = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/processing/proxy')
+    allmodules = [
+        fn.split('.')[0] for fn in os.listdir(moduleBase) \
+        if os.path.isfile(os.path.join(moduleBase, fn)) \
+        and not fn.startswith('_') \
+        and fn.endswith('.py')
+    ]
     if args.module not in allmodules:
         sys.exit('Available modules: {}'.format(str(allmodules)))
 
