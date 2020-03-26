@@ -25,7 +25,6 @@ class MyEvents(Events):
     def processEvent(self, event, aux):
         LJ0, LJ1 = aux['lj0'], aux['lj1']
         passCosmic = all(map(lambda lj: lj.passCosmicVeto(event), [LJ0, LJ1]))
-        passIso = all(map(lambda lj: not (lj.pfiso()>=0.12), [LJ0, LJ1]))
 
         if not passCosmic: return
 
@@ -61,6 +60,24 @@ class MyEvents(Events):
                         (LJ0.p4+LJ1.p4).M(),
                         aux['wgt']
                     )
+                if '{}/muljTkIso05'.format(chan) in self.Histos:
+                    if LJ0.isMuonType(): self.Histos['{}/muljTkIso05'.format(chan)].Fill(LJ0.tkIsolation05, aux['wgt'])
+                    if LJ1.isMuonType(): self.Histos['{}/muljTkIso05'.format(chan)].Fill(LJ1.tkIsolation05, aux['wgt'])
+                if '{}/ljmass'.format(chan) in self.Histos:
+                    self.Histos['{}/ljmass'.format(chan)].Fill(LJ0.p4.M(), aux['wgt'])
+                    self.Histos['{}/ljmass'.format(chan)].Fill(LJ1.p4.M(), aux['wgt'])
+                if '{}/muljmass'.format(chan) in self.Histos:
+                    if LJ0.isMuonType(): self.Histos['{}/muljmass'.format(chan)].Fill(LJ0.p4.M(), aux['wgt'])
+                    if LJ1.isMuonType(): self.Histos['{}/muljmass'.format(chan)].Fill(LJ1.p4.M(), aux['wgt'])
+                if '{}/muljptrel'.format(chan) in self.Histos:
+                    for lj in [LJ0, LJ1]:
+                        if not lj.isMuonType(): continue
+                        mupt = []
+                        for i in lj.pfcand_pfmuonIdx: mupt.append(event.muons[i].p4.pt())
+                        for i in lj.pfcand_dsamuonIdx: mupt.append(event.dsamuons[i].p4.pt())
+                        mupt.sort(reverse=True)
+                        ptrel = ( mupt[0]-mupt[1] )/lj.p4.pt()
+                        self.Histos['{}/muljptrel'.format(chan)].Fill(ptrel, aux['wgt'])
 
 histCollection = [
     {
@@ -92,7 +109,27 @@ histCollection = [
     #     'name': 'ljpairmass',
     #     'binning': (50, 0, 200),
     #     'title': 'lepton-jet pair mass;M_{LJ0,LJ1}[GeV];counts/4GeV'
-    # }
+    # },
+    {
+        'name': 'muljTkIso05',
+        'binning': (50, 0, 1),
+        'title': 'muon-type lepton-jet tkIso;tkIso;counts/0.02',
+    },
+    {
+        'name': 'ljmass',
+        'binning': (50, 0, 150),
+        'title': 'lepton-jet mass;mass[GeV];counts/3GeV',
+    },
+    {
+        'name': 'muljmass',
+        'binning': (50, 0, 150),
+        'title': 'muon-type lepton-jet mass;mass[GeV];counts/3GeV',
+    },
+    {
+        'name': 'muljptrel',
+        'binning': (50, 0, 1.5),
+        'title': 'muon-type lepton-jet pT_{rel};pT_{rel};counts/0.03',
+    },
 ]
 
 ### backgrounds
@@ -166,3 +203,4 @@ for chan in ['2mu2e', '4mu']:
         CatHists = mergeHistsFromMapping(extractHistByName(BkgHists, histName), bkgMAP, bkgCOLORS)
         hstack = ROOT.HistStack(list(CatHists.values()), name='bkgs__{}__{}'.format(chan, hinfo['name']), title=hinfo['title'], drawstyle='HIST')
         hstack.Write()
+f.Close()

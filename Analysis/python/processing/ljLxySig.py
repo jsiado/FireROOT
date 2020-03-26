@@ -56,6 +56,21 @@ class MyEvents(Events):
                     for lj in [LJ0, LJ1]:
                         if lj.isMuonType() and not math.isnan(lj.pfcand_tkD0Max):
                             self.Histos[histToFill].Fill(lj.pfcand_tkD0Max, aux['wgt'])
+                histToFill = 'mindxy-{}'.format(chan)
+                if histToFill in self.Histos:
+                    for lj in [LJ0, LJ1]:
+                        if lj.isMuonType() and not math.isnan(lj.pfcand_tkD0Min):
+                            self.Histos[histToFill].Fill(lj.pfcand_tkD0Min, aux['wgt'])
+                histToFill = 'vxy-{}'.format(chan)
+                if histToFill in self.Histos:
+                    for lj in [LJ0, LJ1]:
+                        if lj.isMuonType() and not math.isnan(lj.klmvtx_lxy):
+                            self.Histos[histToFill].Fill(lj.klmvtx_lxy, aux['wgt'])
+                histToFill = 'vxysig-{}'.format(chan)
+                if histToFill in self.Histos:
+                    for lj in [LJ0, LJ1]:
+                        if lj.isMuonType() and not math.isnan(lj.klmvtx_lxySig):
+                            self.Histos[histToFill].Fill(lj.klmvtx_lxySig, aux['wgt'])
 
 
 histCollection = [
@@ -71,19 +86,34 @@ histCollection = [
     },
     {
         'name': 'dxysig',
-        'binning': (20, 0, 20),
-        'title': 'lepton-jet max d0 significance;max d0/#sigma_{d0};counts/2',
+        'binning': (50, 0, 10),
+        'title': 'lepton-jet max d0 significance;max d0/#sigma_{d0};counts/0.2',
     },
     {
         'name': 'dxysigmin',
-        'binning': (20, 0, 20),
-        'title': 'lepton-jet min d0 significance;min d0/#sigma_{d0};counts/2',
+        'binning': (50, 0, 10),
+        'title': 'lepton-jet min d0 significance;min d0/#sigma_{d0};counts/0.2',
     },
     {
         'name': 'dxy',
         'binning': (50, 0, 5),
-        'title': 'lepton-jet max d0;max d0 [cm];counts/0.2cm'
-    }
+        'title': 'lepton-jet max d0;max d0 [cm];counts/0.1cm'
+    },
+    {
+        'name': 'mindxy',
+        'binning': (50, 0, 0.1),
+        'title': 'lepton-jet min d0;min d0 [cm];counts/0.002cm'
+    },
+    {
+        'name': 'vxy',
+        'binning': (50, 0, 10),
+        'title': 'lepton-jet lxy;lxy [cm];counts/0.2cm'
+    },
+    {
+        'name': 'vxysig',
+        'binning': (50, 0, 10),
+        'title': 'lepton-jet lxy significance;lxy significance [cm];counts/0.2cm'
+    },
 ]
 
 

@@ -42,7 +42,27 @@ histCollection = [
     #     'name': 'ljpairmass',
     #     'binning': (50, 0, 200),
     #     'title': 'lepton-jet pair mass;M_{LJ0,LJ1}[GeV];counts/4GeV'
-    # }
+    # },
+    {
+        'name': 'muljTkIso05',
+        'binning': (50, 0, 1),
+        'title': 'muon-type lepton-jet tkIso;tkIso;counts/0.02',
+    },
+    {
+        'name': 'ljmass',
+        'binning': (50, 0, 150),
+        'title': 'lepton-jet mass;mass[GeV];counts/3GeV',
+    },
+    {
+        'name': 'muljmass',
+        'binning': (50, 0, 150),
+        'title': 'muon-type lepton-jet mass;mass[GeV];counts/3GeV',
+    },
+    {
+        'name': 'muljptrel',
+        'binning': (50, 0, 1.5),
+        'title': 'muon-type lepton-jet pT_{rel};pT_{rel};counts/0.03',
+    },
 ]
 
 

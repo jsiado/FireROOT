@@ -19,7 +19,7 @@ sigDS_4mu, sigSCALE_4mu = sdml.fetch('4mu')
 
 
 pointsToScan = [1, 0.1, 0.05, 0.01]
-requireChargedLj = True
+requireChargedLj = False
 ## print out global variables
 print("Points to scan:", pointsToScan)
 print("Charged Lepton-jets only:", requireChargedLj)
@@ -38,7 +38,7 @@ class MyEvents(Events):
         for lj in [LJ0, LJ1]:
             if lj.isMuonType():
                 metric_.append( lj.minTkD0() )
-        metric = min(metric_)*10 # mm
+        metric = max(metric_)*10 # mm
 
         for chan in ['2mu2e', '4mu']:
             if aux['channel'] == chan:

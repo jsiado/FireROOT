@@ -20,6 +20,51 @@ histCollection = [
         'binning': (20, 0, M_PI),
         'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/20'
     },
+    {
+        'name': 'dphi_d0sig',
+        'binning': (20, 0, M_PI),
+        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/20'
+    },
+    {
+        'name': 'dphi_d0sigInv',
+        'binning': (20, 0, M_PI),
+        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/20'
+    },
+    {
+        'name': 'dphi_d0sigNjet',
+        'binning': (20, 0, M_PI),
+        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/20'
+    },
+    {
+        'name': 'dphi_d0sigNjetInv',
+        'binning': (20, 0, M_PI),
+        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/20'
+    },
+    {
+        'name': 'dphi_d0sigNjetIso',
+        'binning': (20, 0, M_PI),
+        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/20'
+    },
+    {
+        'name': 'dphi_d0sigNjetIsoInv',
+        'binning': (20, 0, M_PI),
+        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/20'
+    },
+    {
+        'name': 'iso',
+        'binning': (50, 0, 1),
+        'title': 'max lepton-jet isolation;isolation;counts/0.02'
+    },
+    {
+        'name': 'njet',
+        'binning': (5, 0, 5),
+        'title': 'num. of AK4Jets;num.AK4jet;counts/1'
+    },
+    {
+        'name': 'd0sig',
+        'binning': (50, 0, 10),
+        'title': 'max lepton-jet min d0 significance;d0/#sigma_{d0};counts/0.2'
+    },
 ]
 
 
@@ -35,6 +80,8 @@ for hinfo in histCollection:
     for chan in ['2mu2e', '4mu']:
         hs = []
 
+        drawoverflow = not hinfo['name'].startswith('dphi')
+
         histName = 'bkgs__{}__{}'.format(chan, hinfo['name'])
         hstack = getattr(f, histName)
         for h in hstack:
@@ -42,7 +89,8 @@ for hinfo in histCollection:
             h.linewidth=0
             h.legendstyle='F'
             h.fillcolor = bkgCOLORS[h.title]
-            # h.xaxis.SetRange(1, h.nbins()+1)
+            if drawoverflow:
+                h.xaxis.SetRange(1, h.nbins()+1)
         stackError = ErrorBandFromHistStack(hstack)
 
         hs.append(hstack)
@@ -56,7 +104,8 @@ for hinfo in histCollection:
         for i, s in enumerate(samples):
             histName = '{}__{}__{}'.format(s, chan, hinfo['name'])
             h = getattr(f, histName).Clone()
-            # h.xaxis.SetRange(1, h.nbins()+1)
+            if drawoverflow:
+                h.xaxis.SetRange(1, h.nbins()+1)
             h.title = s #+ ' (norm.)'
             # h.Scale(1./h.Integral())
             h.drawstyle = 'hist pmc plc'
@@ -66,7 +115,10 @@ for hinfo in histCollection:
             legend.AddEntry(h)
 
         xmin, xmax, ymin, ymax = get_limits(hs)
-        draw(hs, pad=c, logy=True)
+        if drawoverflow:
+            draw(hs, pad=c, xlimits=(xmin, hs[-1].xaxis.GetBinUpEdge(hs[-1].nbins()+1)), logy=True)
+        else:
+            draw(hs, pad=c, logy=True)
         legend.Draw()
         title = TitleAsLatex('[{}] {}'.format(chan.replace('mu', '#mu'), hinfo['title'].split(';')[0]))
         title.Draw()
