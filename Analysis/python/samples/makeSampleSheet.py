@@ -14,12 +14,6 @@ from rootpy.io import root_open
 from FireROOT.Analysis.samples.eospaths import *
 from FireROOT.Analysis.commonhelpers import eosfindfile, eosls
 
-parser = argparse.ArgumentParser(description="produce data ntuple files")
-parser.add_argument("datatype", type=str, nargs=1, choices=["sigmc", "bkgmc", "data"], help="Type of dataset",)
-parser.add_argument("--skim", action='store_true', default=False, help="make ntuple files from skimmed samples. Only valid when datatype is data/bkgmc")
-parser.add_argument("--eventregion", "-r", default='all', type=str, choices=['all', 'proxy', 'muonType'])
-args = parser.parse_args()
-
 
 def list_files(dir, pattern=None):
     """
@@ -299,6 +293,13 @@ def stage_out_json(outfn, datasets, shortcutdir, shortcutfn):
 
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="produce data ntuple files")
+    parser.add_argument("datatype", type=str, nargs=1, choices=["sigmc", "bkgmc", "data"], help="Type of dataset",)
+    parser.add_argument("--skim", action='store_true', default=False, help="make ntuple files from skimmed samples. Only valid when datatype is data/bkgmc")
+    parser.add_argument("--eventregion", "-r", default='all', type=str, choices=['all', 'proxy', 'muonType'])
+    args = parser.parse_args()
+
 
     outdir = join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/samples/store')
     shortcutdir = join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/samples/latest')
