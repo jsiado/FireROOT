@@ -186,7 +186,7 @@ class Events(object):
         for chan in channel:
             self.Histos['{}/cutflow'.format(chan)] = ROOT.Hist(20,0,20,title='cutflow',drawstyle='hist')
 
-        self.LookupWeight = root_open(os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/data/puWeights_10x_56ifb.root')).Get('puWeights')
+        self.LookupWeight = root_open(os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/data/PUWeights_2018.root')).Get('puWeights')
         self.Scale = 1.
 
     def setTriggers(self, triggers):
