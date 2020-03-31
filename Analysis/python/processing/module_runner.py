@@ -4,6 +4,7 @@ import argparse
 import math
 import os, sys
 
+from tqdm import tqdm
 from FireROOT.Analysis.Utils import *
 from FireROOT.Analysis.DatasetMapLoader import (
     DatasetMapLoader,
@@ -82,7 +83,7 @@ if __name__ == '__main__':
             bkgDS, bkgMAP, bkgSCALE = dml.fetch('bkg')
 
         BkgHists = {}
-        for ds, files in bkgDS.items():
+        for ds, files in tqdm(bkgDS.items()):
             events_ = imp.MyEvents(files=files, type='MC', maxevents=args.maxevents)
             events_.setScale(bkgSCALE[ds])
             for chan in events_.channel:
@@ -114,7 +115,7 @@ if __name__ == '__main__':
 
         ### signal 4mu
         SigHists4mu = {}
-        for ds in sampleSig:
+        for ds in tqdm(sampleSig):
             events_ = imp.MyEvents(files=sigDS_4mu[ds], type='MC', maxevents=args.maxevents, channel=['4mu',])
             events_.setScale(sigSCALE_4mu[ds])
             for hinfo in imp.histCollection:
@@ -130,7 +131,7 @@ if __name__ == '__main__':
 
         ### signal 2mu2e
         SigHists2mu2e = {}
-        for ds in sampleSig:
+        for ds in tqdm(sampleSig):
             events_ = imp.MyEvents(files=sigDS_2mu2e[ds], type='MC', maxevents=args.maxevents, channel=['2mu2e',])
             events_.setScale(sigSCALE_2mu2e[ds])
             for hinfo in imp.histCollection:

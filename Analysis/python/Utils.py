@@ -694,6 +694,23 @@ class LuminosityLabel(LabelBase):
         self.DrawLatexNDC(x, y, self.text)
 
 
+class ScenarioLabel(LabelBase):
+    """A label similar to `LuminosityLabel`, but draw on *top, left* of the frame"""
+    def __init__(self, text):
+        super(ScenarioLabel, self).__init__()
+        self.text = text
+        self.font = 42
+        self.scale = 0.6
+        self.align = 11
+        self.padding_top = 0.8
+
+    def draw(self):
+        top_margin, _, _, left_margin = self.get_canvas_margins()
+        self.size = self.scale * top_margin
+        x = left_margin
+        y = 1 - self.padding_top * top_margin
+        self.DrawLatexNDC(x, y, self.text)
+
 
 def draw_labels(lumi_text, cms_position='left', extra_text=''):
     """Draw the CMS Publication Committee figure labels on the active canvas.
