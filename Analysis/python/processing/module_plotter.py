@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 from __future__ import print_function
 import argparse
-import os
+import os, sys
+from functools import reduce
+import ROOT
 from FireROOT.Analysis.Utils import *
-from rootpy.plotting import Hist, Legend, Canvas
+from rootpy.plotting import Hist, Legend, Canvas, HistStack
 from rootpy.io import root_open
 
 ## parser
@@ -12,6 +14,8 @@ parser.add_argument("--inname", "-i", type=str, default=None, help='input ROOT f
 parser.add_argument("--normsig", "-r", type=float, default=-1, help='Normalize signal distributions')
 parser.add_argument("--dataset", "-d", type=str, default='mc', choices=['data', 'mc'], help='dataset to plot')
 parser.add_argument("--subdir", "-s", type=str, default=None, choices=['proxy',], help='subdir modules, DEFAULT None')
+parser.add_argument("--logx", action='store_true')
+parser.add_argument("--overflow", type=bool, default=True)
 
 args = parser.parse_args()
 
@@ -27,12 +31,35 @@ def get_unique_histnames(fname):
     f = root_open(fname)
     for dirpath, dirnames, filenames in f.walk():
         if not filenames: continue
-        if dirpath.endswith('data') or dirpath.endswith('bkg'): res.extend(filenames)
-        if dirpath.endswith('sig'):
+        if dirpath.endswith('data') or dirpath.endswith('bkg'):
+            dirobj = reduce(lambda a,b: getattr(a, b), [f]+dirpath.split('/'))
             for fn in filenames:
-                res.append(fn.split('__')[-1])
+                h_ = getattr(dirobj, fn)
+                if isinstance(h_, HistStack): h_ = h_[0]
+                if h_.GetDimension()>1: continue
+                res.append(fn)
+        if 'sig' in dirpath and not dirnames:
+            dirobj = reduce(lambda a,b: getattr(a, b), [f]+dirpath.split('/'))
+            for fn in filenames:
+                if getattr(dirobj, fn).GetDimension()>1: continue
+                res.append(fn)
     f.close()
     return list(set(res))
+
+def decorate_xaxis_pi(xax):
+    # xax.SetNdivisions(-310)
+    xax.ChangeLabel(2,-1,-1,-1,-1,-1,"#frac{#pi}{10}")
+    xax.ChangeLabel(3,-1,-1,-1,-1,-1,"#frac{#pi}{5}")
+    xax.ChangeLabel(4,-1,-1,-1,-1,-1,"#frac{3#pi}{10}")
+    xax.ChangeLabel(5,-1,-1,-1,-1,-1,"#frac{2#pi}{5}")
+    xax.ChangeLabel(6,-1,-1,-1,-1,-1,"#frac{#pi}{2}")
+    xax.ChangeLabel(7,-1,-1,-1,-1,-1,"#frac{3#pi}{5}")
+    xax.ChangeLabel(8,-1,-1,-1,-1,-1,"#frac{7#pi}{10}")
+    xax.ChangeLabel(9,-1,-1,-1,-1,-1,"#frac{4#pi}{5}")
+    xax.ChangeLabel(10,-1,-1,-1,-1,-1,"#frac{9#pi}{10}")
+    xax.ChangeLabel(11,-1,-1,-1,-1,-1,"#pi")
+    return xax
+
 
 
 if __name__ ==  '__main__':
@@ -70,29 +97,25 @@ if __name__ ==  '__main__':
                         h.linewidth=0
                         h.legendstyle='F'
                         h.fillcolor = bkgCOLORS[h.title]
-                        if h.overflow()!=0:
-                            drawOverflow=True
-                            h.xaxis.SetRange(1, h.nbins()+1)
-                            if not xmax: xmax = h.xaxis.GetBinUpEdge(h.nbins()+1)
-                            else: xmax = max(xmax, h.xaxis.GetBinUpEdge(h.nbins()+1))
-                    stackError = ErrorBandFromHistStack(hstack)
+                        if args.overflow:
+                            h.SetBinContent(h.nbins(), h.GetBinContent(h.nbins())+h.overflow())
 
                     hs.append(hstack)
-                    hs.append(stackError)
 
-                    for h in hstack: legItems.append(h)
-                    legItems.append(stackError)
+
+                    if hstack.Integral():
+                        stackError = ErrorBandFromHistStack(hstack)
+                        hs.append(stackError)
+                        for h in hstack:
+                            if h.integral(overflow=True)==0: continue
+                            legItems.append(h)
+                        legItems.append(stackError)
 
             if args.dataset=='data':
                 ## data
                 if hasattr(channelDir, 'data') and hasattr(channelDir.data, hname):
                     h = getattr(channelDir.data, hname)
                     if not htitle: htitle = h.title
-                    if h.overflow()!=0:
-                        drawOverflow=True
-                        h.xaxis.SetRange(1, h.nbins()+1)
-                        if not xmax: xmax = h.xaxis.GetBinUpEdge(h.nbins()+1)
-                        else: xmax = max(xmax, h.xaxis.GetBinUpEdge(h.nbins()+1))
                     h.title = 'data'
                     h.SetBinContent(h.nbins(), h.GetBinContent(h.nbins())+h.overflow())
                     h.legendstyle = 'LEP'
@@ -101,37 +124,49 @@ if __name__ ==  '__main__':
 
             ## sig
             if hasattr(channelDir, 'sig'):
-                for ds in channelDir.sig.keys():
-                    dsdir = getattr(channelDir.sig, ds.name)
+                sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300'.split('|')
+                sampleSig.extend( 'mXX-100_mA-5_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|') )
+                # for ds in channelDir.sig.keys():
+                for i, ds in enumerate(sampleSig):
+                    if not hasattr(channelDir.sig, ds): continue
+                    dsdir = getattr(channelDir.sig, ds)
                     h=None
                     for k in dsdir.keys():
                         if k.name!=hname: continue
                         h = getattr(dsdir, k.name).Clone()
                     if h is None: continue
+                    if h.integral(overflow=True)==0: continue
 
                     if not htitle: htitle = h.title
-                    if h.overflow()!=0:
-                        drawOverflow=True
-                        h.xaxis.SetRange(1, h.nbins()+1)
-                        if not xmax: xmax = h.xaxis.GetBinUpEdge(h.nbins()+1)
-                        else: xmax = max(xmax, h.xaxis.GetBinUpEdge(h.nbins()+1))
-                    h.title = ds.name
+                    h.title = ds
                     if args.normsig>0:
                         h.title += ' (norm.)'
-                        h.Scale(1.*args.normsig/h.Integral())
-                    h.drawstyle = 'hist pmc plc'
+                        if h.Integral()>0:
+                            h.Scale(1.*args.normsig/h.Integral())
+                    if args.overflow:
+                        h.SetBinContent(h.nbins(), h.GetBinContent(h.nbins())+h.overflow())
+
+                    h.drawstyle = 'hist'
+                    h.color = sigCOLORS[i]
                     h.legendstyle = 'L'
                     h.linewidth = 2
                     hs.append(h)
                     legItems.append(h)
 
+            legend = Legend(legItems, pad=c, margin=0.25, topmargin=0.02, entrysep=0.01, entryheight=0.02, textsize=10)
 
-            legend = Legend(legItems, pad=c, margin=0.1, entryheight=0.02, textsize=12)
-
-            xmin_, xmax_, ymin_, ymax_ = get_limits(hs)
+            xmin_, xmax_, ymin_, ymax_ = get_limits(hs, logx=args.logx)
             if drawOverflow and xmax is not None: xmax_ = xmax
-            if args.dataset=='mc': draw(hs, pad=c, xlimits=(xmin_, xmax_), logy=True)
-            elif args.dataset=='data': draw(hs, pad=c, xlimits=(xmin_, xmax_), logy=False, ylimits=(0, ymax_), )
+
+            xdiv_ = -310 if 'phi' in htitle else None
+            if args.dataset=='mc':
+                axes, limits = draw(hs, pad=c, logy=True, logx=args.logx, xdivisions=xdiv_)
+            elif args.dataset=='data':
+                axes, limits = draw(hs, pad=c, logy=False, ylimits=(0, ymax_), logx=args.logx, xdivisions=xdiv_)
+            if 'phi' in htitle: decorate_xaxis_pi(axes[0])
+            if args.logx: axes[0].SetMoreLogLabels()
+            ROOT.gPad.SetGrid()
+            ROOT.gPad.Update()
             legend.Draw()
             title = TitleAsLatex('[{}] {}'.format(chan.replace('mu', '#mu'), htitle.split(';')[0]))
             title.Draw()

@@ -6,8 +6,8 @@ from FireROOT.Analysis.Utils import *
 
 
 class MyEvents(Events):
-    def __init__(self, files=None, type='MC', maxevents=-1, channel=['2mu2e', '4mu']):
-        super(MyEvents, self).__init__(files=files, type=type, maxevents=maxevents, channel=channel)
+    def __init__(self, files=None, type='MC', maxevents=-1, channel=['2mu2e', '4mu'], **kwargs):
+        super(MyEvents, self).__init__(files=files, type=type, maxevents=maxevents, channel=channel, **kwargs)
 
     def processEvent(self, event, aux):
         if aux['channel'] not in self.Channel: return
@@ -38,9 +38,7 @@ class MyEvents(Events):
         if max(mind0sigs)<metric_d0sig[chan]: return
         self.Histos['{}/cutflow'.format(chan)].Fill(cutflowbin, aux['wgt']); cutflowbin+=1
 
-        self.Histos['{}/dphi'.format(chan)].Fill(dphi, aux['wgt'])
         self.Histos['{}/njet'.format(chan)].Fill(njet, aux['wgt'])
-        self.Histos['{}/iso'.format(chan)].Fill(maxpfiso, aux['wgt'])
 
         if njet==0:
             self.Histos['{}/dphi_0jet'.format(chan)].Fill(dphi, aux['wgt'])
@@ -50,6 +48,13 @@ class MyEvents(Events):
         if chan=='2mu2e':
             if njet>0: return
             else: self.Histos['{}/cutflow'.format(chan)].Fill(cutflowbin, aux['wgt']); cutflowbin+=1
+
+        self.Histos['{}/dphiIso2D'.format(chan)].Fill(dphi, maxpfiso, aux['wgt'])
+
+        self.Histos['{}/dphi'.format(chan)].Fill(dphi, aux['wgt'])
+        self.Histos['{}/iso'.format(chan)].Fill(maxpfiso, aux['wgt'])
+        invm = (LJ0.p4+LJ1.p4).M()
+        self.Histos['{}/invm'.format(chan)].Fill(invm, aux['wgt'])
 
         if maxpfiso<metric_pfiso[chan]:
             self.Histos['{}/dphi_siso'.format(chan)].Fill(dphi, aux['wgt'])
@@ -76,18 +81,33 @@ class MyEvents(Events):
                 # binNum., labAngel, labSize, labAlign, labColor, labFont, labText
                 xaxis.ChangeLabel(i, 315, -1, 11, -1, -1, s)
 
+        for k in self.Histos:
+            if 'phi' not in k: continue
+            xax = self.Histos[k].axis(0)
+            xax.SetNdivisions(-310)
+            xax.ChangeLabel(2,-1,-1,-1,-1,-1,"#frac{#pi}{10}")
+            xax.ChangeLabel(3,-1,-1,-1,-1,-1,"#frac{#pi}{5}")
+            xax.ChangeLabel(4,-1,-1,-1,-1,-1,"#frac{3#pi}{10}")
+            xax.ChangeLabel(5,-1,-1,-1,-1,-1,"#frac{2#pi}{5}")
+            xax.ChangeLabel(6,-1,-1,-1,-1,-1,"#frac{#pi}{2}")
+            xax.ChangeLabel(7,-1,-1,-1,-1,-1,"#frac{3#pi}{5}")
+            xax.ChangeLabel(8,-1,-1,-1,-1,-1,"#frac{7#pi}{10}")
+            xax.ChangeLabel(9,-1,-1,-1,-1,-1,"#frac{4#pi}{5}")
+            xax.ChangeLabel(10,-1,-1,-1,-1,-1,"#frac{9#pi}{10}")
+            xax.ChangeLabel(11,-1,-1,-1,-1,-1,"#pi")
+
 
 
 histCollection = [
     {
         'name': 'dphi',
-        'binning': (20, 0, M_PI),
-        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/20'
+        'binning': (30, 0, M_PI),
+        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/30'
     },
     {
         'name': 'iso',
         'binning': (50, 0, 1),
-        'title': 'max lepton-jet isolation;isolation;counts/0.02'
+        'title': 'max lepton-jet isolation;isolation;Events'
     },
     {
         'name': 'njet',
@@ -96,28 +116,38 @@ histCollection = [
     },
     {
         'name': 'd0sig',
-        'binning': (50, 0, 10),
-        'title': 'max lepton-jet min d0 significance;d0/#sigma_{d0};counts/0.2'
+        'binning': [[0, 0.25, 0.5, 1.0, 1.5, 2.0, 3, 4, 6, 8, 10]],
+        'title': 'max lepton-jet min d0 significance;d0/#sigma_{d0};Events'
     },
     {
         'name': 'dphi_0jet',
-        'binning': (20, 0, M_PI),
-        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/20'
+        'binning': (30, 0, M_PI),
+        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/30'
     },
     {
         'name': 'dphi_0jetInv',
-        'binning': (20, 0, M_PI),
-        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/20'
+        'binning': (30, 0, M_PI),
+        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/30'
     },
     {
         'name': 'dphi_siso',
-        'binning': (20, 0, M_PI),
-        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/20'
+        'binning': (30, 0, M_PI),
+        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/30'
     },
     {
         'name': 'dphi_sisoInv',
-        'binning': (20, 0, M_PI),
-        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/20'
+        'binning': (30, 0, M_PI),
+        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/30'
+    },
+    {
+        'name': 'dphiIso2D',
+        'binning': (30, 0, M_PI, 30, 0, 0.3),
+        'title': '|#Delta#phi| vs maxiso;|#Delta#phi|;maxIso',
+    },
+    {
+        'name': 'invm',
+        'binning': (100, 0, 250),
+        'title': 'inv mass;mass [GeV];Events'
     },
 ]
 

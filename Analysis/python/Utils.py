@@ -10,6 +10,12 @@ from rootpy.plotting.graph import _Graph1DBase, Graph
 from rootpy.plotting.style import get_style
 
 bkgCOLORS ={'QCD': 'powderblue', 'DYJetsToLL': 'wheat', 'TTJets': 'darkcyan', 'DiBoson': 'salmon'}
+sigCOLORS =[
+    "#1696d2", "#ec008b", "#000000", "#d2d2d2",
+    "#fdbf11", "#55b748", "#9e0142", "#f46d43",
+    "#bf812d", "#66c2a5", "#5e4fa2", "#e6f598",
+]
+
 multiadd = lambda a, b: map(operator.add, a, b)
 multisub = lambda a, b: map(operator.sub, a, b)
 
@@ -85,11 +91,22 @@ def sumHistStack(hstack):
 def TitleAsLatex(s):
     """Add a title as TLatex on top left"""
 
-    label = ROOT.TLatex(ROOT.gStyle.GetPadLeftMargin(), 0.9+ROOT.gStyle.GetPadTopMargin()+0.01, s)
-    label.SetTextFont(43)
-    label.SetTextAlign(11)
-    label.SetTextSize(22)
-    label.SetNDC()
+    # label = ROOT.TLatex(ROOT.gStyle.GetPadLeftMargin(), 0.9+ROOT.gStyle.GetPadTopMargin()*0.01, s)
+    label = ROOT.TPaveText(
+        ROOT.gStyle.GetPadLeftMargin()-0.02,
+        0.95+ROOT.gStyle.GetPadTopMargin()*0.03,
+        ROOT.gStyle.GetPadLeftMargin()+0.58,
+        0.95+ROOT.gStyle.GetPadTopMargin()*0.85,
+        'NB NDC'
+    )
+    label.AddText(s)
+    label.SetTextFont(42)
+    label.SetTextAlign(12)
+    # label.SetTextSize(22)
+    # label.SetNDC()
+    label.SetFillStyle(0)
+    label.SetFillColor(0)
+    label.SetBorderSize(0)
     return label
 
 
@@ -114,7 +131,7 @@ def MyStyle():
     font = 43 # Helvetica
     style.SetTextFont(font)
     style.SetLegendFont(font)
-    style.SetPalette(112) # ROOT.kViridis
+    style.SetPalette(112) # 55 ROOT.kCMYK # 112 ROOT.kViridis
     style.SetErrorX()
     return style
 
