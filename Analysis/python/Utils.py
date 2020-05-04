@@ -15,6 +15,8 @@ sigCOLORS =[
     "#fdbf11", "#55b748", "#9e0142", "#f46d43",
     "#bf812d", "#66c2a5", "#5e4fa2", "#e6f598",
 ]
+sigTAGS = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300'.split('|')
+sigTAGS.extend( 'mXX-100_mA-5_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|') )
 
 multiadd = lambda a, b: map(operator.add, a, b)
 multisub = lambda a, b: map(operator.sub, a, b)

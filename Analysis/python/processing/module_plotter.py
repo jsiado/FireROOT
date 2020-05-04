@@ -5,19 +5,23 @@ import os, sys
 from functools import reduce
 import ROOT
 from FireROOT.Analysis.Utils import *
+from FireROOT.Analysis.samples.signalnumbers import genxsec
 from rootpy.plotting import Hist, Legend, Canvas, HistStack
 from rootpy.io import root_open
 
 ## parser
 parser = argparse.ArgumentParser(description="module plotter.")
 parser.add_argument("--inname", "-i", type=str, default=None, help='input ROOT file name')
-parser.add_argument("--normsig", "-r", type=float, default=-1, help='Normalize signal distributions')
+parser.add_argument("--normsig", "-r", type=float, default=-1, help='Normalize signal distributions to a fix value')
+parser.add_argument("--normsigxsec", "-x", type=float, default=30, help='Normalize signal distributions to a fix xsec [fb]')
 parser.add_argument("--dataset", "-d", type=str, default='mc', choices=['data', 'mc'], help='dataset to plot')
 parser.add_argument("--subdir", "-s", type=str, default=None, choices=['proxy',], help='subdir modules, DEFAULT None')
 parser.add_argument("--logx", action='store_true')
 parser.add_argument("--overflow", type=bool, default=True)
 
 args = parser.parse_args()
+if args.normsig>0 and args.normsigxsec>0:
+    sys.exit('You cannot normalize signal to a fixed value and a fixed xsec at the same time.')
 
 inputdir = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/')
 if args.subdir: inputdir = os.path.join(inputdir, args.subdir)
@@ -141,8 +145,13 @@ if __name__ ==  '__main__':
                     h.title = ds
                     if args.normsig>0:
                         h.title += ' (norm.)'
-                        if h.Integral()>0:
-                            h.Scale(1.*args.normsig/h.Integral())
+                        if h.integral(overflow=True)>0:
+                            h.scale( 1.*args.normsig/h.integral(overflow=True) )
+                    if args.normsigxsec>0:
+                        h.title += ' (norm. {:g}fb)'.format(args.normsigxsec)
+                        mboundstate = int(ds.split('_')[0].replace('mXX-',''))
+                        if h.integral(overflow=True)>0:
+                            h.scale( args.normsigxsec/genxsec[mboundstate] )
                     if args.overflow:
                         h.SetBinContent(h.nbins(), h.GetBinContent(h.nbins())+h.overflow())
 
@@ -153,7 +162,7 @@ if __name__ ==  '__main__':
                     hs.append(h)
                     legItems.append(h)
 
-            legend = Legend(legItems, pad=c, margin=0.25, topmargin=0.02, entrysep=0.01, entryheight=0.02, textsize=10)
+            legend = Legend(legItems, pad=c, margin=0.25, leftmargin=0.45, topmargin=0.02, entrysep=0.01, entryheight=0.02, textsize=10)
 
             xmin_, xmax_, ymin_, ymax_ = get_limits(hs, logx=args.logx)
             if drawOverflow and xmax is not None: xmax_ = xmax

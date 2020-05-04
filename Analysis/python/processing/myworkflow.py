@@ -19,6 +19,9 @@ class MyEvents(Events):
 
         if not passCosmic: return
 
+        dphi = abs(DeltaPhi(LJ0.p4, LJ1.p4))
+        if self.Type=='DATA' and dphi>2.2: return
+
         mind0s = []
         for lj in [LJ0, LJ1]:
             if lj.isMuonType() and not math.isnan(lj.pfcand_tkD0Min):
@@ -29,12 +32,12 @@ class MyEvents(Events):
         self.Histos['{}/maxmind0'.format(chan)].Fill(max(mind0s), aux['wgt'])
 
         ## displacement cut
-        metric_d0 = {'2mu2e': 1600, '4mu': 400}
+        metric_d0 = {'2mu2e': 1000, '4mu': 100}
         if max(mind0s)<metric_d0[chan]: return
 
-        dphi = abs(DeltaPhi(LJ0.p4, LJ1.p4))
         maxpfiso = max([LJ0.pfiso(), LJ1.pfiso()])
 
+        egmljiso = None
         self.Histos['{}/dphi'.format(chan)].Fill(dphi, aux['wgt'])
         self.Histos['{}/maxiso'.format(chan)].Fill(maxpfiso, aux['wgt'])
         for lj in [LJ0, LJ1]:
@@ -42,10 +45,13 @@ class MyEvents(Events):
             if lj.isMuonType():
                 self.Histos['{}/muljiso'.format(chan)].Fill(lj.pfiso(), aux['wgt'])
             if lj.isEgmType():
+                egmljiso = lj.pfiso()
                 self.Histos['{}/egmljiso'.format(chan)].Fill(lj.pfiso(), aux['wgt'])
 
 
         self.Histos['{}/dphiIso2D'.format(chan)].Fill(dphi, maxpfiso, aux['wgt'])
+        if egmljiso is not None:
+            self.Histos['{}/dphiEgmIso2D'.format(chan)].Fill(dphi, egmljiso, aux['wgt'])
 
 
     def postProcess(self):
@@ -85,27 +91,32 @@ histCollection = [
     },
     {
         'name': 'maxiso',
-        'binning': (50, 0, 1),
+        'binning': (50, 0, 0.5),
         'title': 'max lepton-jet isolation;isolation;Events'
     },
     {
         'name': 'ljiso',
-        'binning': (50, 0, 1),
+        'binning': (50, 0, 0.5),
         'title': 'lepton-jet isolation;isolation;Events'
     },
     {
         'name': 'muljiso',
-        'binning': (50, 0, 1),
+        'binning': (50, 0, 0.5),
         'title': 'muon-type lepton-jet isolation;isolation;Events'
     },
     {
         'name': 'egmljiso',
-        'binning': (50, 0, 1),
+        'binning': (50, 0, 0.5),
         'title': 'EGM-type lepton-jet isolation;isolation;Events'
     },
     {
         'name': 'dphiIso2D',
-        'binning': (30, 0, M_PI, 30, 0, 0.3),
+        'binning': (30, 0, M_PI, 50, 0, 0.5),
         'title': '|#Delta#phi| vs maxiso;|#Delta#phi|;maxIso',
+    },
+    {
+        'name': 'dphiEgmIso2D',
+        'binning': (30, 0, M_PI, 50, 0, 0.5),
+        'title': '|#Delta#phi| vs egm-type lepton-jet Iso;|#Delta#phi|;Iso',
     },
 ]

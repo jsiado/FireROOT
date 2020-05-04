@@ -34,9 +34,8 @@ def args_sanity(args):
     bkg, sig, data = False, False, False
     if isinstance(args.dataset, str) or 'all' in args.dataset:
         bkg, sig, data = True, True, True
-    elif 'mc' in args.dataset:
-        bkg, sig = True, True
     else:
+        if 'mc' in args.dataset: bkg, sig = True, True
         if 'bkg' in args.dataset: bkg = True
         if 'sig' in args.dataset: sig = True
         if 'data' in args.dataset: data = True

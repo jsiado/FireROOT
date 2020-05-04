@@ -24,13 +24,6 @@ ROOT.gPad.SetGrid()
 
 f = root_open(fn)
 
-h = f.ch4mu.data.dphiAct2D
-h.Draw('colz')
-title = TitleAsLatex('[4#mu VR] '+h.title)
-title.Draw()
-
-canvas.SaveAs('{}/ch4mu_vr_dphiact.pdf'.format(outdir))
-canvas.Clear()
 
 def create_closure_map(h):
     ## closure map
@@ -46,21 +39,22 @@ def create_closure_map(h):
             d = h.integral(i+1,h.GetNbinsX(),1,j)
             a = h.integral(1,i,j+1,h.GetNbinsY())
             b = h.integral(i+1,h.GetNbinsX(),j+1,h.GetNbinsY())
-            if a==0 or b==0 or c==0 or d==0:
+            # if a==0 or b==0 or c==0 or d==0:
+            if a<2 or b<2 or c<2:
                 hc.SetBinContent(i,j,0)
                 continue
 
             d_pred_val = b*c/float(a)
             d_pred_err = d_pred_val*math.sqrt(1/float(a)+1/float(b)+1/float(c))
             d_diff = abs(d-d_pred_val)/d
-            if d_pred_err < 0.5*d_pred_val:
+            # if d_pred_err < 0.5*d_pred_val:
                 # hc.SetBinContent(i,j,(d-d_pred_val)/d)
-                hc.SetBinContent(i,j,d_diff)
-                ave_closure += d_diff
-                ave_closure_sqrd += d_diff**2
-                nbins += 1
-            else:
-                hc.SetBinContent(i,j,0)
+            hc.SetBinContent(i,j,d_diff)
+            ave_closure += d_diff
+            ave_closure_sqrd += d_diff**2
+            nbins += 1
+            # else:
+            #     hc.SetBinContent(i,j,0)
 
     xax = hc.xaxis
     xax.SetNdivisions(-310)
@@ -91,7 +85,8 @@ def create_closeness_map(h):
             d = h.integral(i+1,h.GetNbinsX(),1,j)
             a = h.integral(1,i,j+1,h.GetNbinsY())
             b = h.integral(i+1,h.GetNbinsX(),j+1,h.GetNbinsY())
-            if a==0 or b==0 or c==0 or d==0:
+            # if a==0 or b==0 or c==0 or d==0:
+            if a<2 or b<2 or c<2:
                 hc.SetBinContent(i,j,0)
                 continue
 
@@ -118,6 +113,16 @@ def create_closeness_map(h):
 
     return hc
 
+h = f.ch4mu.data.dphiIso2D
+h.scale(40.6/h.integral())
+h.Draw('colz')
+h.GetListOfFunctions().FindObject("palette").SetX2NDC(0.92)
+title = TitleAsLatex('[4#mu VR] '+h.title)
+title.Draw()
+
+canvas.SaveAs('{}/ch4mu_vr_dphiiso.pdf'.format(outdir))
+canvas.Clear()
+
 hc, ave_closure, ave_closure_sqrd = create_closure_map(h)
 print('Average closure: {:.3f}'.format(ave_closure))
 print('Spread: {:.3f}'.format(math.sqrt(abs(ave_closure_sqrd-ave_closure**2))))
@@ -126,7 +131,7 @@ hc.Draw('colz')
 hc.GetListOfFunctions().FindObject("palette").SetX2NDC(0.92)
 title = TitleAsLatex('[4#mu VR] '+h.title+' closure map')
 title.Draw()
-canvas.SaveAs('{}/ch4mu_vr_dphiact_closuremap.pdf'.format(outdir))
+canvas.SaveAs('{}/ch4mu_vr_dphiiso_closuremap.pdf'.format(outdir))
 canvas.Clear()
 
 
@@ -136,7 +141,7 @@ hc.GetListOfFunctions().FindObject("palette").SetX2NDC(0.92)
 title = TitleAsLatex('[4#mu VR] '+h.title+' closeness map')
 title.Draw()
 
-canvas.SaveAs('{}/ch4mu_vr_dphiact_closeness.pdf'.format(outdir))
+canvas.SaveAs('{}/ch4mu_vr_dphiiso_closeness.pdf'.format(outdir))
 canvas.Clear()
 
 
@@ -146,12 +151,13 @@ f.close()
 ###########################
 
 
-# fn = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/val2mu2e.root')
 fn = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/proxy/proxy_2mu2e.root')
 f = root_open(fn)
 
 h = f.ch2mu2e.data.dphiIso2D
+h.scale(37.9/h.integral())
 h.Draw('colz')
+h.GetListOfFunctions().FindObject("palette").SetX2NDC(0.92)
 title = TitleAsLatex('[2#mu2e VR] '+h.title)
 title.Draw()
 

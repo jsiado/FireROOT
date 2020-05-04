@@ -220,6 +220,7 @@ class Events(object):
         self.Histos = {}
         for chan in channel:
             self.Histos['{}/cutflow'.format(chan)] = ROOT.Hist(20,0,20,title='cutflow',drawstyle='hist')
+        self.KeepCutFlow = False
 
         self.LookupWeight = root_open(os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/data/PUWeights_2018.root')).Get('puWeights')
         self.Scale = 1.
@@ -294,13 +295,17 @@ class Events(object):
         pass
 
     def postProcess(self):
-        labels = ['total', 'trigger_pass', 'leptonjet_ge2', 'pv_good', 'cosmicveto_pass']
-        for ch in self.Channel:
-            xaxis = self.Histos['{}/cutflow'.format(ch)].axis(0)
-            for i, s in enumerate(labels, start=1):
-                xaxis.SetBinLabel(i, s)
-                # binNum., labAngel, labSize, labAlign, labColor, labFont, labText
-                xaxis.ChangeLabel(i, 315, -1, 11, -1, -1, s)
+        if self.KeepCutFlow:
+            labels = ['total', 'trigger_pass', 'leptonjet_ge2', 'pv_good', 'cosmicveto_pass']
+            for ch in self.Channel:
+                xaxis = self.Histos['{}/cutflow'.format(ch)].axis(0)
+                for i, s in enumerate(labels, start=1):
+                    xaxis.SetBinLabel(i, s)
+                    # binNum., labAngel, labSize, labAlign, labColor, labFont, labText
+                    xaxis.ChangeLabel(i, 315, -1, 11, -1, -1, s)
+        else:
+            for ch in self.Channel:
+                self.Histos.pop('{}/cutflow'.format(ch))
 
     @property
     def histos(self):

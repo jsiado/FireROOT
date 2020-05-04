@@ -16,14 +16,7 @@ class MyEvents(ProxyEvents):
 
         lj, proxy = aux['lj'], aux['proxy']
         if not lj.passCosmicVeto(event): return
-
-
-        njet = sum([
-            1 for j in event.ak4jets if \
-                j.jetid \
-                and j.p4.pt() > max([lj.p4.pt(), proxy.p4.pt()]) \
-                and abs(j.p4.eta()) < 2.4
-            ])
+        if abs(proxy.dz(event))>40: return
 
         nbtight = 0
         for s, j in zip(event.hftagscores, event.ak4jets):
@@ -35,18 +28,28 @@ class MyEvents(ProxyEvents):
 
         maxpfiso = lj.pfiso()
         dphi = abs(DeltaPhi(lj.p4, proxy.p4))
-        invm = (lj.p4+proxy.p4).M()
+
+        self.Histos['{}/nbtight'.format(chan)].Fill(nbtight, aux['wgt'])
+        self.Histos['{}/proxyd0inc'.format(chan)].Fill(proxyd0, aux['wgt'])
+        if nbtight==0: return
+
+        if proxyd0 > 100:
+            self.Histos['{}/dphi_100'.format(chan)].Fill(dphi, aux['wgt'])
+        if proxyd0 > 200:
+            self.Histos['{}/dphi_200'.format(chan)].Fill(dphi, aux['wgt'])
+        if proxyd0 > 300:
+            self.Histos['{}/dphi_300'.format(chan)].Fill(dphi, aux['wgt'])
+        if proxyd0 > 400:
+            self.Histos['{}/dphi_400'.format(chan)].Fill(dphi, aux['wgt'])
+        if proxyd0 > 500:
+            self.Histos['{}/dphi_500'.format(chan)].Fill(dphi, aux['wgt'])
 
         self.Histos['{}/proxyd0'.format(chan)].Fill(proxyd0, aux['wgt'])
-        if proxyd0<1600: return
-        self.Histos['{}/nbtight'.format(chan)].Fill(nbtight, aux['wgt'])
-        if nbtight==0: return
+        if proxyd0<1000: return
+
         self.Histos['{}/proxyiso'.format(chan)].Fill(proxy.pfiso(), aux['wgt'])
-        self.Histos['{}/njet'.format(chan)].Fill(njet, aux['wgt'])
         self.Histos['{}/dphi'.format(chan)].Fill(dphi, aux['wgt'])
         self.Histos['{}/ljiso'.format(chan)].Fill(maxpfiso, aux['wgt'])
-        hadact = lj.p4.energy()*lj.hadIsolationNoPU05/(1-lj.hadIsolationNoPU05)
-        self.Histos['{}/hadactivity'.format(chan)].Fill(hadact, aux['wgt'])
         self.Histos['{}/dphiIso2D'.format(chan)].Fill(dphi, maxpfiso, aux['wgt'])
 
     def postProcess(self):
@@ -75,38 +78,59 @@ histCollection = [
         'title': 'Num. tight bjets;Num.bjets;counts'
     },
     {
-        'name': 'proxyd0',
-        'binning': [[0,2,4,6,8,10,20,50,]+list(np.arange(100,2100,100))],
+        'name': 'proxyd0inc',
+        'binning': [[0,2,4,6,8,10,20,50,]+list(np.arange(100,2501,100))],
         'title': 'proxy muon |d_{0}|;|d_{0}| [#mum];Events'
     },
     {
-        'name': 'njet',
-        'binning': (5, 0, 5),
-        'title': 'num. of AK4Jets (p_{T}>LJ0 p_{T}, proxy p_{T});N;counts/1'
+        'name': 'proxyd0',
+        'binning': [[0,2,4,6,8,10,20,50,]+list(np.arange(100,2501,100))],
+        'title': 'proxy muon |d_{0}|(N_{bjet}#geq1);|d_{0}| [#mum];Events'
     },
     {
         'name': 'proxyiso',
-        'binning': (50, 0, 1),
-        'title': 'proxy muon isolation;isolation;counts/0.02'
+        'binning': (50, 0, 0.5),
+        'title': 'proxy muon isolation;isolation;counts'
     },
     {
         'name': 'ljiso',
-        'binning': (50, 0, 1),
-        'title': 'lepton-jet isolation;isolation;counts/0.02'
+        'binning': (50, 0, 0.5),
+        'title': 'lepton-jet isolation;isolation;counts'
     },
+    {
+        'name': 'dphi_100',
+        'binning': (30, 0, M_PI),
+        'title': '|#Delta#phi|(lepton-jet, proxy muon) (proxy muon |d_{0}|>100#mum);|#Delta#phi|;counts/#pi/30'
+    },
+    {
+        'name': 'dphi_200',
+        'binning': (30, 0, M_PI),
+        'title': '|#Delta#phi|(lepton-jet, proxy muon) (proxy muon |d_{0}|>200#mum);|#Delta#phi|;counts/#pi/30'
+    },
+    {
+        'name': 'dphi_300',
+        'binning': (30, 0, M_PI),
+        'title': '|#Delta#phi|(lepton-jet, proxy muon) (proxy muon |d_{0}|>300#mum);|#Delta#phi|;counts/#pi/30'
+    },
+    {
+        'name': 'dphi_400',
+        'binning': (30, 0, M_PI),
+        'title': '|#Delta#phi|(lepton-jet, proxy muon) (proxy muon |d_{0}|>400#mum);|#Delta#phi|;counts/#pi/30'
+    },
+    {
+        'name': 'dphi_500',
+        'binning': (30, 0, M_PI),
+        'title': '|#Delta#phi|(lepton-jet, proxy muon) (proxy muon |d_{0}|>500#mum);|#Delta#phi|;counts/#pi/30'
+    },
+
     {
         'name': 'dphi',
         'binning': (30, 0, M_PI),
-        'title': '|#Delta#phi| between lepton-jet and proxy muon;|#Delta#phi|;counts/#pi/30'
-    },
-    {
-        'name': 'hadactivity',
-        'binning': (100, 0, 100),
-        'title': 'lepton-jet isolation hadronic PFcand activity;hadronic activity [GeV];Events/1GeV',
+        'title': '|#Delta#phi|(lepton-jet, proxy muon);|#Delta#phi|;counts/#pi/30'
     },
     {
         'name': 'dphiIso2D',
-        'binning': (30, 0, M_PI, 30, 0, 0.3),
-        'title': '|#Delta#phi| vs maxiso;|#Delta#phi|;maxIso',
+        'binning': (30, 0, M_PI, 50, 0, 0.5),
+        'title': '|#Delta#phi| vs lepton-jet isolation;|#Delta#phi|;iso',
     },
 ]
