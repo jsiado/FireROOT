@@ -57,17 +57,7 @@ def create_closure_map(h):
             #     hc.SetBinContent(i,j,0)
 
     xax = hc.xaxis
-    xax.SetNdivisions(-310)
-    xax.ChangeLabel(2,-1,-1,-1,-1,-1,"#frac{#pi}{10}")
-    xax.ChangeLabel(3,-1,-1,-1,-1,-1,"#frac{#pi}{5}")
-    xax.ChangeLabel(4,-1,-1,-1,-1,-1,"#frac{3#pi}{10}")
-    xax.ChangeLabel(5,-1,-1,-1,-1,-1,"#frac{2#pi}{5}")
-    xax.ChangeLabel(6,-1,-1,-1,-1,-1,"#frac{#pi}{2}")
-    xax.ChangeLabel(7,-1,-1,-1,-1,-1,"#frac{3#pi}{5}")
-    xax.ChangeLabel(8,-1,-1,-1,-1,-1,"#frac{7#pi}{10}")
-    xax.ChangeLabel(9,-1,-1,-1,-1,-1,"#frac{4#pi}{5}")
-    xax.ChangeLabel(10,-1,-1,-1,-1,-1,"#frac{9#pi}{10}")
-    xax.ChangeLabel(11,-1,-1,-1,-1,-1,"#pi")
+    decorate_axis_pi(xax)
 
     ave_closure /= nbins
     ave_closure_sqrd /= nbins
@@ -99,17 +89,7 @@ def create_closeness_map(h):
             hc.SetBinContent(i,j,int(close))
 
     xax = hc.xaxis
-    xax.SetNdivisions(-310)
-    xax.ChangeLabel(2,-1,-1,-1,-1,-1,"#frac{#pi}{10}")
-    xax.ChangeLabel(3,-1,-1,-1,-1,-1,"#frac{#pi}{5}")
-    xax.ChangeLabel(4,-1,-1,-1,-1,-1,"#frac{3#pi}{10}")
-    xax.ChangeLabel(5,-1,-1,-1,-1,-1,"#frac{2#pi}{5}")
-    xax.ChangeLabel(6,-1,-1,-1,-1,-1,"#frac{#pi}{2}")
-    xax.ChangeLabel(7,-1,-1,-1,-1,-1,"#frac{3#pi}{5}")
-    xax.ChangeLabel(8,-1,-1,-1,-1,-1,"#frac{7#pi}{10}")
-    xax.ChangeLabel(9,-1,-1,-1,-1,-1,"#frac{4#pi}{5}")
-    xax.ChangeLabel(10,-1,-1,-1,-1,-1,"#frac{9#pi}{10}")
-    xax.ChangeLabel(11,-1,-1,-1,-1,-1,"#pi")
+    decorate_axis_pi(xax)
 
     return hc
 

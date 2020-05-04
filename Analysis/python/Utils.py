@@ -757,3 +757,19 @@ def draw_labels(lumi_text, cms_position='left', extra_text=''):
     lumi_label = LuminosityLabel(lumi_text)
     lumi_label.draw()
     ROOT.gPad.Update()
+
+
+
+def decorate_axis_pi(xax):
+    xax.SetNdivisions(-310)
+    xax.ChangeLabel(2,-1,-1,-1,-1,-1,"0.1#pi")
+    xax.ChangeLabel(3,-1,-1,-1,-1,-1,"0.2#pi")
+    xax.ChangeLabel(4,-1,-1,-1,-1,-1,"0.3#pi")
+    xax.ChangeLabel(5,-1,-1,-1,-1,-1,"0.4#pi")
+    xax.ChangeLabel(6,-1,-1,-1,-1,-1,"0.5#pi")
+    xax.ChangeLabel(7,-1,-1,-1,-1,-1,"0.6#pi")
+    xax.ChangeLabel(8,-1,-1,-1,-1,-1,"0.7#pi")
+    xax.ChangeLabel(9,-1,-1,-1,-1,-1,"0.8#pi")
+    xax.ChangeLabel(10,-1,-1,-1,-1,-1,"0.9#pi")
+    xax.ChangeLabel(11,-1,-1,-1,-1,-1,"#pi")
+    return xax
