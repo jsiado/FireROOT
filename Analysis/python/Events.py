@@ -288,7 +288,7 @@ class Events(object):
             if not event.metfilters.PrimaryVertexFilter: continue
             for ch in self.Channel: self.Histos['{}/cutflow'.format(ch)].Fill(3, aux['wgt'])
 
-            cosmic_metric = {'4mu': 6, '2mu2e': 7}
+            cosmic_metric = {'4mu': 7, '2mu2e': 7}
             if event.cosmicveto.parallelpairs > cosmic_metric[aux['channel']]: continue
             for ch in self.Channel: self.Histos['{}/cutflow'.format(ch)].Fill(4, aux['wgt'])
 
@@ -516,7 +516,7 @@ class CosmicEvents(Events):
             elif LJ0.isEgmType() and LJ1.isMuonType(): aux['channel'] = '2mu2e'
             else: continue
 
-            cosmic_metric = {'4mu': 6, '2mu2e': 7}
+            cosmic_metric = {'4mu': 7, '2mu2e': 7}
             aux['hasCosmicShower'] = event.cosmicveto.parallelpairs > cosmic_metric[aux['channel']]
 
 
