@@ -34,6 +34,7 @@ class MyEvents(Events):
         ## displacement cut
         metric_d0 = {'2mu2e': 1000, '4mu': 100}
         if max(mind0s)<metric_d0[chan]: return
+        self.Histos['{}/rawevents'.format(chan)].Fill(0)
 
         maxpfiso = max([LJ0.pfiso(), LJ1.pfiso()])
 
@@ -108,5 +109,10 @@ histCollection = [
         'name': 'dphiEgmIso2D',
         'binning': (30, 0, M_PI, 50, 0, 0.5),
         'title': '|#Delta#phi| vs egm-type lepton-jet Iso;|#Delta#phi|;Iso',
+    },
+    {
+        'name': 'rawevents',
+        'binning': (1,0,1),
+        'title': 'Raw events count;;Events',
     },
 ]

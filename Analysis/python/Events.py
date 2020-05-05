@@ -56,13 +56,19 @@ class LeptonJetMix(object):
     def qSum(self):
         return sum(list(self.pfcand_charge))
 
+    def muonQSum(self):
+        res = 0
+        for ctype, q in zip(list(self.pfcand_type), list(self.pfcand_charge)):
+            if ctype==3 or ctype==8: res+=q
+        return res
+
     def isMuonNeutral(self):
         if self.isEgmType(): return True
-        if self.isMuonType(): return self.qSum()==0
+        if self.isMuonType(): return self.muonQSum()==0
 
     def isMuonCharged(self):
         if self.isEgmType(): return True
-        if self.isMuonType(): return self.qSum()!=0
+        if self.isMuonType(): return self.muonQSum()!=0
 
     def dRcosmicDSA(self, event):
         return [event.dsamuons[i].deltaRCosmicDSA for i in self.pfcand_dsamuonIdx]
