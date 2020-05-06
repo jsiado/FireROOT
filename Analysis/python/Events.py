@@ -227,6 +227,7 @@ class Events(object):
         for chan in channel:
             self.Histos['{}/cutflow'.format(chan)] = ROOT.Hist(20,0,20,title='cutflow',drawstyle='hist')
         self.KeepCutFlow = False
+        self.RawCutFlow = False
 
         self.LookupWeight = root_open(os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/data/PUWeights_2018.root')).Get('puWeights')
         self.Scale = 1.
@@ -254,12 +255,16 @@ class Events(object):
                 aux['wgt'] *= event.weight # gen weight
                 aux['wgt'] *= self.LookupWeight.GetBinContent(self.LookupWeight.GetXaxis().FindBin(event.trueInteractionNum)) ## pileup correction
 
-            for ch in self.Channel: self.Histos['{}/cutflow'.format(ch)].Fill(0, aux['wgt'])
+            for ch in self.Channel:
+                if self.RawCutFlow: self.Histos['{}/cutflow'.format(ch)].Fill(0)
+                else: self.Histos['{}/cutflow'.format(ch)].Fill(0, aux['wgt'])
 
             ## trigger ##
             if not any([getattr(event.hlt, t) for t in self.Triggers]): continue
 
-            for ch in self.Channel: self.Histos['{}/cutflow'.format(ch)].Fill(1, aux['wgt'])
+            for ch in self.Channel:
+                if self.RawCutFlow: self.Histos['{}/cutflow'.format(ch)].Fill(1)
+                else: self.Histos['{}/cutflow'.format(ch)].Fill(1, aux['wgt'])
 
             ## 2 leptonjets in channel definition ##
             leptonjets = [lj for lj in event.leptonjets]
@@ -282,15 +287,21 @@ class Events(object):
             aux['lj0'] = LJ0
             aux['lj1'] = LJ1
 
-            for ch in self.Channel: self.Histos['{}/cutflow'.format(ch)].Fill(2, aux['wgt'])
+            for ch in self.Channel:
+                if self.RawCutFlow: self.Histos['{}/cutflow'.format(ch)].Fill(2)
+                else: self.Histos['{}/cutflow'.format(ch)].Fill(2, aux['wgt'])
 
             ## event-level mask ##
             if not event.metfilters.PrimaryVertexFilter: continue
-            for ch in self.Channel: self.Histos['{}/cutflow'.format(ch)].Fill(3, aux['wgt'])
+            for ch in self.Channel:
+                if self.RawCutFlow: self.Histos['{}/cutflow'.format(ch)].Fill(3)
+                else: self.Histos['{}/cutflow'.format(ch)].Fill(3, aux['wgt'])
 
             cosmic_metric = {'4mu': 7, '2mu2e': 7}
             if event.cosmicveto.parallelpairs > cosmic_metric[aux['channel']]: continue
-            for ch in self.Channel: self.Histos['{}/cutflow'.format(ch)].Fill(4, aux['wgt'])
+            for ch in self.Channel:
+                if self.RawCutFlow: self.Histos['{}/cutflow'.format(ch)].Fill(4)
+                else: self.Histos['{}/cutflow'.format(ch)].Fill(4, aux['wgt'])
 
 
             self.processEvent(event, aux)

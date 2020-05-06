@@ -24,4 +24,34 @@ df = pd.DataFrame(rawevents)
 
 print(df.T)
 
+cutflowlabels = None
+cutflownumbers = OrderedDict()
+for sigtag in sigTAGS:
+    entries = OrderedDict()
+    h=getattr(f.ch4mu.sig, sigtag).cutflow
+    _cutflowlabels = []
+    for i in range(1,9):
+        _cutflowlabels.append(h.xaxis.GetBinLabel(i))
+        entries[h.xaxis.GetBinLabel(i)] = h.GetBinContent(i)
+    if cutflowlabels is None: cutflowlabels = _cutflowlabels
+    cutflownumbers[sigtag]=entries
+df = pd.DataFrame(cutflownumbers)
+print('--- 4mu')
+print(df.T[cutflowlabels])
+
+cutflowlabels = None
+cutflownumbers = OrderedDict()
+for sigtag in sigTAGS:
+    entries = OrderedDict()
+    h=getattr(f.ch2mu2e.sig, sigtag).cutflow
+    _cutflowlabels = []
+    for i in range(1,9):
+        _cutflowlabels.append(h.xaxis.GetBinLabel(i))
+        entries[h.xaxis.GetBinLabel(i)] = h.GetBinContent(i)
+    if cutflowlabels is None: cutflowlabels = _cutflowlabels
+    cutflownumbers[sigtag]=entries
+df = pd.DataFrame(cutflownumbers)
+print('--- 2mu2e')
+print(df.T[_cutflowlabels])
+
 f.close()

@@ -29,8 +29,7 @@ bkgf = root_open(bkgfn)
 
 
 
-def calculate_za(s, b, unc_r):
-    sigma_b = b*unc_r
+def calculate_za(s, b, sigma_b):
     first_term = (s+b)*math.log( ( (s+b)*(b+sigma_b**2) )/(b**2+(s+b)*sigma_b**2) )
     second_term = (b**2/sigma_b**2)*math.log( 1+(sigma_b**2*s)/(b*(b+sigma_b**2)) )
     try:
@@ -60,13 +59,11 @@ def create_za_map(sh, bh, unc_rate, sigtag):
 
 
             bkg_ = bh_b*bh_c/bh_a
-            # bkg_pred_err = bkg_*math.sqrt(1/float(bh_a)+1/float(bh_b)+1/float(bh_c))
-            # if bkg_pred_err > 0.5*bkg_:
-            #     zah.SetBinContent(i,j,0)
-            #     continue
+            # sigma_b = bkg_ * unc_rate
+            sigma_b = bkg_*math.sqrt(1/bh_a + 1/bh_b + 1/bh_c)
 
             sig_ = shc.integral(i+1,shc.GetNbinsX(),1,j)
-            za_ = calculate_za(sig_, bkg_, unc_rate)
+            za_ = calculate_za(sig_, bkg_, sigma_b)
             zah.SetBinContent(i,j,za_)
 
     zah.axis(2).SetTitle('Z_{A}')
@@ -87,7 +84,9 @@ def create_occupancy_map(bkgh):
             if bh_a<2 or bh_b<2 or bh_c<2:
                 hc.SetBinContent(i,j,0)
             else:
-                hc.SetBinContent(i,j,1)
+                hc.SetBinContent(i,j,2)
+                if bh_a>3 and bh_b>3 and bh_c>3:
+                    hc.SetBinContent(i,j,3)
 
     xax = hc.xaxis
     decorate_axis_pi(xax)

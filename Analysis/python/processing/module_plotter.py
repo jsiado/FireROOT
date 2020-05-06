@@ -14,8 +14,9 @@ parser = argparse.ArgumentParser(description="module plotter.")
 parser.add_argument("--inname", "-i", type=str, default=None, help='input ROOT file name')
 parser.add_argument("--normsig", "-r", type=float, default=-1, help='Normalize signal distributions to a fix value')
 parser.add_argument("--normsigxsec", "-x", type=float, default=30, help='Normalize signal distributions to a fix xsec [fb]')
-parser.add_argument("--dataset", "-d", type=str, default='mc', choices=['data', 'mc'], help='dataset to plot')
+parser.add_argument("--dataset", "-d", type=str, default='mc', choices=['data', 'mc', 'all'], help='dataset to plot')
 parser.add_argument("--subdir", "-s", type=str, default=None, choices=['proxy',], help='subdir modules, DEFAULT None')
+parser.add_argument("--histname", "-t", type=str, default=None, help='only plot this histogram')
 parser.add_argument("--logx", action='store_true')
 parser.add_argument("--overflow", type=bool, default=True)
 
@@ -77,7 +78,9 @@ if __name__ ==  '__main__':
     from rootpy.plotting.style import set_style
     set_style(MyStyle())
 
-    hist_toplot = get_unique_histnames(infile)
+    hist_toplot = []
+    if args.histname: hist_toplot = [args.histname]
+    else: hist_toplot = get_unique_histnames(infile)
 
     c = Canvas()
     f = root_open(infile)
@@ -90,7 +93,7 @@ if __name__ ==  '__main__':
             htitle = None
             drawOverflow, xmax = False, None
 
-            if args.dataset=='mc':
+            if args.dataset=='mc' or args.dataset=='all':
                 ## bkg
                 if hasattr(channelDir, 'bkg') and hasattr(channelDir.bkg, hname):
                     hstack = getattr(channelDir.bkg, hname)
@@ -115,7 +118,7 @@ if __name__ ==  '__main__':
                             legItems.append(h)
                         legItems.append(stackError)
 
-            if args.dataset=='data':
+            if args.dataset=='data' or args.dataset=='all':
                 ## data
                 if hasattr(channelDir, 'data') and hasattr(channelDir.data, hname):
                     h = getattr(channelDir.data, hname)
@@ -168,7 +171,7 @@ if __name__ ==  '__main__':
             if drawOverflow and xmax is not None: xmax_ = xmax
 
             xdiv_ = -310 if 'phi' in htitle else None
-            if args.dataset=='mc':
+            if args.dataset=='mc' or args.dataset=='all':
                 axes, limits = draw(hs, pad=c, logy=True, logx=args.logx, xdivisions=xdiv_)
             elif args.dataset=='data':
                 axes, limits = draw(hs, pad=c, logy=False, ylimits=(0, ymax_), logx=args.logx, xdivisions=xdiv_)

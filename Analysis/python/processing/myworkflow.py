@@ -9,15 +9,21 @@ from FireROOT.Analysis.Utils import *
 class MyEvents(Events):
     def __init__(self, files=None, type='MC', maxevents=-1, channel=['2mu2e', '4mu'], **kwargs):
         super(MyEvents, self).__init__(files=files, type=type, maxevents=maxevents, channel=channel, **kwargs)
+        self.KeepCutFlow=True
+        self.RawCutFlow=True
 
     def processEvent(self, event, aux):
         if aux['channel'] not in self.Channel: return
         chan = aux['channel']
+        cutflowbin = 5
+
+        self.Histos['{}/cutflow'.format(chan)].Fill(cutflowbin); cutflowbin+=1
 
         LJ0, LJ1 = aux['lj0'], aux['lj1']
         passCosmic = all(map(lambda lj: lj.passCosmicVeto(event), [LJ0, LJ1]))
 
         if not passCosmic: return
+        self.Histos['{}/cutflow'.format(chan)].Fill(cutflowbin); cutflowbin+=1
 
         dphi = abs(DeltaPhi(LJ0.p4, LJ1.p4))
         if self.Type=='DATA' and dphi>2.2: return
@@ -31,14 +37,26 @@ class MyEvents(Events):
             self.Histos['{}/mind0'.format(chan)].Fill(v, aux['wgt'])
         self.Histos['{}/maxmind0'.format(chan)].Fill(max(mind0s), aux['wgt'])
 
+        maxpfiso = max([LJ0.pfiso(), LJ1.pfiso()])
+        egmljiso = None
+        for lj in [LJ0, LJ1]:
+            if lj.isEgmType(): egmljiso = lj.pfiso()
+        if max(mind0s)<100: return
+
+        # all events with |d0|>0.1mm
+        self.Histos['{}/dphiIso2Dinc'.format(chan)].Fill(dphi, maxpfiso, aux['wgt'])
+        if egmljiso is not None:
+            self.Histos['{}/dphiEgmIso2Dinc'.format(chan)].Fill(dphi, egmljiso, aux['wgt'])
+
+
         ## displacement cut
         metric_d0 = {'2mu2e': 1000, '4mu': 100}
         if max(mind0s)<metric_d0[chan]: return
+        self.Histos['{}/cutflow'.format(chan)].Fill(cutflowbin); cutflowbin+=1
+
         self.Histos['{}/rawevents'.format(chan)].Fill(0)
 
-        maxpfiso = max([LJ0.pfiso(), LJ1.pfiso()])
 
-        egmljiso = None
         self.Histos['{}/dphi'.format(chan)].Fill(dphi, aux['wgt'])
         self.Histos['{}/maxiso'.format(chan)].Fill(maxpfiso, aux['wgt'])
         for lj in [LJ0, LJ1]:
@@ -57,6 +75,15 @@ class MyEvents(Events):
 
     def postProcess(self):
         super(MyEvents, self).postProcess()
+
+        for ch in self.Channel:
+            xaxis = self.Histos['{}/cutflow'.format(ch)].axis(0)
+            labels = [ch, 'ljcosmicveto_pass', 'mind0_pass',]
+
+            for i, s in enumerate(labels, start=6):
+                xaxis.SetBinLabel(i, s)
+                # binNum., labAngel, labSize, labAlign, labColor, labFont, labText
+                xaxis.ChangeLabel(i, 315, -1, 11, -1, -1, s)
 
         for k in self.Histos:
             if 'phi' not in k: continue
@@ -99,6 +126,16 @@ histCollection = [
         'name': 'egmljiso',
         'binning': (50, 0, 0.5),
         'title': 'EGM-type lepton-jet isolation;isolation;Events'
+    },
+    {
+        'name': 'dphiIso2Dinc',
+        'binning': (30, 0, M_PI, 50, 0, 0.5),
+        'title': '|#Delta#phi| vs maxiso;|#Delta#phi|;maxIso',
+    },
+    {
+        'name': 'dphiEgmIso2Dinc',
+        'binning': (30, 0, M_PI, 50, 0, 0.5),
+        'title': '|#Delta#phi| vs egm-type lepton-jet Iso;|#Delta#phi|;Iso',
     },
     {
         'name': 'dphiIso2D',
