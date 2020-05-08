@@ -3,13 +3,14 @@ from __future__ import print_function
 import argparse
 import math, numbers
 import os, sys
+from collections import OrderedDict
 from multiprocessing import Pool
 
 from tqdm import tqdm
 from FireROOT.Analysis.Utils import *
 from FireROOT.Analysis.DatasetMapLoader import (
     DatasetMapLoader,
-    SigDatasetMapLoader
+    CentralSignalMapLoader
 )
 
 from rootpy.io import root_open
@@ -83,7 +84,7 @@ if __name__ == '__main__':
             from FireROOT.Analysis.DatasetMapLoader import ProxyEventsSigDatasetMapLoader
             sdml = ProxyEventsSigDatasetMapLoader()
         else:
-            sdml = SigDatasetMapLoader()
+            sdml = CentralSignalMapLoader()
 
 
         sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300'.split('|')
@@ -126,39 +127,67 @@ if __name__ == '__main__':
 
         ### signal 4mu
         if '4mu' in args.channel:
-            sigDS_4mu, sigSCALE_4mu = sdml.fetch('4mu')
+            sigDS_4mu_inc, sigSCALE_4mu_inc = sdml.fetch('4mu')
+            sigDS_4mu, sigSCALE_4mu = {}, {}
+            for t in sampleSig:
+                for k in sigDS_4mu_inc:
+                    if not k.startswith(t): continue
+                    sigDS_4mu[t] = sigDS_4mu_inc[k]
+                for k in sigSCALE_4mu_inc:
+                    if not k.startswith(t): continue
+                    sigSCALE_4mu[t] = sigSCALE_4mu_inc[k]
 
-            packages = []
-            SigHists4mu = []
-            pool = Pool(processes=12)
+            SigHists4mu = OrderedDict()
 
             for i, ds in enumerate(sampleSig, start=1):
                 if ds not in sigDS_4mu or not sigDS_4mu[ds]: continue
-                packages.append((ds, sigDS_4mu[ds], sigSCALE_4mu[ds], args.maxevents, ['4mu',]))
-            for res in tqdm(pool.imap_unordered(dofill, packages), total=len(packages)):
-                SigHists4mu.append(res)
-            pool.close()
-            pool.join()
-            SigHists4mu = dict(SigHists4mu)
+                packages = []
+                historesult = []
+                pool = Pool(processes=12)
+                for f in sigDS_4mu[ds]:
+                    packages.append((ds, [f], sigSCALE_4mu[ds], args.maxevents, ['4mu',]))
+                for res in tqdm(pool.imap_unordered(dofill, packages), total=len(packages)):
+                    historesult.append(res[1])
+                pool.close()
+                pool.join()
+                hists = historesult.pop()
+                for k in hists:
+                    for res in historesult:
+                        hists[k].Add(res[k])
+                SigHists4mu[ds] = hists
             log.info('channel 4mu filling done')
 
 
         ### signal 2mu2e
         if '2mu2e' in args.channel:
-            sigDS_2mu2e, sigSCALE_2mu2e = sdml.fetch('2mu2e')
+            sigDS_2mu2e_inc, sigSCALE_2mu2e_inc = sdml.fetch('2mu2e')
+            sigDS_2mu2e, sigSCALE_2mu2e = {}, {}
+            for t in sampleSig:
+                for k in sigDS_2mu2e_inc:
+                    if not k.startswith(t): continue
+                    sigDS_2mu2e[t] = sigDS_2mu2e_inc[k]
+                for k in sigSCALE_2mu2e_inc:
+                    if not k.startswith(t): continue
+                    sigSCALE_2mu2e[t] = sigSCALE_2mu2e_inc[k]
 
-            packages = []
-            SigHists2mu2e = []
-            pool = Pool(processes=12)
+            SigHists2mu2e = OrderedDict()
 
             for i, ds in enumerate(sampleSig, start=1):
                 if ds not in sigDS_2mu2e or not sigDS_2mu2e[ds]: continue
-                packages.append((ds, sigDS_2mu2e[ds], sigSCALE_2mu2e[ds], args.maxevents, ['2mu2e',]))
-            for res in tqdm(pool.imap_unordered(dofill, packages), total=len(packages)):
-                SigHists2mu2e.append(res)
-            pool.close()
-            pool.join()
-            SigHists2mu2e = dict(SigHists2mu2e)
+                packages = []
+                historesult = []
+                pool = Pool(processes=12)
+                for f in sigDS_2mu2e[ds]:
+                    packages.append((ds, [f], sigSCALE_2mu2e[ds], args.maxevents, ['2mu2e',]))
+                for res in tqdm(pool.imap_unordered(dofill, packages), total=len(packages)):
+                    historesult.append(res[1])
+                pool.close()
+                pool.join()
+                hists = historesult.pop()
+                for k in hists:
+                    for res in historesult:
+                        hists[k].Add(res[k])
+                SigHists2mu2e[ds] = hists
             log.info('channel 2mu2e filling done')
 
 
