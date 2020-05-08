@@ -230,6 +230,9 @@ class Events(object):
         self.RawCutFlow = False
 
         self.LookupWeight = root_open(os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/data/PUWeights_2018.root')).Get('puWeights')
+        self.LookupMuonSF = root_open(os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/data/RunABCD_SF_ISO.root')).Get('NUM_LooseRelIso_DEN_LooseID_pt_abseta')
+        self.LookupElectronSF = root_open(os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/data/2018_ElectronLoose.root')).Get('EGamma_SF2D')
+        self.LookupPhotonSF = root_open(os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/data/2018_PhotonsLoose.root')).Get('EGamma_SF2D')
         self.Scale = 1.
 
     def setTriggers(self, triggers):
@@ -286,6 +289,32 @@ class Events(object):
 
             aux['lj0'] = LJ0
             aux['lj1'] = LJ1
+
+            if self.Type == 'MC':
+                for lj in [LJ0, LJ1]:
+                    for t, pt, eta in zip(list(lj.pfcand_type), list(lj.pfcand_pt), list(lj.pfcand_eta)):
+                        ## muon scale factor, DSA same as muon for now
+                        if t==3 or t==8:
+                            xbin = self.LookupMuonSF.xaxis.FindBin(pt)
+                            xbin = min(max(xbin, 1), self.LookupMuonSF.nbins(0))
+                            ybin = self.LookupMuonSF.yaxis.FindBin(abs(eta))
+                            sf = self.LookupMuonSF.GetBinContent(xbin, ybin)
+                            aux['wgt'] *= sf
+                        ## electron scale factor, using eta instead of SC eta for now
+                        if t==2:
+                            xbin = self.LookupElectronSF.xaxis.FindBin(eta)
+                            ybin = self.LookupElectronSF.xaxis.FindBin(pt)
+                            ybin = min(max(ybin, 1), self.LookupElectronSF.nbins(1))
+                            sf = self.LookupElectronSF.GetBinContent(xbin, ybin)
+                            aux['wgt'] *= sf
+                        ## photon scale factor, using eta instead of SC eta for now
+                        if t==4:
+                            xbin = self.LookupPhotonSF.xaxis.FindBin(eta)
+                            ybin = self.LookupPhotonSF.xaxis.FindBin(pt)
+                            ybin = min(max(ybin, 1), self.LookupPhotonSF.nbins(1))
+                            sf = self.LookupPhotonSF.GetBinContent(xbin, ybin)
+                            aux['wgt'] *= sf
+
 
             for ch in self.Channel:
                 if self.RawCutFlow: self.Histos['{}/cutflow'.format(ch)].Fill(2)
