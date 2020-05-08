@@ -5,6 +5,7 @@ import ROOT
 from rootpy.io import root_open
 from rootpy.plotting.style import set_style
 from rootpy.plotting import Hist, Legend, Canvas
+from rootpy.plotting.shapes import Line
 
 from FireROOT.Analysis.samples.signalnumbers import genxsec
 from FireROOT.Analysis.Utils import *
@@ -40,9 +41,6 @@ def calculate_za(s, b, sigma_b):
 
 def create_za_map(sh, bh, unc_rate, sigtag):
     shc = sh.clone()
-    mboundstate = int(sigtag.split('_')[0].replace('mXX-', ''))
-    shc.scale( 30./genxsec[mboundstate] )
-
     bhc = bh.clone()
     zah = bhc.clone()
     zah.Reset()
@@ -103,10 +101,9 @@ def mark_maximum_bin(h):
     xedge = h.xedges(i+1)
     yedge = h.yedges(j+1)
     # print(i,j, maxval)
-    label = '(|#Delta#phi|, iso): {:.2f}, {:.2f} '.format(xedge, yedge)+'Z_{A}: '+'{:.3f}'.format(maxval)
     hc.SetBinContent(maxbin, 1)
     hc.SetMarkerStyle(28)
-    return hc, label
+    return hc, xedge, yedge, maxval
 
 
 bkgh = bkgf.ch4mu.data.dphiIso2D
@@ -127,10 +124,14 @@ canvas.Clear()
 
 for sigtag in sigTAGS:
     sigh = getattr(sigf.ch4mu.sig, sigtag).dphiIso2D
+    mboundstate = int(sigtag.split('_')[0].replace('mXX-', ''))
+    sigh.scale( 30./genxsec[mboundstate] )
+
     zah = create_za_map(sigh, bkgh, unc_rate=0.098, sigtag=sigtag)
     zah.Draw('colz')
     zah.GetListOfFunctions().FindObject("palette").SetX2NDC(0.92)
-    mkh, label = mark_maximum_bin(zah)
+    mkh, xedge, yedge, maxval = mark_maximum_bin(zah)
+    label = '(|#Delta#phi|, iso): {:.2f}, {:.2f} '.format(xedge, yedge)+'Z_{A}: '+'{:.3f}'.format(maxval)
     mkh.Draw('p same')
     title = TitleAsLatex('[4#mu {}] '.format(sigtag)+'proxy significance Z_{A}')
     title.Draw()
@@ -140,6 +141,22 @@ for sigtag in sigTAGS:
     leg.Draw()
     canvas.SaveAs('{}/ch4mu_{}.pdf'.format(outdir, sigtag))
     canvas.Clear()
+
+    sigc = sigh.clone()
+    sigc.Draw('colz')
+    sigc.GetListOfFunctions().FindObject("palette").SetX2NDC(0.92)
+    title = TitleAsLatex('[4#mu SR {}] '.format(sigtag)+'|#Delta#phi| vs. maxIso')
+    title.Draw()
+    decorate_axis_pi(sigc.xaxis)
+    hline = Line(sigc.xaxis.GetXmin(), yedge, sigc.xaxis.GetXmax(), yedge)
+    vline = Line(xedge, sigc.yaxis.GetXmin(), xedge, sigc.yaxis.GetXmax())
+    for l in [hline, vline]:
+        l.linewidth=2
+        l.color='red'
+        l.Draw()
+    canvas.SaveAs('{}/ch4mu_isodphi_{}.pdf'.format(outdir, sigtag))
+    canvas.Clear()
+
 
 bkgf.close()
 
@@ -165,10 +182,14 @@ canvas.Clear()
 
 for sigtag in sigTAGS:
     sigh = getattr(sigf.ch2mu2e.sig, sigtag).dphiEgmIso2D
+    mboundstate = int(sigtag.split('_')[0].replace('mXX-', ''))
+    sigh.scale( 30./genxsec[mboundstate] )
+
     zah = create_za_map(sigh, bkgh, unc_rate=0.151, sigtag=sigtag)
     zah.Draw('colz')
     zah.GetListOfFunctions().FindObject("palette").SetX2NDC(0.92)
-    mkh, label = mark_maximum_bin(zah)
+    mkh, xedge, yedge, maxval = mark_maximum_bin(zah)
+    label = '(|#Delta#phi|, iso): {:.2f}, {:.2f} '.format(xedge, yedge)+'Z_{A}: '+'{:.3f}'.format(maxval)
     mkh.Draw('p same')
     title = TitleAsLatex('[2#mu2e {}] '.format(sigtag)+'proxy significance Z_{A}')
     title.Draw()
@@ -177,6 +198,21 @@ for sigtag in sigTAGS:
     leg.AddEntry(mkh, label=label)
     leg.Draw()
     canvas.SaveAs('{}/ch2mu2e_{}.pdf'.format(outdir, sigtag))
+    canvas.Clear()
+
+    sigc = sigh.clone()
+    sigc.Draw('colz')
+    sigc.GetListOfFunctions().FindObject("palette").SetX2NDC(0.92)
+    title = TitleAsLatex('[2#mu2e SR {}] '.format(sigtag)+'|#Delta#phi| vs. Iso')
+    title.Draw()
+    decorate_axis_pi(sigc.xaxis)
+    hline = Line(sigc.xaxis.GetXmin(), yedge, sigc.xaxis.GetXmax(), yedge)
+    vline = Line(xedge, sigc.yaxis.GetXmin(), xedge, sigc.yaxis.GetXmax())
+    for l in [hline, vline]:
+        l.linewidth=2
+        l.color='red'
+        l.Draw()
+    canvas.SaveAs('{}/ch2mu2e_isodphi_{}.pdf'.format(outdir, sigtag))
     canvas.Clear()
 
 
