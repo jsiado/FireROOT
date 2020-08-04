@@ -7,8 +7,8 @@ from rootpy.plotting import Hist, Legend, Canvas
 
 from FireROOT.Analysis.Utils import *
 
-fn = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/signalDSAquality.root')
-outdir = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/etc/plots/')
+fn = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/modules/signalDSAquality.root')
+outdir = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/etc/plots/OverlaySignalDSAquality')
 if not os.path.isdir(outdir): os.makedirs(outdir)
 
 
@@ -47,10 +47,10 @@ c.SaveAs(os.path.join(outdir, 'signalDSAquality_nsta.pdf'.format(outdir)))
 
 # 2. hits
 h0, h1 = hdir.nhits, hdir.nhitsInv
-h0.title='N(DT+CSC) hits #geq 12'
+h0.title='N(DT+CSC) hits > 12'
 h0.color='blue'
 
-h1.title='N(DT+CSC) hits < 12'
+h1.title='N(DT+CSC) hits #leq 12'
 h1.color='red'
 
 routine([h0, h1], c)

@@ -9,9 +9,9 @@ from rootpy.plotting import Hist, Legend, Canvas
 from FireROOT.Analysis.samples.signalnumbers import genxsec
 from FireROOT.Analysis.Utils import *
 
-sigfn = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/displacementVariables.root')
+sigfn = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/modules/displacementVariables.root')
 bkgfn = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/proxy/proxy_4mu.root')
-sigabcdfn = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/myworkflow.root')
+sigabcdfn = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/modules/myworkflow.root')
 
 outdir = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/etc/plots/optimized0')
 if not os.path.isdir(outdir): os.makedirs(outdir)
@@ -35,10 +35,10 @@ def calculate_za(s, b, sigma_b):
         return 0
 
 
-def extract_background(bkgh):
+def extract_background(bkgh, xboundary=2.2, yboundary=0.15):
     nbinsX, nbinsY = bkgh.nbins(0), bkgh.nbins(1)
-    xbound = bkgh.xaxis.FindBin(2.2)
-    ybound = bkgh.yaxis.FindBin(0.15)
+    xbound = bkgh.xaxis.FindBin(xboundary)
+    ybound = bkgh.yaxis.FindBin(yboundary)
 
     NB = bkgh.integral(xbound, nbinsX, ybound, nbinsY)
     NA = bkgh.integral(1, xbound-1, ybound, nbinsY)
@@ -48,10 +48,10 @@ def extract_background(bkgh):
 
     return ND, sigma_d
 
-def extract_signal_d(sigh):
+def extract_signal_d(sigh, xboundary=2.2, yboundary=0.15):
     nbinsX, nbinsY = sigh.nbins(0), sigh.nbins(1)
-    xbound = sigh.xaxis.FindBin(2.2)
-    ybound = sigh.yaxis.FindBin(0.15)
+    xbound = sigh.xaxis.FindBin(xboundary)
+    ybound = sigh.yaxis.FindBin(yboundary)
 
     ND = sigh.integral(xbound, nbinsX, 1, ybound-1)
     return ND
@@ -66,7 +66,7 @@ sigabcdf = root_open(sigabcdfn)
 
 bkgh = bkgf.ch4mu.data.muljd0.clone()
 binnum = bkgh.xaxis.FindBin(100)
-bkgh.scale(40.6/bkgh.integral(xbin1=binnum, overflow=True))
+bkgh.scale(1678.3/bkgh.integral(xbin1=binnum, overflow=True))
 bkgh.drawstyle='hist'
 bkgh.fillstyle='solid'
 bkgh.legendstyle='F'
@@ -90,7 +90,7 @@ for it, sigtag in enumerate(sigTAGS):
     h.legendstyle='L'
     sighs.append(h)
 
-draw([bkgh]+sighs, ylimits=(1e-5,1e4), logy=True)
+draw([bkgh]+sighs, ylimits=(1e-4,1e4), logy=True)
 leg = Legend([bkgh]+sighs, pad=canvas,
             margin=0.25, leftmargin=0.45, topmargin=0.02,
             entrysep=0.01, entryheight=0.02, textsize=10)
@@ -109,13 +109,13 @@ for h in sighs:
         bkg_tot = bkgh.integral(xbin1=i, overflow=True)
         bkg_abcd = bkgf.ch4mu.data.dphiIso2D.clone()
         bkg_abcd.scale( bkg_tot/bkg_abcd.integral() )
-        b, sigma_b = extract_background(bkg_abcd)
+        b, sigma_b = extract_background(bkg_abcd, yboundary=0.2)
 
         sig_tot = h.integral(xbin1=i, overflow=True)
         sigtag = h.title.split(' ')[0]
         sig_abcd = getattr(sigabcdf.ch4mu.sig, sigtag).dphiIso2Dinc.clone()
         sig_abcd.scale( sig_tot/sig_abcd.integral() )
-        s = extract_signal_d(sig_abcd)
+        s = extract_signal_d(sig_abcd, yboundary=0.2)
 
         h_[i] = calculate_za(s, b, sigma_b)
         h_[i].error = 0
@@ -123,7 +123,7 @@ for h in sighs:
     signalsigs.append(h_)
 
 ROOT.gPad.SetLogy(0)
-draw(signalsigs[:], ylimits=(0.025,0.06), ytitle='Z_{A} A.U.')
+draw(signalsigs[:], ylimits=(0.0,0.06), ytitle='Z_{A} A.U.')
 leg = Legend(signalsigs, pad=canvas,
             margin=0.25, leftmargin=0.45, topmargin=0.02,
             entrysep=0.01, entryheight=0.02, textsize=10)
@@ -138,7 +138,7 @@ canvas.clear()
 
 bkgh = bkgf.ch4mu.data.muljd0.clone()
 binnum = bkgh.xaxis.FindBin(100)
-bkgh.scale(287.5/bkgh.integral(xbin1=binnum, overflow=True))
+bkgh.scale(2939.3/bkgh.integral(xbin1=binnum, overflow=True))
 bkgh.drawstyle='hist'
 bkgh.fillstyle='solid'
 bkgh.legendstyle='F'
@@ -163,7 +163,7 @@ for it, sigtag in enumerate(sigTAGS):
     h.legendstyle='L'
     sighs.append(h)
 
-draw([bkgh]+sighs, ylimits=(1e-5,1e4), logy=True)
+draw([bkgh]+sighs, ylimits=(1e-4,1e4), logy=True)
 leg = Legend([bkgh]+sighs, pad=canvas,
             margin=0.25, leftmargin=0.45, topmargin=0.02,
             entrysep=0.01, entryheight=0.02, textsize=10)
@@ -186,13 +186,13 @@ for h in sighs:
         bkg_tot = bkgh.integral(xbin1=i, overflow=True)
         bkg_abcd = ch2mu2ef.ch2mu2e.data.dphiIso2D.clone()
         bkg_abcd.scale( bkg_tot/bkg_abcd.integral() )
-        b, sigma_b = extract_background(bkg_abcd)
+        b, sigma_b = extract_background(bkg_abcd, yboundary=0.1)
 
         sig_tot = h.integral(xbin1=i, overflow=True)
         sigtag = h.title.split(' ')[0]
         sig_abcd = getattr(sigabcdf.ch2mu2e.sig, sigtag).dphiEgmIso2Dinc.clone()
         sig_abcd.scale( sig_tot/sig_abcd.integral() )
-        s = extract_signal_d(sig_abcd)
+        s = extract_signal_d(sig_abcd, yboundary=0.1)
 
         h_[i] = calculate_za(s, b, sigma_b)
         h_[i].error = 0
@@ -201,7 +201,7 @@ for h in sighs:
 
 
 ROOT.gPad.SetLogy(0)
-draw(signalsigs[:], ylimits=(0.01,0.07), pad=canvas, ytitle='Z_{A} A.U.')
+draw(signalsigs[:], ylimits=(0.0,0.07), pad=canvas, ytitle='Z_{A} A.U.')
 leg = Legend(signalsigs, pad=canvas,
             margin=0.25, leftmargin=0.45, topmargin=0.02,
             entrysep=0.01, entryheight=0.02, textsize=10)

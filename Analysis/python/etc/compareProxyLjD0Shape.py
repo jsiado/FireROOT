@@ -6,6 +6,7 @@ import ROOT
 from rootpy.io import root_open
 from rootpy.plotting.style import set_style
 from rootpy.plotting import Hist, Legend, Canvas
+from rootpy.plotting.shapes import Line
 
 from FireROOT.Analysis.Utils import *
 
@@ -35,7 +36,12 @@ d0wbj_c.linewidth=2
 d0wbj_c.drawstyle='hist'
 d0wbj_c.legendstyle='L'
 
-draw([d0inc, d0wbj, d0wbj_c], ylimits=(1e-1, 1e5), logy=True)
+todraw = [d0inc, d0wbj, d0wbj_c]
+# for h in todraw:
+#     h.SetBinContent(h.nbins(), h.GetBinContent(h.nbins())+h.overflow())
+#     h.SetBinError(h.nbins(), math.sqrt(h[h.nbins()].value))
+
+draw(todraw, ylimits=(2e-1, 1e6), logy=True)
 leg = Legend(3, pad=canvas, topmargin=0.05, margin=0.2, entryheight=0.02, entrysep=0.01, textsize=12,)
 leg.AddEntry(d0inc, label='inclusive')
 leg.AddEntry(d0wbj, label='N_{bjet}#geq1')
@@ -45,6 +51,14 @@ leg.Draw()
 
 title = TitleAsLatex('[4#mu VR] muon-type lepton-jet min |d_{0}| shape comparison')
 title.Draw()
+
+frame = canvas.FindObject('TFrame')
+lo, hi = frame.GetY1(), frame.GetY2()
+vline = Line(100, lo, 100, hi)
+vline.color='black'
+vline.linewidth=2
+vline.linestyle='dashed'
+vline.Draw()
 
 canvas.SaveAs('{}/ch4mu_muljd0Shape.pdf'.format(outdir))
 canvas.clear()
