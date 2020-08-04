@@ -5,8 +5,8 @@ from FireROOT.Analysis.Utils import *
 
 
 class MyEvents(SignalEvents):
-    def __init__(self, files=None, type='MC', maxevents=-1, channel=['2mu2e', '4mu']):
-        super(MyEvents, self).__init__(files=files, type=type, maxevents=maxevents, channel=channel)
+    def __init__(self, files=None, type='MC', maxevents=-1, channel=['2mu2e', '4mu'], **kwargs):
+        super(MyEvents, self).__init__(files=files, type=type, maxevents=maxevents, channel=channel, **kwargs)
 
     def processEvent(self, event, aux):
         if aux['channel'] not in self.Channel: return
@@ -25,6 +25,7 @@ class MyEvents(SignalEvents):
             pairs.sort(key=lambda x: x[1])
             if pairs and pairs[0][1]<0.3:
                 dsaToGenmuMap[i] = pairs[0][0]
+            self.Histos['%s/DsaTimeAll'%chan].Fill(dsa.dtCscTime, aux['wgt'])
 
         for i, j in dsaToGenmuMap.items():
             dsa, genmu = event.dsamuons[i], gmus[j]
@@ -36,7 +37,7 @@ class MyEvents(SignalEvents):
             else:
                 self.Histos['{}/nstasInv'.format(chan)].Fill(metric, aux['wgt'])
 
-            if (dsa.DTHits+dsa.CSCHits)>=12:
+            if (dsa.DTHits+dsa.CSCHits)>12:
                 self.Histos['{}/nhits'.format(chan)].Fill(metric, aux['wgt'])
             else:
                 self.Histos['{}/nhitsInv'.format(chan)].Fill(metric, aux['wgt'])
@@ -66,6 +67,9 @@ class MyEvents(SignalEvents):
                 self.Histos['{}/inc'.format(chan)].Fill(metric, aux['wgt'])
             else:
                 self.Histos['{}/incInv'.format(chan)].Fill(metric, aux['wgt'])
+
+            self.Histos['%s/DsaTimeMatched'%chan].Fill(dsa.dtCscTime, aux['wgt'])
+
 
 
 
@@ -134,5 +138,15 @@ histCollection = [
         'name': 'incInv',
         'binning': (50, -1, 1),
         'title': 'inclusive cuts;(p_{T}^{reco}-p_{T}^{gen})/p_{T}^{gen};norm. counts/0.04'
+    },
+    {
+        'name': 'DsaTimeAll',
+        'binning': (50, -50, 50),
+        'title': 'DSA time;time [ns];counts/2'
+    },
+    {
+        'name': 'DsaTimeMatched',
+        'binning': (50, -50, 50),
+        'title': 'DSA time;time [ns];counts/2'
     },
 ]

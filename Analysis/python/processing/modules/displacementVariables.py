@@ -19,8 +19,6 @@ class MyEvents(Events):
         if not passCosmic: return
 
 
-        invm = (LJ0.p4+LJ1.p4).M()
-
         ## displacement variables
         mind0s, maxd0s, aved0s = [], [], []
         mind0sigs, maxd0sigs, aved0sigs = [], [], []
@@ -49,32 +47,32 @@ class MyEvents(Events):
 histCollection = [
     {
         'name': 'mind0',
-        'binning': [[0,2,4,6,8,10,20,50,]+list(np.arange(100,2501,100))],
+        'binning': (50, 0, 2500),
         'title': 'muon-type lepton-jet minimum |d_{0}|;|d_{0}| [#mum];Events',
     },
     {
         'name': 'maxd0',
-        'binning': [[0,2,4,6,8,10,20,50,]+list(np.arange(100,2501,100))],
+        'binning': (50, 0, 2500),
         'title': 'muon-type lepton-jet maximum |d_{0}|;|d_{0}| [#mum];Events',
     },
     {
         'name': 'aved0',
-        'binning': [[0,2,4,6,8,10,20,50,]+list(np.arange(100,2501,100))],
+        'binning': (50, 0, 2500),
         'title': 'muon-type lepton-jet average |d_{0}|;|d_{0}| [#mum];Events',
     },
     {
         'name': 'mind0sig',
-        'binning': [list(np.arange(0,1,0.1))+list(np.arange(1,10,2))+list(np.arange(10,100,10))],
+        'binning': (50, 0, 100),
         'title': 'muon-type lepton-jet minimum |d_{0}| significance;|d_{0}|/#sigma_{d_{0}};Events',
     },
     {
         'name': 'maxd0sig',
-        'binning': [list(np.arange(0,1,0.1))+list(np.arange(1,10,2))+list(np.arange(10,100,10))],
+        'binning': (50, 0, 100),
         'title': 'muon-type lepton-jet maximum |d_{0}| significance;|d_{0}|/#sigma_{d_{0}};Events',
     },
     {
         'name': 'aved0sig',
-        'binning': [list(np.arange(0,1,0.1))+list(np.arange(1,10,2))+list(np.arange(10,100,10))],
+        'binning': (50, 0, 100),
         'title': 'muon-type lepton-jet average |d_{0}| significance;|d_{0}|/#sigma_{d_{0}};Events',
     },
 ]

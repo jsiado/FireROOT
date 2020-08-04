@@ -5,8 +5,8 @@ from FireROOT.Analysis.Utils import *
 
 
 class MyEvents(SignalEvents):
-    def __init__(self, files=None, type='MC', maxevents=-1, channel=['2mu2e', '4mu']):
-        super(MyEvents, self).__init__(files=files, type=type, maxevents=maxevents, channel=channel)
+    def __init__(self, files=None, type='MC', maxevents=-1, channel=['2mu2e', '4mu'], **kwargs):
+        super(MyEvents, self).__init__(files=files, type=type, maxevents=maxevents, channel=channel, **kwargs)
 
     def processEvent(self, event, aux):
         if aux['channel'] not in self.Channel: return
@@ -34,6 +34,8 @@ class MyEvents(SignalEvents):
             if dsa.charge==genmu.charge:
                 self.Histos['{}/ljsrcdsasameq'.format(chan)].Fill(metric, aux['wgt'])
 
+        self.Histos['%s/pfmet'%chan].Fill(event.pfMet.r(), aux['wgt'])
+
 
 histCollection = [
     {
@@ -45,5 +47,10 @@ histCollection = [
         'name': 'ljsrcdsasameq',
         'binning': (50, -1, 1),
         'title': 'DSA in lepton-jet source;(p_{T}^{reco}-p_{T}^{gen})/p_{T}^{gen};norm. counts/0.04'
+    },
+    {
+        'name': 'pfmet',
+        'binning': (50, 0, 500),
+        'title': 'PF MET;MET [GEV];counts/10'
     },
 ]

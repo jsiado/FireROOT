@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import math
+import numpy as np
 
 from FireROOT.Analysis.Events import *
 from FireROOT.Analysis.Utils import *
@@ -12,23 +13,40 @@ class MyEvents(Events):
     def processEvent(self, event, aux):
         if aux['channel'] not in self.Channel: return
         chan = aux['channel']
-
         LJ0, LJ1 = aux['lj0'], aux['lj1']
         passCosmic = all(map(lambda lj: lj.passCosmicVeto(event), [LJ0, LJ1]))
+
         if not passCosmic: return
 
-        dphi = abs(DeltaPhi(LJ0.p4, LJ1.p4))
-
-        ## displacement cut
         mind0s = []
         for lj in [LJ0, LJ1]:
             if lj.isMuonType() and not math.isnan(lj.pfcand_tkD0Min):
                 mind0s.append( lj.pfcand_tkD0Min*1e4 )
-        metric = {'2mu2e': 1000, '4mu': 100}
-        if max(mind0s)<metric[chan]: return
 
-        if self.Type=='DATA' and dphi>2.2: return
+        # njet = sum([
+        #     1 for j in event.ak4jets if \
+        #         j.jetid \
+        #         and j.p4.pt() > max([LJ0.p4.pt(), LJ1.p4.pt()]) \
+        #         and abs(j.p4.eta()) < 2.4
+        #     ])
+
+        pfiso = [LJ0.pfiso(), LJ1.pfiso()]
+        pfact = [
+            LJ0.p4.energy()*LJ0.pfiso()/(1-LJ0.pfiso()),
+            LJ1.p4.energy()*LJ1.pfiso()/(1-LJ1.pfiso()),
+        ]
+        dphi = abs(DeltaPhi(LJ0.p4, LJ1.p4))
+
+
+        self.Histos['{}/maxiso'.format(chan)].Fill(max(pfiso), aux['wgt'])
+        self.Histos['{}/maxact'.format(chan)].Fill(max(pfact), aux['wgt'])
+        for lj in [LJ0, LJ1]:
+            if not lj.isEgmType(): continue
+            self.Histos['{}/egmljiso'.format(chan)].Fill(lj.pfiso(), aux['wgt'])
+            self.Histos['{}/egmljact'.format(chan)].Fill(lj.p4.energy()*lj.pfiso()/(1-lj.pfiso()), aux['wgt'])
         self.Histos['{}/dphi'.format(chan)].Fill(dphi, aux['wgt'])
+
+        if max(mind0s)<1600: return
 
     def postProcess(self):
         super(MyEvents, self).postProcess()
@@ -49,12 +67,30 @@ class MyEvents(Events):
             xax.ChangeLabel(11,-1,-1,-1,-1,-1,"#pi")
 
 
-
 histCollection = [
+    {
+        'name': 'maxiso',
+        'binning': (50, 0, 1),
+        'title': 'max lepton-jet isolation;isolation;counts'
+    },
+    {
+        'name': 'egmljiso',
+        'binning': (50, 0, 1),
+        'title': 'Egm-type lepton-jet isolation;isolation;counts'
+    },
+    {
+        'name': 'maxact',
+        'binning': (100, 0, 100),
+        'title': 'max lepton-jet activity;PF activity [GeV];counts'
+    },
+    {
+        'name': 'egmljact',
+        'binning': (100, 0, 100),
+        'title': 'Egm-type lepton-jet activity;PF activity [GeV];counts'
+    },
     {
         'name': 'dphi',
         'binning': (30, 0, M_PI),
-        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/30'
+        'title': '|#Delta#phi|(lepton-jet pair);|#Delta#phi|;counts/#pi/30'
     },
 ]
-

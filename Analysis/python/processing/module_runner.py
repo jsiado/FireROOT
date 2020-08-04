@@ -10,7 +10,8 @@ from tqdm import tqdm
 from FireROOT.Analysis.Utils import *
 from FireROOT.Analysis.DatasetMapLoader import (
     DatasetMapLoader,
-    CentralSignalMapLoader
+    SigDatasetMapLoader,
+    CentralSignalMapLoader,
 )
 
 from rootpy.io import root_open
@@ -27,7 +28,8 @@ parser.add_argument("--outname", "-o", type=str, default=None, help='output ROOT
 parser.add_argument("--maxevents", "-n", type=int, default=-1, help='max number of events to run')
 parser.add_argument("--channel", "-ch", nargs='*', default=['2mu2e', '4mu'], choices=['2mu2e', '4mu'], help='channels to run')
 parser.add_argument("--create", "-c", type=str, default='recreate', choices=['recreate', 'update'], help='update output by')
-parser.add_argument("--proxy", action='store_true', help='run proxy events')
+parser.add_argument("--mbase", "-b", type=str, default='modules', choices=['modules', 'proxy', 'debug', 'centralSig'], help='module base name')
+parser.add_argument("--private", action='store_true', help='run private signal sample')
 args = parser.parse_args()
 
 def args_sanity(args):
@@ -42,49 +44,32 @@ def args_sanity(args):
         if 'data' in args.dataset: data = True
 
     ## module
-    moduleBase = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/processing')
-    if args.proxy: moduleBase = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/processing/proxy')
-    # if '.' in args.module:
-    #     relpath, args.module = args.module.rsplit('.',2)
-    #     moduleBase = os.path.join(moduleBase, relpath.replace('.','/'))
-    # allmodules = [
-    #     fn.split('.')[0] for fn in os.listdir(moduleBase) \
-    #     if os.path.isfile(os.path.join(moduleBase, fn)) \
-    #     and not fn.startswith('_') \
-    #     and fn.endswith('.py')
-    # ]
-    # if args.module not in allmodules:
-    #     sys.exit('Available modules: {}'.format(str(allmodules)))
+    moduleBase = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/processing/{}'.format(args.mbase))
+    assert(os.path.isdir(moduleBase))
 
     return bkg, sig, data
 
 runbkg, runsig, rundata = args_sanity(args)
-_modulebase = 'FireROOT.Analysis.processing'
-if args.proxy: _modulebase = 'FireROOT.Analysis.processing.proxy'
+_modulebase = 'FireROOT.Analysis.processing.{}'.format(args.mbase)
 imp = __import__('{}.{}'.format(_modulebase, args.module), fromlist=['MyEvents', 'histCollection'])
 
 
 
 if __name__ == '__main__':
 
-    outdir = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/')
-    if args.proxy: outdir = os.path.join(outdir, 'proxy')
+    outdir = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/{}/'.format(args.mbase))
     if not os.path.isdir(outdir): os.makedirs(outdir)
-    if args.outname:
-        outname = os.path.join(outdir, '{}.root'.format(args.outname))
-    else:
-        outname = os.path.join(outdir, '{}.root'.format(args.module))
+
+    if args.outname: outname = os.path.join(outdir, '{}.root'.format(args.outname))
+    else:            outname = os.path.join(outdir, '{}.root'.format(args.module))
     if args.create == 'update' and not os.path.isfile(outname):
         sys.exit('UPDATE was used not file not recreated yet.')
 
-    if not args.proxy and (runbkg or rundata): dml = DatasetMapLoader()
+    if args.mbase!='proxy' and (runbkg or rundata): dml = DatasetMapLoader()
 
     if runsig:
-        if args.proxy:
-            from FireROOT.Analysis.DatasetMapLoader import ProxyEventsSigDatasetMapLoader
-            sdml = ProxyEventsSigDatasetMapLoader()
-        else:
-            sdml = CentralSignalMapLoader()
+        if args.private: sdml = SigDatasetMapLoader()
+        else:            sdml = CentralSignalMapLoader()
 
 
         sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300'.split('|')
@@ -143,7 +128,7 @@ if __name__ == '__main__':
                 if ds not in sigDS_4mu or not sigDS_4mu[ds]: continue
                 packages = []
                 historesult = []
-                pool = Pool(processes=12)
+                pool = Pool(processes=min(len(sigDS_4mu[ds]), 12))
                 for f in sigDS_4mu[ds]:
                     packages.append((ds, [f], sigSCALE_4mu[ds], args.maxevents, ['4mu',]))
                 for res in tqdm(pool.imap_unordered(dofill, packages), total=len(packages)):
@@ -176,7 +161,7 @@ if __name__ == '__main__':
                 if ds not in sigDS_2mu2e or not sigDS_2mu2e[ds]: continue
                 packages = []
                 historesult = []
-                pool = Pool(processes=12)
+                pool = Pool(processes=min(len(sigDS_2mu2e[ds]), 12))
                 for f in sigDS_2mu2e[ds]:
                     packages.append((ds, [f], sigSCALE_2mu2e[ds], args.maxevents, ['2mu2e',]))
                 for res in tqdm(pool.imap_unordered(dofill, packages), total=len(packages)):
@@ -192,10 +177,9 @@ if __name__ == '__main__':
 
 
     if runbkg:
-        if args.proxy:
+        if args.mbase=='proxy':
             from FireROOT.Analysis.DatasetMapLoader import ProxyEventsBkgDatasetMapLoader
-            PROXYDIR = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/samples/merged/proxy')
-            dml = ProxyEventsBkgDatasetMapLoader(proxydir=PROXYDIR)
+            dml = ProxyEventsBkgDatasetMapLoader()
             bkgDS, bkgMAP, bkgSCALE = dml.fetch()
         else:
             bkgDS, bkgMAP, bkgSCALE = dml.fetch('bkg')
@@ -228,10 +212,9 @@ if __name__ == '__main__':
         log.info('background MC done')
 
     if rundata:
-        if args.proxy:
+        if args.mbase=='proxy':
             from FireROOT.Analysis.DatasetMapLoader import ProxyEventsDataDatasetMapLoader
-            PROXYDIR = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/samples/merged/proxy')
-            ddml = ProxyEventsDataDatasetMapLoader(proxydir=PROXYDIR)
+            ddml = ProxyEventsDataDatasetMapLoader()
             dataDS, dataMAP = ddml.fetch()
         else:
             dataDS, dataMAP = dml.fetch('data')
@@ -275,7 +258,7 @@ if __name__ == '__main__':
 
         packages = []
         historesult = []
-        pool = Pool(processes=12)
+        pool = Pool(processes=min(len(_files), 12))
 
         for f in _files:
             packages.append(([f], args.maxevents, args.channel))

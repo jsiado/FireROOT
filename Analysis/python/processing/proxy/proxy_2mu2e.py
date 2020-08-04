@@ -35,6 +35,7 @@ class MyEvents(ProxyEvents):
 
         if proxyd0 > 100:
             self.Histos['{}/dphi_100'.format(chan)].Fill(dphi, aux['wgt'])
+            self.Histos['{}/dphiIso2Dpre'.format(chan)].Fill(dphi, maxpfiso, aux['wgt'])
         if proxyd0 > 200:
             self.Histos['{}/dphi_200'.format(chan)].Fill(dphi, aux['wgt'])
         if proxyd0 > 300:
@@ -43,9 +44,10 @@ class MyEvents(ProxyEvents):
             self.Histos['{}/dphi_400'.format(chan)].Fill(dphi, aux['wgt'])
         if proxyd0 > 500:
             self.Histos['{}/dphi_500'.format(chan)].Fill(dphi, aux['wgt'])
+            self.Histos['{}/dphiIso2Dinit'.format(chan)].Fill(dphi, maxpfiso, aux['wgt'])
 
         self.Histos['{}/proxyd0'.format(chan)].Fill(proxyd0, aux['wgt'])
-        if proxyd0<1000: return
+        if proxyd0<1500: return
 
         self.Histos['{}/proxyiso'.format(chan)].Fill(proxy.pfiso(), aux['wgt'])
         self.Histos['{}/dphi'.format(chan)].Fill(dphi, aux['wgt'])
@@ -59,6 +61,8 @@ class MyEvents(ProxyEvents):
             if 'phi' not in k: continue
             xax = self.Histos[k].axis(0)
             decorate_axis_pi(xax)
+            if '2D' in k:
+                self.Histos[k].yaxis.SetNdivisions(-210)
 
 
 histCollection = [
@@ -69,58 +73,69 @@ histCollection = [
     },
     {
         'name': 'proxyd0inc',
-        'binning': [[0,2,4,6,8,10,20,50,]+list(np.arange(100,2501,100))],
+        # 'binning': [[0,2,4,6,8,10,20,50,]+list(np.arange(100,2501,100))],
+        'binning': (40, 0, 2000),
         'title': 'proxy muon |d_{0}|;|d_{0}| [#mum];Events'
     },
     {
         'name': 'proxyd0',
-        'binning': [[0,2,4,6,8,10,20,50,]+list(np.arange(100,2501,100))],
+        'binning': (40, 0, 2000),
         'title': 'proxy muon |d_{0}|(N_{bjet}#geq1);|d_{0}| [#mum];Events'
     },
     {
         'name': 'proxyiso',
-        'binning': (50, 0, 0.5),
+        'binning': (20, 0, 0.5),
         'title': 'proxy muon isolation;isolation;counts'
     },
     {
         'name': 'ljiso',
-        'binning': (50, 0, 0.5),
+        'binning': (20, 0, 0.5),
         'title': 'lepton-jet isolation;isolation;counts'
     },
     {
         'name': 'dphi_100',
-        'binning': (30, 0, M_PI),
-        'title': '|#Delta#phi|(lepton-jet, proxy muon) (proxy muon |d_{0}|>100#mum);|#Delta#phi|;counts/#pi/30'
+        'binning': (20, 0, M_PI),
+        'title': '|#Delta#phi|(lepton-jet, proxy muon) (proxy muon |d_{0}|>100#mum);|#Delta#phi|;counts/#pi/20'
     },
     {
         'name': 'dphi_200',
-        'binning': (30, 0, M_PI),
-        'title': '|#Delta#phi|(lepton-jet, proxy muon) (proxy muon |d_{0}|>200#mum);|#Delta#phi|;counts/#pi/30'
+        'binning': (20, 0, M_PI),
+        'title': '|#Delta#phi|(lepton-jet, proxy muon) (proxy muon |d_{0}|>200#mum);|#Delta#phi|;counts/#pi/20'
     },
     {
         'name': 'dphi_300',
-        'binning': (30, 0, M_PI),
-        'title': '|#Delta#phi|(lepton-jet, proxy muon) (proxy muon |d_{0}|>300#mum);|#Delta#phi|;counts/#pi/30'
+        'binning': (20, 0, M_PI),
+        'title': '|#Delta#phi|(lepton-jet, proxy muon) (proxy muon |d_{0}|>300#mum);|#Delta#phi|;counts/#pi/20'
     },
     {
         'name': 'dphi_400',
-        'binning': (30, 0, M_PI),
-        'title': '|#Delta#phi|(lepton-jet, proxy muon) (proxy muon |d_{0}|>400#mum);|#Delta#phi|;counts/#pi/30'
+        'binning': (20, 0, M_PI),
+        'title': '|#Delta#phi|(lepton-jet, proxy muon) (proxy muon |d_{0}|>400#mum);|#Delta#phi|;counts/#pi/20'
     },
     {
         'name': 'dphi_500',
-        'binning': (30, 0, M_PI),
-        'title': '|#Delta#phi|(lepton-jet, proxy muon) (proxy muon |d_{0}|>500#mum);|#Delta#phi|;counts/#pi/30'
+        'binning': (20, 0, M_PI),
+        'title': '|#Delta#phi|(lepton-jet, proxy muon) (proxy muon |d_{0}|>500#mum);|#Delta#phi|;counts/#pi/20'
     },
 
     {
         'name': 'dphi',
-        'binning': (30, 0, M_PI),
-        'title': '|#Delta#phi|(lepton-jet, proxy muon);|#Delta#phi|;counts/#pi/30'
+        'binning': (20, 0, M_PI),
+        'title': '|#Delta#phi|(lepton-jet, proxy muon);|#Delta#phi|;counts/#pi/20'
+    },
+    {
+        'name': 'dphiIso2Dpre',
+        'binning': (20, 0, M_PI, 20, 0, 0.5),
+        'title': '|#Delta#phi| vs lepton-jet isolation;|#Delta#phi|;iso',
+    },
+    {
+        'name': 'dphiIso2Dinit',
+        'binning': (20, 0, M_PI, 20, 0, 0.5),
+        'title': '|#Delta#phi| vs lepton-jet isolation;|#Delta#phi|;iso',
     },
     {
         'name': 'dphiIso2D',
-        'binning': (30, 0, M_PI, 50, 0, 0.5),
+        'binning': (20, 0, M_PI, 20, 0, 0.5),
         'title': '|#Delta#phi| vs lepton-jet isolation;|#Delta#phi|;iso',
     },
 ]

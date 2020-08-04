@@ -50,7 +50,7 @@ class MyEvents(Events):
 
 
         ## displacement cut
-        metric_d0 = {'2mu2e': 1000, '4mu': 100}
+        metric_d0 = {'2mu2e': 1500, '4mu': 1000}
         if max(mind0s)<metric_d0[chan]: return
         self.Histos['{}/cutflow'.format(chan)].Fill(cutflowbin); cutflowbin+=1
 
@@ -63,6 +63,8 @@ class MyEvents(Events):
             self.Histos['{}/ljiso'.format(chan)].Fill(lj.pfiso(), aux['wgt'])
             if lj.isMuonType():
                 self.Histos['{}/muljiso'.format(chan)].Fill(lj.pfiso(), aux['wgt'])
+                self.Histos['%s/muljphi'%chan].Fill(lj.p4.phi(), aux['wgt'])
+
             if lj.isEgmType():
                 egmljiso = lj.pfiso()
                 self.Histos['{}/egmljiso'.format(chan)].Fill(lj.pfiso(), aux['wgt'])
@@ -89,67 +91,76 @@ class MyEvents(Events):
             if 'phi' not in k: continue
             xax = self.Histos[k].axis(0)
             decorate_axis_pi(xax)
+            if '2D' in k:
+                self.Histos[k].yaxis.SetNdivisions(-210)
 
 
 histCollection = [
     {
         'name': 'mind0',
-        'binning': [[0,2,4,6,8,10,20,50,]+list(np.arange(100,2501,100))],
+        # 'binning': [[0,2,4,6,8,10,20,50,]+list(np.arange(100,2501,100))],
+        'binning': (40, 0, 2000),
         'title': 'muon-type lepton-jet minimum |d_{0}|;|d_{0}| [#mum];Events',
     },
     {
         'name': 'maxmind0',
-        'binning': [[0,2,4,6,8,10,20,50,]+list(np.arange(100,2501,100))],
+        # 'binning': [[0,2,4,6,8,10,20,50,]+list(np.arange(100,2501,100))],
+        'binning': (40, 0, 2000),
         'title': 'maximum of muon-type lepton-jets min |d_{0}|s;|d_{0}| [#mum];Events',
     },
     {
         'name': 'dphi',
-        'binning': (30, 0, M_PI),
-        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/30'
+        'binning': (20, 0, M_PI),
+        'title': '|#Delta#phi| of lepton-jet pair;|#Delta#phi|;counts/#pi/20'
     },
     {
         'name': 'maxiso',
-        'binning': (50, 0, 0.5),
+        'binning': (20, 0, 0.5),
         'title': 'max lepton-jet isolation;isolation;Events'
     },
     {
         'name': 'ljiso',
-        'binning': (50, 0, 0.5),
+        'binning': (20, 0, 0.5),
         'title': 'lepton-jet isolation;isolation;Events'
     },
     {
         'name': 'muljiso',
-        'binning': (50, 0, 0.5),
+        'binning': (20, 0, 0.5),
         'title': 'muon-type lepton-jet isolation;isolation;Events'
     },
     {
         'name': 'egmljiso',
-        'binning': (50, 0, 0.5),
+        'binning': (20, 0, 0.5),
         'title': 'EGM-type lepton-jet isolation;isolation;Events'
     },
     {
         'name': 'dphiIso2Dinc',
-        'binning': (30, 0, M_PI, 50, 0, 0.5),
+        'binning': (20, 0, M_PI, 20, 0, 0.5),
         'title': '|#Delta#phi| vs maxiso;|#Delta#phi|;maxIso',
     },
     {
         'name': 'dphiEgmIso2Dinc',
-        'binning': (30, 0, M_PI, 50, 0, 0.5),
-        'title': '|#Delta#phi| vs egm-type lepton-jet Iso;|#Delta#phi|;Iso',
+        'binning': (20, 0, M_PI, 20, 0, 0.5),
+        'title': '|#Delta#phi| vs egm-type lepton-jet Iso;|#Delta#phi|; Egm-type LJ Iso',
     },
     {
         'name': 'dphiIso2D',
-        'binning': (30, 0, M_PI, 50, 0, 0.5),
+        'binning': (20, 0, M_PI, 20, 0, 0.5),
         'title': '|#Delta#phi| vs maxiso;|#Delta#phi|;maxIso',
     },
     {
         'name': 'dphiEgmIso2D',
-        'binning': (30, 0, M_PI, 50, 0, 0.5),
-        'title': '|#Delta#phi| vs egm-type lepton-jet Iso;|#Delta#phi|;Iso',
+        'binning': (20, 0, M_PI, 20, 0, 0.5),
+        'title': '|#Delta#phi| vs egm-type lepton-jet Iso;|#Delta#phi|; Egm-type LJ Iso',
     },
     {
         'name': 'rawevents',
         'binning': (1,0,1),
         'title': 'Raw events count;;Events',
+    },
+    {
+        'name': 'muljphi',
+        'binning': (40, -M_PI, M_PI),
+        'title': 'muon-type LJ #phi;#phi;counts/#pi/20'
     },
 ]

@@ -41,20 +41,29 @@ class MyEvents(CosmicEvents):
             if passAllCosmicVeto and max(absdz)>40: passAllCosmicVeto=False
 
         if passAllCosmicVeto:
+            # print chan, event.run, event.lumi, event.event, LJ0.minTwoTrackDist(), LJ1.minTwoTrackDist()
             self.Histos['{}/grandcosmicvetores'.format(chan)].Fill(1, aux['wgt'])
+
+    def postProcess(self):
+        super(MyEvents, self).postProcess()
+        for k in self.Histos:
+            if 'grandcosmicvetores' not in k: continue
+            xax = self.Histos[k].axis(0)
+            xax.SetNdivisions(2)
+            xax.ChangeLabel(1,-1,-1,-1,-1,-1,"total")
+            xax.ChangeLabel(2,-1,-1,-1,-1,-1,"pass")
+
 
 
 histCollection = [
     {
         'name': 'tktkdca',
-        # 'binning': [[0,1,2,5,10,25,50,75,100]],
-        'binning': (100,0,100),
+        'binning': [[0,2,4,6,8,10,15,20,30,40]],
         'title': 'Lepton-jet min track-track DCA;D.C.A [cm];counts',
     },
     {
         'name': 'tktkdca_after_drcosmic',
-        # 'binning': [[0,1,2,5,10,25,50,75,100]],
-        'binning': (100,0,100),
+        'binning': [[0,2,4,6,8,10,15,20,30,40]],
         'title': 'Lepton-jet min track-track DCA (#DeltaR_{cosmic}>0.05);D.C.A [cm];counts',
     },
     {
@@ -64,17 +73,17 @@ histCollection = [
     },
     {
         'name': 'maxabstkdz',
-        'binning': (400,0,200),
+        'binning': [[0,2,4,6,8,10,15,20,30,40,60,100]],
         'title': 'muon-type lepton-jet max track |dz|;|dz| [cm];counts',
     },
     {
         'name': 'maxabstkdz_after_drcosmic',
-        'binning': (400,0,200),
+        'binning': [[0,2,4,6,8,10,15,20,30,40,60,100]],
         'title': 'muon-type lepton-jet max track |dz| (#DeltaR_{cosmic}>0.05);|dz| [cm];counts',
     },
     {
         'name': 'grandcosmicvetores',
-        'binning': (2,0,2),
+        'binning': (2,-0.5,1.5),
         'title': 'total cosmic veto result;;counts',
     },
 ]

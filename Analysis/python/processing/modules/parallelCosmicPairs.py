@@ -12,10 +12,9 @@ class MyEvents(CosmicEvents):
         if aux['channel'] not in self.Channel: return
         chan = aux['channel']
         LJ0, LJ1 = aux['lj0'], aux['lj1']
-        # passCosmic = all(map(lambda lj: lj.passCosmicVeto(event), [LJ0, LJ1]))
-        # if not passCosmic: return
 
-        self.Histos['{}/npair'.format(chan)].Fill(event.cosmicveto.parallelpairs, aux['wgt'])
+        # This is `cosmicMuon` collection
+        self.Histos['{}/npair'.format(chan)].Fill(aux['nparallel'], aux['wgt'])
 
 histCollection = [
     {

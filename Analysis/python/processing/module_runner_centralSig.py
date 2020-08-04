@@ -20,11 +20,13 @@ parser.add_argument("--outname", "-o", type=str, default=None, help='output ROOT
 parser.add_argument("--maxevents", "-n", type=int, default=-1, help='max number of events to run')
 parser.add_argument("--create", "-c", type=str, default='recreate', choices=['recreate', 'update'], help='update output by')
 parser.add_argument("--sigparam", "-p",  type=str, nargs='*',default=None, help='signal parameters')
+parser.add_argument("--mbase", "-b", type=str, default='modules', choices=['modules', 'centralSig'], help='module base name')
+parser.add_argument("--channel", "-ch", nargs='*', default=['2mu2e', '4mu'], choices=['2mu2e', '4mu'], help='channels to run')
 args = parser.parse_args()
 
 def args_sanity(args):
     # module
-    moduleBase = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/processing/centralSig')
+    moduleBase = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/processing/%s'%args.mbase)
     if not os.path.isdir(moduleBase): sys.exit('Module base not exist!')
     allmodules = [
         fn.split('.')[0] for fn in os.listdir(moduleBase) \
@@ -36,7 +38,7 @@ def args_sanity(args):
         sys.exit('Available modules: {}'.format(str(allmodules)))
 
 args_sanity(args)
-_modulebase = 'FireROOT.Analysis.processing.centralSig'
+_modulebase = 'FireROOT.Analysis.processing.{}'.format(args.mbase)
 try:
     imp = __import__('{}.{}'.format(_modulebase, args.module), fromlist=['MyEvents', 'histCollection'])
 except Exception as e:
@@ -94,66 +96,70 @@ if __name__ == '__main__':
     # tqdm: https://github.com/tqdm/tqdm/issues/484#issuecomment-351001534
 
     ### signal 4mu
-    packages = []
-    SigHists4mu = []
-    pool = Pool(processes=12)
+    if '4mu' in args.channel:
+        packages = []
+        SigHists4mu = []
+        pool = Pool(processes=12)
 
-    for i, ds in enumerate(sampleSig, start=1):
-        if ds not in sigDS_4mu or not sigDS_4mu[ds]: continue
-        packages.append((ds, sigDS_4mu[ds], sigSCALE_4mu[ds], args.maxevents, ['4mu',]))
-    for res in tqdm.tqdm(pool.imap_unordered(dofill, packages), total=len(packages)):
-        SigHists4mu.append(res)
-    pool.close()
-    pool.join()
-    SigHists4mu = dict(SigHists4mu)
-    log.info('channel 4mu filling done')
+        for i, ds in enumerate(sampleSig, start=1):
+            if ds not in sigDS_4mu or not sigDS_4mu[ds]: continue
+            packages.append((ds, sigDS_4mu[ds], sigSCALE_4mu[ds], args.maxevents, ['4mu',]))
+        for res in tqdm.tqdm(pool.imap_unordered(dofill, packages), total=len(packages)):
+            SigHists4mu.append(res)
+        pool.close()
+        pool.join()
+        SigHists4mu = dict(SigHists4mu)
+        log.info('channel 4mu filling done')
 
 
     ### signal 2mu2e
-    packages = []
-    SigHists2mu2e = []
-    pool = Pool(processes=12)
+    if '2mu2e' in args.channel:
+        packages = []
+        SigHists2mu2e = []
+        pool = Pool(processes=12)
 
-    for i, ds in enumerate(sampleSig, start=1):
-        if ds not in sigDS_2mu2e or not sigDS_2mu2e[ds]: continue
-        packages.append((ds, sigDS_2mu2e[ds], sigSCALE_2mu2e[ds], args.maxevents, ['2mu2e',]))
-    for res in tqdm.tqdm(pool.imap_unordered(dofill, packages), total=len(packages)):
-        SigHists2mu2e.append(res)
-    pool.close()
-    pool.join()
-    SigHists2mu2e = dict(SigHists2mu2e)
-    log.info('channel 2mu2e filling done')
+        for i, ds in enumerate(sampleSig, start=1):
+            if ds not in sigDS_2mu2e or not sigDS_2mu2e[ds]: continue
+            packages.append((ds, sigDS_2mu2e[ds], sigSCALE_2mu2e[ds], args.maxevents, ['2mu2e',]))
+        for res in tqdm.tqdm(pool.imap_unordered(dofill, packages), total=len(packages)):
+            SigHists2mu2e.append(res)
+        pool.close()
+        pool.join()
+        SigHists2mu2e = dict(SigHists2mu2e)
+        log.info('channel 2mu2e filling done')
 
 
     log.info('saving to {}'.format(outname))
     f = root_open(outname, args.create)
-    try: f.mkdir('ch4mu')
-    except: pass
-    chanDir = f.ch4mu
-    chanDir.cd()
-    for ds, hs in SigHists4mu.items():
-        mxxma = ds.rsplit('_', 2)[0]
-        lxyctau = ds.split('_', 2)[-1]
-        try: chanDir.mkdir(mxxma+'/'+lxyctau, recurse=True)
+    if '4mu' in args.channel:
+        try: f.mkdir('ch4mu')
         except: pass
-        getattr(getattr(chanDir, mxxma), lxyctau).cd()
-        for h in hs.values():
-            h.SetName( h.GetName().replace('{}__4mu__'.format(ds), '') )
-            if args.create=='update': h.Write('', ROOT.TObject.kOverwrite)
-            else: h.Write()
+        chanDir = f.ch4mu
+        chanDir.cd()
+        for ds, hs in SigHists4mu.items():
+            mxxma = ds.rsplit('_', 2)[0]
+            lxyctau = ds.split('_', 2)[-1]
+            try: chanDir.mkdir(mxxma+'/'+lxyctau, recurse=True)
+            except: pass
+            getattr(getattr(chanDir, mxxma), lxyctau).cd()
+            for h in hs.values():
+                h.SetName( h.GetName().replace('{}__4mu__'.format(ds), '') )
+                if args.create=='update': h.Write('', ROOT.TObject.kOverwrite)
+                else: h.Write()
 
-    try: f.mkdir('ch2mu2e')
-    except: pass
-    chanDir = f.ch2mu2e
-    chanDir.cd()
-    for ds, hs in SigHists2mu2e.items():
-        mxxma = ds.rsplit('_', 2)[0]
-        lxyctau = ds.split('_', 2)[-1]
-        try: chanDir.mkdir(mxxma+'/'+lxyctau, recurse=True)
+    if '2mu2e' in args.channel:
+        try: f.mkdir('ch2mu2e')
         except: pass
-        getattr(getattr(chanDir, mxxma), lxyctau).cd()
-        for h in hs.values():
-            h.SetName( h.GetName().replace('{}__2mu2e__'.format(ds), '') )
-            if args.create=='update': h.Write('', ROOT.TObject.kOverwrite)
-            else: h.Write()
+        chanDir = f.ch2mu2e
+        chanDir.cd()
+        for ds, hs in SigHists2mu2e.items():
+            mxxma = ds.rsplit('_', 2)[0]
+            lxyctau = ds.split('_', 2)[-1]
+            try: chanDir.mkdir(mxxma+'/'+lxyctau, recurse=True)
+            except: pass
+            getattr(getattr(chanDir, mxxma), lxyctau).cd()
+            for h in hs.values():
+                h.SetName( h.GetName().replace('{}__2mu2e__'.format(ds), '') )
+                if args.create=='update': h.Write('', ROOT.TObject.kOverwrite)
+                else: h.Write()
     f.close()
