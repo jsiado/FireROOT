@@ -77,8 +77,8 @@ class LeptonJetMix(object):
         return [event.dsamuons[i].deltaRCosmicSeg for i in self.pfcand_dsamuonIdx]
 
     def muons(self, event):
-        res = [event.muons[i].p4 for i in self.pfcand_pfmuonIdx]
-        res += [event.dsamuons[i].p4 for i in self.pfcand_dsamuonIdx]
+        res = [event.muons[i] for i in self.pfcand_pfmuonIdx]
+        res += [event.dsamuons[i] for i in self.pfcand_dsamuonIdx]
         return res
 
     def passCosmicVeto(self, event, thres=0.05):
@@ -184,15 +184,34 @@ class ProxyMuonMix(object):
         return True
 
 
+def globalCosmicShower(cosmicMuons, channel):
+    from FireROOT.Analysis.Utils import computeCosAlpha
+
+    cosmic_metric = {'4mu': 6, '2mu2e': 6}
+    nppCOSMIC = 0
+    for i, cosmic_i in enumerate(cosmicMuons):
+        if cosmic_i.p4.pt()<5 or abs(cosmic_i.p4.eta())>1.2: continue
+        for j, cosmic_j in enumerate(cosmicMuons):
+            if j<=i: continue
+            if cosmic_j.p4.pt()<5 or abs(cosmic_j.p4.eta())>1.2: continue
+            cosalpha = computeCosAlpha(cosmic_i.p4, cosmic_j.p4)
+            if abs(cosalpha)<0.99: continue
+            nppCOSMIC+=1
+
+    return nppCOSMIC, nppCOSMIC>cosmic_metric[channel]
+
+
+
 class Events(object):
-    def __init__(self, files=None, type='MC', dtag='', maxevents=-1, channel=['4mu', '2mu2e'], chargedlj=False):
+    def __init__(self, files=None, type='MC', dtag='', maxevents=-1, channel=['4mu', '2mu2e'], ctau=None, chargedlj=False):
 
         if type.upper() not in ['MC', 'DATA']: raise ValueError("Argument `type` need to be MC/DATA")
-        self.Type = type
+        self.Type = type.upper()
         self.ChargedLJ = chargedlj
         self.MaxEvents = maxevents
         self.Channel = channel
         self.Dtag = dtag
+        self.Ctau = ctau
 
         if not files: raise ValueError("Argument `files` need to be non-empty")
         if isinstance(files, str): files = [files,]
@@ -200,15 +219,15 @@ class Events(object):
 
         ### register collections ###
         # self.Chain.define_collection('pvs', prefix='pv_', size='pv_n')
-        # self.Chain.define_collection('electrons', prefix='electron_', size='electron_n')
+        self.Chain.define_collection('electrons', prefix='electron_', size='electron_n')
         self.Chain.define_collection('muons', prefix='muon_', size='muon_n')
         self.Chain.define_collection('dsamuons', prefix='dsamuon_', size='dsamuon_n')
         self.Chain.define_collection('photons', prefix='photon_', size='photon_n')
-        # self.Chain.define_collection('cosmiconelegs', prefix='cosmiconeleg_', size='cosmiconeleg_n')
         self.Chain.define_collection('ak4jets', prefix='akjet_ak4PFJetsCHS_', size='akjet_ak4PFJetsCHS_n')
         self.Chain.define_collection('hftagscores', prefix='hftagscore_', size='hftagscore_n')
         self.Chain.define_collection('leptonjets', prefix='pfjet_', size='pfjet_n', mix=LeptonJetMix)
         self.Chain.define_collection('ljsources', prefix='ljsource_', size='ljsource_n')
+        self.Chain.define_collection('cosmicmuons', prefix='cosmicmuon_', size='cosmicmuon_n')
 
         self.Chain.define_object('hlt', prefix='HLT_')
         self.Chain.define_object('metfilters', prefix='metfilters_')
@@ -230,7 +249,8 @@ class Events(object):
         self.RawCutFlow = False
 
         self.LookupWeight = root_open(os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/data/PUWeights_2018.root')).Get('puWeights')
-        self.LookupMuonSF = root_open(os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/data/RunABCD_SF_ISO.root')).Get('NUM_LooseRelIso_DEN_LooseID_pt_abseta')
+        self.LookupMuonSFLowpT = root_open(os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/data/mu_Loose_pt7.root')).Get('ratio_syst')
+        self.LookupMuonSF = root_open(os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/data/RunABCD_SF_ID.root')).Get('NUM_LooseID_DEN_TrackerMuons_pt_abseta_syst')
         self.LookupElectronSF = root_open(os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/data/2018_ElectronLoose.root')).Get('EGamma_SF2D')
         self.LookupPhotonSF = root_open(os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/data/2018_PhotonsLoose.root')).Get('EGamma_SF2D')
         self.Scale = 1.
@@ -282,7 +302,7 @@ class Events(object):
                 if not LJ0.passSelection(event): continue
                 if not LJ1.passSelection(event): continue
 
-            if LJ0.isMuonType() and LJ1.isMuonType(): aux['channel'] = '4mu'
+            if LJ0.isMuonType() and LJ1.isMuonType():  aux['channel'] = '4mu'
             elif LJ0.isMuonType() and LJ1.isEgmType(): aux['channel'] = '2mu2e'
             elif LJ0.isEgmType() and LJ1.isMuonType(): aux['channel'] = '2mu2e'
             else: continue
@@ -291,29 +311,107 @@ class Events(object):
             aux['lj1'] = LJ1
 
             if self.Type == 'MC':
+                aux['sf_electron']     = 1.
+                aux['sf_electron_up']  = 1.
+                aux['sf_electron_low'] = 1.
+
+                aux['sf_photon']     = 1.
+                aux['sf_photon_up']  = 1.
+                aux['sf_photon_low'] = 1.
+
+                aux['sf_pfmuon']     = 1.
+                aux['sf_pfmuon_up']  = 1.
+                aux['sf_pfmuon_low'] = 1.
+
                 for lj in [LJ0, LJ1]:
-                    for t, pt, eta in zip(list(lj.pfcand_type), list(lj.pfcand_pt), list(lj.pfcand_eta)):
-                        ## muon scale factor, DSA same as muon for now
-                        if t==3 or t==8:
+                    ## muon scale factor
+                    for i in lj.pfcand_pfmuonIdx:
+                        _pfmu_p4 = event.muons[i].p4
+                        pt, eta = _pfmu_p4.pt(), _pfmu_p4.eta()
+                        if pt>=20:
                             xbin = self.LookupMuonSF.xaxis.FindBin(pt)
                             xbin = min(max(xbin, 1), self.LookupMuonSF.nbins(0))
                             ybin = self.LookupMuonSF.yaxis.FindBin(abs(eta))
                             sf = self.LookupMuonSF.GetBinContent(xbin, ybin)
-                            aux['wgt'] *= sf
-                        ## electron scale factor, using eta instead of SC eta for now
-                        if t==2:
-                            xbin = self.LookupElectronSF.xaxis.FindBin(eta)
-                            ybin = self.LookupElectronSF.xaxis.FindBin(pt)
-                            ybin = min(max(ybin, 1), self.LookupElectronSF.nbins(1))
-                            sf = self.LookupElectronSF.GetBinContent(xbin, ybin)
-                            aux['wgt'] *= sf
-                        ## photon scale factor, using eta instead of SC eta for now
-                        if t==4:
-                            xbin = self.LookupPhotonSF.xaxis.FindBin(eta)
-                            ybin = self.LookupPhotonSF.xaxis.FindBin(pt)
-                            ybin = min(max(ybin, 1), self.LookupPhotonSF.nbins(1))
-                            sf = self.LookupPhotonSF.GetBinContent(xbin, ybin)
-                            aux['wgt'] *= sf
+                            err_up = self.LookupMuonSF.GetBinErrorUp(xbin, ybin)
+                            err_lo = self.LookupMuonSF.GetBinErrorLow(xbin, ybin)
+                        else:
+                            for i in range(self.LookupMuonSFLowpT.num_points):
+                                x = self.LookupMuonSFLowpT.x(i)
+                                xh = x + self.LookupMuonSFLowpT.xerrh(i)
+                                xl = x - self.LookupMuonSFLowpT.xerrl(i)
+                                if xl<=eta and eta<=xh:
+                                    sf = self.LookupMuonSFLowpT.y(i)
+                                    err_up = self.LookupMuonSFLowpT.yerrh(i)
+                                    err_lo = self.LookupMuonSFLowpT.yerrl(i)
+                                    break
+                        aux['wgt'] *= sf
+
+                        aux['sf_pfmuon']     *= sf
+                        aux['sf_pfmuon_up']  *= sf+err_up
+                        aux['sf_pfmuon_low'] *= sf-err_lo
+
+                    ## NOTE DSA scale factor, nothing for now
+                    for i in lj.pfcand_dsamuonIdx:
+                        sf = 1.
+                        aux['wgt'] *= sf
+
+                    ## electron scale factor
+                    for i in lj.pfcand_electronIdx:
+                        _electron = event.electrons[i]
+                        xbin = self.LookupElectronSF.xaxis.FindBin(_electron.scEta)
+                        ybin = self.LookupElectronSF.xaxis.FindBin(_electron.p4.pt())
+                        ybin = min(max(ybin, 1), self.LookupElectronSF.nbins(1))
+                        sf = self.LookupElectronSF.GetBinContent(xbin, ybin)
+                        aux['wgt'] *= sf
+
+                        aux['sf_electron']    *= sf
+                        aux['sf_electron_up'] *= sf+self.LookupElectronSF.GetBinErrorUp (xbin, ybin)
+                        aux['sf_electron_low']*= sf-self.LookupElectronSF.GetBinErrorLow(xbin, ybin)
+
+                    ## photon scale factor
+                    for i in lj.pfcand_photonIdx:
+                        _photon = event.photons[i]
+                        xbin = self.LookupPhotonSF.xaxis.FindBin(_photon.scEta)
+                        ybin = self.LookupPhotonSF.xaxis.FindBin(_photon.p4.pt())
+                        ybin = min(max(ybin, 1), self.LookupPhotonSF.nbins(1))
+                        sf = self.LookupPhotonSF.GetBinContent(xbin, ybin)
+                        aux['wgt'] *= sf
+
+                        aux['sf_photon']    *= sf
+                        aux['sf_photon_up'] *= sf+self.LookupPhotonSF.GetBinErrorUp (xbin, ybin)
+                        aux['sf_photon_low']*= sf-self.LookupPhotonSF.GetBinErrorLow(xbin, ybin)
+
+                aux['wgt_electron_up']  = aux['wgt']/aux['sf_electron'] * aux['sf_electron_up']
+                aux['wgt_electron_low'] = aux['wgt']/aux['sf_electron'] * aux['sf_electron_low']
+                aux['wgt_photon_up']    = aux['wgt']/aux['sf_photon']   * aux['sf_photon_up']
+                aux['wgt_photon_low']   = aux['wgt']/aux['sf_photon']   * aux['sf_photon_low']
+                aux['wgt_pfmuon_up']    = aux['wgt']/aux['sf_pfmuon']   * aux['sf_pfmuon_up']
+                aux['wgt_pfmuon_low']   = aux['wgt']/aux['sf_pfmuon']   * aux['sf_pfmuon_low']
+
+
+                    # for t, pt, eta in zip(list(lj.pfcand_type), list(lj.pfcand_pt), list(lj.pfcand_eta)):
+                    #     ## muon scale factor, DSA same as muon for now
+                    #     if t==3 or t==8:
+                    #         xbin = self.LookupMuonSF.xaxis.FindBin(pt)
+                    #         xbin = min(max(xbin, 1), self.LookupMuonSF.nbins(0))
+                    #         ybin = self.LookupMuonSF.yaxis.FindBin(abs(eta))
+                    #         sf = self.LookupMuonSF.GetBinContent(xbin, ybin)
+                    #         aux['wgt'] *= sf
+                    #     ## electron scale factor, using eta instead of SC eta for now
+                    #     if t==2:
+                    #         xbin = self.LookupElectronSF.xaxis.FindBin(eta)
+                    #         ybin = self.LookupElectronSF.xaxis.FindBin(pt)
+                    #         ybin = min(max(ybin, 1), self.LookupElectronSF.nbins(1))
+                    #         sf = self.LookupElectronSF.GetBinContent(xbin, ybin)
+                    #         aux['wgt'] *= sf
+                    #     ## photon scale factor, using eta instead of SC eta for now
+                    #     if t==4:
+                    #         xbin = self.LookupPhotonSF.xaxis.FindBin(eta)
+                    #         ybin = self.LookupPhotonSF.xaxis.FindBin(pt)
+                    #         ybin = min(max(ybin, 1), self.LookupPhotonSF.nbins(1))
+                    #         sf = self.LookupPhotonSF.GetBinContent(xbin, ybin)
+                    #         aux['wgt'] *= sf
 
 
             for ch in self.Channel:
@@ -326,8 +424,9 @@ class Events(object):
                 if self.RawCutFlow: self.Histos['{}/cutflow'.format(ch)].Fill(3)
                 else: self.Histos['{}/cutflow'.format(ch)].Fill(3, aux['wgt'])
 
-            cosmic_metric = {'4mu': 7, '2mu2e': 7}
-            if event.cosmicveto.parallelpairs > cosmic_metric[aux['channel']]: continue
+            nppCOSMIC, cosmicShowerTagged = globalCosmicShower(event.cosmicmuons, aux['channel'])
+            if cosmicShowerTagged: continue
+
             for ch in self.Channel:
                 if self.RawCutFlow: self.Histos['{}/cutflow'.format(ch)].Fill(4)
                 else: self.Histos['{}/cutflow'.format(ch)].Fill(4, aux['wgt'])
@@ -360,7 +459,6 @@ class Events(object):
     @property
     def channel(self):
         return self.Channel
-
 
 
 
@@ -487,6 +585,8 @@ class ProxyEvents(Events):
 
             leptonjets = [lj for lj in event.leptonjets]
             if not leptonjets: continue
+            if len([lj for lj in event.leptonjets if lj.isMuonType()])>1: continue
+
             leptonjets.sort(key=lambda lj: lj.p4.pt(), reverse=True)
             aux['lj'] = leptonjets[0]
             if not aux['lj'].passSelection(event): continue
@@ -495,10 +595,72 @@ class ProxyEvents(Events):
             elif aux['lj'].isEgmType(): aux['channel'] = '2mu2e'
             else: continue
 
+            if self.Type == 'MC':
+                aux['sf_electron'] = 1.
+                aux['sf_photon']   = 1.
+                aux['sf_pfmuon']   = 1.
+
+                _pfmuons_p4 = []
+                for i in aux['lj'].pfcand_pfmuonIdx:
+                    _pfmuons_p4.append( event.muons[i].p4 )
+                if aux['proxy'].isPFMuon():
+                    _pfmuons_p4.append(aux['proxy'].p4)
+
+                for _pfmu_p4 in _pfmuons_p4:
+                    pt, eta = _pfmu_p4.pt(), _pfmu_p4.eta()
+                    if pt>=20:
+                        xbin = self.LookupMuonSF.xaxis.FindBin(pt)
+                        xbin = min(max(xbin, 1), self.LookupMuonSF.nbins(0))
+                        ybin = self.LookupMuonSF.yaxis.FindBin(abs(eta))
+                        sf = self.LookupMuonSF.GetBinContent(xbin, ybin)
+                    else:
+                        for i in range(self.LookupMuonSFLowpT.num_points):
+                            x = self.LookupMuonSFLowpT.x(i)
+                            xh = x + self.LookupMuonSFLowpT.xerrh(i)
+                            xl = x - self.LookupMuonSFLowpT.xerrl(i)
+                            if xl<=eta and eta<=xh:
+                                sf = self.LookupMuonSFLowpT.y(i)
+                                break
+                    aux['wgt'] *= sf
+                    aux['sf_pfmuon']     *= sf
+
+                ## NOTE DSA scale factor, nothing for now.
+                # remember to consider proxy muon also.
+                for i in aux['lj'].pfcand_dsamuonIdx:
+                    sf = 1.
+                    aux['wgt'] *= sf
+
+                ## electron scale factor
+                for i in aux['lj'].pfcand_electronIdx:
+                    _electron = event.electrons[i]
+                    xbin = self.LookupElectronSF.xaxis.FindBin(_electron.scEta)
+                    ybin = self.LookupElectronSF.xaxis.FindBin(_electron.p4.pt())
+                    ybin = min(max(ybin, 1), self.LookupElectronSF.nbins(1))
+                    sf = self.LookupElectronSF.GetBinContent(xbin, ybin)
+
+                    aux['wgt'] *= sf
+                    aux['sf_electron']    *= sf
+
+                ## photon scale factor
+                for i in lj.pfcand_photonIdx:
+                    _photon = event.photons[i]
+                    xbin = self.LookupPhotonSF.xaxis.FindBin(_photon.scEta)
+                    ybin = self.LookupPhotonSF.xaxis.FindBin(_photon.p4.pt())
+                    ybin = min(max(ybin, 1), self.LookupPhotonSF.nbins(1))
+                    sf = self.LookupPhotonSF.GetBinContent(xbin, ybin)
+
+                    aux['wgt'] *= sf
+                    aux['sf_photon']    *= sf
+
+
             for ch in self.Channel: self.Histos['{}/cutflow'.format(ch)].Fill(2, aux['wgt'])
 
             ## event-level mask ##
             if not event.metfilters.PrimaryVertexFilter: continue
+
+            ## event-level mask ##
+            nppCOSMIC, cosmicShowerTagged = globalCosmicShower(event.cosmicmuons, aux['channel'])
+            if cosmicShowerTagged: continue
             for ch in self.Channel: self.Histos['{}/cutflow'.format(ch)].Fill(3, aux['wgt'])
 
             if not event.cosmicveto.result: continue
@@ -508,13 +670,17 @@ class ProxyEvents(Events):
             self.processEvent(event, aux)
 
     def postProcess(self):
-        labels = ['total', 'trigger_pass', 'leptonjetProxyMuon', 'pv_good', 'cosmicveto_pass']
-        for ch in self.Channel:
-            xaxis = self.Histos['{}/cutflow'.format(ch)].axis(0)
-            for i, s in enumerate(labels, start=1):
-                xaxis.SetBinLabel(i, s)
-                # binNum., labAngel, labSize, labAlign, labColor, labFont, labText
-                xaxis.ChangeLabel(i, 315, -1, 11, -1, -1, s)
+        if self.KeepCutFlow:
+            labels = ['total', 'trigger_pass', 'leptonjetProxyMuon', 'pv_good', 'cosmicveto_pass']
+            for ch in self.Channel:
+                xaxis = self.Histos['{}/cutflow'.format(ch)].axis(0)
+                for i, s in enumerate(labels, start=1):
+                    xaxis.SetBinLabel(i, s)
+                    # binNum., labAngel, labSize, labAlign, labColor, labFont, labText
+                    xaxis.ChangeLabel(i, 315, -1, 11, -1, -1, s)
+        else:
+            for ch in self.Channel:
+                self.Histos.pop('{}/cutflow'.format(ch))
 
 
 
@@ -556,8 +722,10 @@ class CosmicEvents(Events):
             elif LJ0.isEgmType() and LJ1.isMuonType(): aux['channel'] = '2mu2e'
             else: continue
 
-            cosmic_metric = {'4mu': 7, '2mu2e': 7}
-            aux['hasCosmicShower'] = event.cosmicveto.parallelpairs > cosmic_metric[aux['channel']]
+            nppCOSMIC, cosmicShowerTagged = globalCosmicShower(event.cosmicmuons, aux['channel'])
+
+            aux['nparallel'] = nppCOSMIC
+            aux['hasCosmicShower'] = cosmicShowerTagged
 
 
             aux['lj0'] = LJ0
@@ -568,13 +736,18 @@ class CosmicEvents(Events):
 
 
     def postProcess(self):
-        labels = ['total', 'trigger_pass', 'leptonjetProxyMuon', 'pv_good', 'cosmicveto_pass']
-        for ch in self.Channel:
-            xaxis = self.Histos['{}/cutflow'.format(ch)].axis(0)
-            for i, s in enumerate(labels, start=1):
-                xaxis.SetBinLabel(i, s)
-                # binNum., labAngel, labSize, labAlign, labColor, labFont, labText
-                xaxis.ChangeLabel(i, 315, -1, 11, -1, -1, s)
+        if self.KeepCutFlow:
+            labels = ['total', 'trigger_pass', 'leptonjetProxyMuon', 'pv_good', 'cosmicveto_pass']
+            for ch in self.Channel:
+                xaxis = self.Histos['{}/cutflow'.format(ch)].axis(0)
+                for i, s in enumerate(labels, start=1):
+                    xaxis.SetBinLabel(i, s)
+                    # binNum., labAngel, labSize, labAlign, labColor, labFont, labText
+                    xaxis.ChangeLabel(i, 315, -1, 11, -1, -1, s)
+        else:
+            for ch in self.Channel:
+                self.Histos.pop('{}/cutflow'.format(ch))
+
 
 
 
@@ -582,6 +755,7 @@ class SignalEvents(Events):
     def __init__(self, files=None, type='MC', maxevents=-1, channel=['4mu', '2mu2e'], **kwargs):
         super(SignalEvents, self).__init__(files=files, type=type, maxevents=maxevents, channel=channel, **kwargs)
         self.Chain.define_collection('gens', prefix='gen_', size='gen_n')
+        # self.Chain.define_object('pfmet', prefix='pfMet')
 
     def process(self):
 
@@ -592,7 +766,7 @@ class SignalEvents(Events):
             aux['wgt'] = self.Scale
             if self.Type == 'MC':
                 aux['wgt'] *= event.weight # gen weight
-                aux['wgt'] *= self.LookupWeight.GetBinContent(self.LookupWeight.GetXaxis().FindBin(event.trueInteractionNum)) ## pileup correction
+                # aux['wgt'] *= self.LookupWeight.GetBinContent(self.LookupWeight.GetXaxis().FindBin(event.trueInteractionNum)) ## pileup correction
 
             aux['dp'] = [p for p in event.gens if p.pid==32]
             aux['channel'] = '4mu'

@@ -5,11 +5,19 @@ from math import log
 import rootpy.ROOT as ROOT
 from rootpy.plotting.utils import *
 from rootpy.context import preserve_current_canvas, do_nothing
+from rootpy import asrootpy
 from rootpy.plotting.hist import _Hist, Hist, HistStack
 from rootpy.plotting.graph import _Graph1DBase, Graph
 from rootpy.plotting.style import get_style
 
-bkgCOLORS ={'QCD': 'powderblue', 'DYJetsToLL': 'wheat', 'TTJets': 'darkcyan', 'DiBoson': 'salmon'}
+bkgCOLORS ={
+    'QCD': 'powderblue',
+    'DYJetsToLL': 'wheat',
+    'TTJets': 'darkcyan',
+    'Top': 'darkcyan',
+    'WJets': 'darkmagenta',
+    'DiBoson': 'salmon',
+}
 sigCOLORS =[
     "#1696d2", "#ec008b", "#000000", "#d2d2d2",
     "#fdbf11", "#55b748", "#9e0142", "#f46d43",
@@ -58,17 +66,15 @@ def ErrorBandFromHistStack(hstack, **kwargs):
     possion error band (TGraphAsymmError) from sum of `hstack`
     kwargs are forwarded for TGraphAsymmError property setting
     """
-    _sumStack = None
-    for h in hstack.GetHists():
-        if _sumStack is None: _sumStack = h.Clone()
-        else: _sumStack.Add(h)
+    _sumStack = sumHistStack(hstack)
 
-    stackError = _sumStack.poisson_errors()
+    stackError = asrootpy(_sumStack)#.poisson_errors()
     ROOT.SetOwnership(stackError, False)
     kwDefaults = {
         'fillstyle': 3244,
         'fillcolor': 'gray',
-        'drawstyle': '2',
+        'drawstyle': 'e2',
+        'markersize': 0,
         'legendstyle': 'F',
         'title': 'stat. unc',
     }
@@ -87,6 +93,7 @@ def sumHistStack(hstack):
     for h in hstack.GetHists():
         if _sumStack is None: _sumStack = h.Clone()
         else: _sumStack.Add(h)
+    _sumStack.Sumw2()
     return _sumStack
 
 
@@ -130,11 +137,15 @@ def MyStyle():
     style.SetLabelSize(0.03, "XYZ")
     style.SetLegendBorderSize(0)
     style.SetLegendFillColor(0)
-    font = 43 # Helvetica
+    font = 42 # Helvetica
     style.SetTextFont(font)
-    style.SetLegendFont(font)
-    style.SetPalette(112) # 55 ROOT.kCMYK # 112 ROOT.kViridis
+    style.SetLegendFont(43)
+    style.SetPalette(ROOT.kBird) # 55 ROOT.kCMYK # 112 ROOT.kViridis
     style.SetErrorX()
+    style.SetPadTopMargin(0.05)
+    style.SetPadBottomMargin(0.10)
+    style.SetPadLeftMargin(0.12)
+    style.SetPadRightMargin(0.04)
     return style
 
 
@@ -761,15 +772,51 @@ def draw_labels(lumi_text, cms_position='left', extra_text=''):
 
 
 def decorate_axis_pi(xax):
-    xax.SetNdivisions(-310)
-    xax.ChangeLabel(2,-1,-1,-1,-1,-1,"0.1#pi")
-    xax.ChangeLabel(3,-1,-1,-1,-1,-1,"0.2#pi")
-    xax.ChangeLabel(4,-1,-1,-1,-1,-1,"0.3#pi")
-    xax.ChangeLabel(5,-1,-1,-1,-1,-1,"0.4#pi")
-    xax.ChangeLabel(6,-1,-1,-1,-1,-1,"0.5#pi")
-    xax.ChangeLabel(7,-1,-1,-1,-1,-1,"0.6#pi")
-    xax.ChangeLabel(8,-1,-1,-1,-1,-1,"0.7#pi")
-    xax.ChangeLabel(9,-1,-1,-1,-1,-1,"0.8#pi")
-    xax.ChangeLabel(10,-1,-1,-1,-1,-1,"0.9#pi")
-    xax.ChangeLabel(11,-1,-1,-1,-1,-1,"#pi")
+    xmin, xmax = xax.GetXmin(), xax.GetXmax()
+    if abs(xmin-0)<1e-3 and abs(xmax-M_PI)<1e-3:
+        xax.SetNdivisions(-210)
+        xax.ChangeLabel(2,-1,-1,-1,-1,-1,"0.1#pi")
+        xax.ChangeLabel(3,-1,-1,-1,-1,-1,"0.2#pi")
+        xax.ChangeLabel(4,-1,-1,-1,-1,-1,"0.3#pi")
+        xax.ChangeLabel(5,-1,-1,-1,-1,-1,"0.4#pi")
+        xax.ChangeLabel(6,-1,-1,-1,-1,-1,"0.5#pi")
+        xax.ChangeLabel(7,-1,-1,-1,-1,-1,"0.6#pi")
+        xax.ChangeLabel(8,-1,-1,-1,-1,-1,"0.7#pi")
+        xax.ChangeLabel(9,-1,-1,-1,-1,-1,"0.8#pi")
+        xax.ChangeLabel(10,-1,-1,-1,-1,-1,"0.9#pi")
+        xax.ChangeLabel(11,-1,-1,-1,-1,-1,"#pi")
+    if abs(xmin+M_PI)<1e-3 and abs(xmax-M_PI)<1e-3:
+        xax.SetNdivisions(-410)
+        xax.ChangeLabel(1,-1,-1,-1,-1,-1,"-#pi")
+        xax.ChangeLabel(2,-1,-1,-1,-1,-1,"-0.8#pi")
+        xax.ChangeLabel(3,-1,-1,-1,-1,-1,"-0.6#pi")
+        xax.ChangeLabel(4,-1,-1,-1,-1,-1,"-0.4#pi")
+        xax.ChangeLabel(5,-1,-1,-1,-1,-1,"-0.2#pi")
+        xax.ChangeLabel(6,-1,-1,-1,-1,-1,"0")
+        xax.ChangeLabel(7,-1,-1,-1,-1,-1,"0.2#pi")
+        xax.ChangeLabel(8,-1,-1,-1,-1,-1,"0.4#pi")
+        xax.ChangeLabel(9,-1,-1,-1,-1,-1,"0.6#pi")
+        xax.ChangeLabel(10,-1,-1,-1,-1,-1,"0.8#pi")
+        xax.ChangeLabel(11,-1,-1,-1,-1,-1,"#pi")
     return xax
+
+
+def computeCosAlpha(p4_1, p4_2):
+    vec_1 = ROOT.TVector3(p4_1.px(), p4_1.py(), p4_1.pz())
+    vec_2 = ROOT.TVector3(p4_2.px(), p4_2.py(), p4_2.pz())
+
+    return vec_1.Dot(vec_2)/vec_1.Mag()/vec_2.Mag()
+
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+def colorMsg(msg, code):
+    return getattr(bcolors, code)+msg+bcolors.ENDC
