@@ -6,6 +6,7 @@ The signal yield is proportional to the DM bound state cross section, therefore 
 We are assuming the decay branch fraction of XX->Zd+Zd is 100%.
 
 * I drive the `CombineHarvestor` to write datacard for each signal masspoint;
+  * The backbone of the datacard follow the [Example part III](http://cms-analysis.github.io/CombineHarvester/intro3.html) from CombineHarvestor documentation.
 * then print out the `combine` command which will be executed. AsympotitcLimits are fast to run, there's no problem
 to run them interactively. HybridNew are more time-consuming, especially `--LHCmode LHC-limits`, it's better to
 submit those jobs to CERN condor (work on lxplus)
