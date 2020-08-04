@@ -1,0 +1,4 @@
+datacards*
+logs
+condorSubmit
+condorExecutable.sh
