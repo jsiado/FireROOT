@@ -8,8 +8,8 @@ import ROOT
 proxydir = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/samples/merged/proxy')
 if not os.path.isdir(proxydir): os.makedirs(proxydir)
 
-# shortcut = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/samples/latest/proxy_backgrounds.json')
-shortcut = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/samples/latest/proxy_data2018.json')
+shortcut = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/samples/latest/proxy_backgrounds.json')
+#shortcut = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/samples/latest/proxy_data2018.json')
 
 flist = json.load(open(os.path.realpath(shortcut)))
 if 'data' in os.path.basename(shortcut):

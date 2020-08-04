@@ -13,7 +13,7 @@ from FireROOT.Analysis.samples.makeSampleSheet import stage_out_json, total_even
 from FireROOT.Analysis.samples.signalnumbers import genxsec, darkphotonbr
 from Firefighter.ffConfig.datasetUtils import sigmc_ctau2lxy
 from Firefighter.ffConfig.production.Autumn18.sigmc.central.generateyaml import (
-    get_valid_datatasets,
+    get_valid_datasets,
     parseSignalDataset
 )
 
@@ -22,7 +22,7 @@ def getNtupleListFromDataJS(dn):
     storeInfo = json.loads(open(f).read().replace('var data=', ''))['store']
     res = []
     for entry in storeInfo:
-        if entry['name']==dn and entry['jobstatus']=="COMPLETED":
+        if entry['name']==dn: #and entry['jobstatus']=="COMPLETED":
             res = entry['ntuplefiles']
             break
     return res
@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
     ffntuplesColl = {'2mu2e': {}, '4mu': {}}
     scalesColl = {'2mu2e': {}, '4mu': {}}
-    for d in get_valid_datatasets():
+    for d in get_valid_datasets():
         channel, mxx, ma, ctau = parseSignalDataset(d)
         lxy = sigmc_ctau2lxy(float(mxx), float(ma), float(ctau))
         key = 'mXX-{}_mA-{}_lxy-{}_ctau-{}'.format(

@@ -12,6 +12,14 @@ BKG_XSEC = dict(
         "Top": 34.91,
         "AntiTop": 34.97,
     },
+    Top={
+        "TTJets": 491.3,
+        "ST_t-channel_antitop": 82.52,
+        "ST_t-channel_top": 119.7, # XSDB
+        "ST_tW_antitop": 34.97, # XSDB
+        "ST_tW_top": 34.91, # XSDB
+        "ST_s-channel_leptonDecay": 3.74,
+    },
     WJets={
         "WJets_HT-70To100": 1353,
         "WJets_HT-100To200": 1395,
@@ -23,8 +31,8 @@ BKG_XSEC = dict(
         "WJets_HT-2500ToInf": 0.008001,
     },
     DYJetsToLL={
-        "DYJetsToLL-M-10to50": 15820,
-        "DYJetsToLL_M-50": 5317,
+        "DYJetsToLL-M-10to50": 15810,
+        "DYJetsToLL_M-50": 6077,
         "DYJetsToLL_M-50_NLO": 6435,
     },
     DiBoson={
@@ -54,5 +62,15 @@ BKG_XSEC = dict(
         "QCD_Pt-600to800": 18.19,
         "QCD_Pt-800to1000": 3.271,
         "QCD_Pt-1000toInf": 1.08,
+
+        "QCD_HT50to100": 246300000.0,
+        "QCD_HT100to200": 27440000.,
+        "QCD_HT200to300": 1759000.0,
+        "QCD_HT300to500": 351400.0,
+        "QCD_HT500to700": 32260.0,
+        "QCD_HT700to1000": 6830.0,
+        "QCD_HT1000to1500": 1207.0,
+        "QCD_HT1500to2000": 119.1,
+        "QCD_HT2000toInf": 25.16,
     },
 )
