@@ -238,16 +238,16 @@ canvas.Clear()
 f.close()
 
 
+####################
+### UNBLINDED SR ###
+####################
+
 fn = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/modules/myworkflow.root')
 f = root_open(fn)
 
-fout = root_open('out.root', 'recreate')
 h = f.ch4mu.data.dphiIso2D
-print('4mu: correlation factor ', h.get_correlation_factor())
+print('4mu: correlation factor (blinded region is empty) ', h.get_correlation_factor())
 
-# for i in range(14+1, h.nbins(0)+1):
-#     for j in range(1, h.nbins(1)+1):
-#         h.SetBinContent(i,j,0)
 h.Draw('colz')
 h.GetListOfFunctions().FindObject("palette").SetX2NDC(0.92)
 title = TitleAsLatex('[4#mu SR] '+h.title)
@@ -285,11 +285,8 @@ canvas.clear()
 
 
 h= f.ch2mu2e.data.dphiEgmIso2D
-print('2mu2e: correlation factor ', h.get_correlation_factor())
+print('2mu2e: correlation factor (blinded region is empty)', h.get_correlation_factor())
 
-# for i in range(14+1, h.nbins(0)+1):
-#     for j in range(1, h.nbins(1)+1):
-#         h.SetBinContent(i,j,0)
 h.Draw('colz')
 h.GetListOfFunctions().FindObject("palette").SetX2NDC(0.92)
 title = TitleAsLatex('[2#mu2e SR] '+h.title)
@@ -324,6 +321,5 @@ title.Draw()
 canvas.SaveAs('{}/ch2mu2e_sr_dphiiso_closeness.pdf'.format(outdir))
 canvas.clear()
 
-fout.close()
 
 f.close()

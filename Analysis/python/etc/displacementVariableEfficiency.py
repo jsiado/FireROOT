@@ -88,6 +88,6 @@ for chan in ['2mu2e', ]: #'4mu'
     for varname in [ 'mind0sig', 'maxd0sig', 'aved0sig', 'mind0', 'maxd0', 'aved0',]:
         routine(varname, chan)
 
-with open('dispvar_efficiency.json', 'w') as f:
-    f.write(json.dumps(table_data, indent=4))
+# with open('dispvar_efficiency.json', 'w') as f:
+#     f.write(json.dumps(table_data, indent=4))
 f.close()

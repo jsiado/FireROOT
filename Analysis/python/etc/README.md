@@ -1,0 +1,29 @@
+# Standalone scripts
+
+- `centralSig_optimizeABCD.py`: optimize ABCD boundaries for each central signal samples
+- `centralSig_validategen.py`: make gen-level quantity plots from central signal samples
+- `checkProxyABCD.py`: check closure in the validation region
+- `closureABCD.py`: make closure plots from VR and unblined SR
+- `compareProxyLjD0Shape.py`: overlay Proxy LJ d0 shape in 4mu VR
+- `displacementSignificance.py`: plot forward s/sqrt(b) for displacement variables
+- `displacementVariableEfficiency.py`: plot cut efficiency for displacement variables
+- `dump_SF.py`: print central scale factor maps
+- `harvester_leptonIDSyst.py`: determine lepton ID systematic uncertainties from central signal samples
+- `leptonjetCosmicVetoCutEfficiency.py`: report cut efficiency on `drdsa` and `drseg` for DSA muons
+- `leptonjetDphiCutEfficiency.py`: report cut efficiency on `dphi` for lepton-jet pair
+- `leptonjetGlobalCosmicVeto.py`: report cut efficiency on all cosmic suppression measurements
+- `leptonjetIsoCutEfficiency.py`: report cut efficiency for lepton-jet isolations
+- `leptonjetLeptonRangeCutEfficiency.py`: report cut efficiency when raising pT threshold for e/γ/μ
+- `leptonjetTrackTrackDCACutEfficiency.py`: report cut efficiency for `tktkdca` and `maxabsdz` for cosmic veto
+- `mass_XX.py`: plot invariant mass of lepton-jet pair in signal samples
+- `optimize_ABCD.py`: optimize ABCD boundaries with validation regions
+- `optimized0.py`: optimize d0 cut
+- `optimizedphi.py`: optimize dphi cut
+- `optimizeiso.py`: optimize iso cut
+- `overlayProxyDphi.py`: overlay lepton-jet pair dphi distribution at different d0 cut
+- `overlaySignalDSAquality.py`: DSA N-1 plots on ID cuts from siganl sample
+- `overlaySignalLifetime.py`: overlay `dplxy` of private signal sample points
+- `parallelCosmicCutEfficiency.py`: report cut efficiency on parallel cosmic pairs
+- `printProxyDataEvents.py`: convert the cutflow histogram to numbers
+- `printSignalRawEvents.py`: convert the cutflow histogram of raw events to numbers
+- `ratioABCD.py`: plot the ratio of high/low at various ABCD boundaries
