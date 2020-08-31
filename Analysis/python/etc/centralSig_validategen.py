@@ -65,6 +65,48 @@ def plot_pt(chan, obj):
     canvas.clear()
 
 
+def plot_dppt(chan):
+    assert(chan in ['2mu2e', '4mu'])
+
+    chandir = getattr(f, 'ch'+chan)
+    masskeys_ = [k.name for k in chandir.keys()]
+    # mzd=1.2
+    masskeys = [k for k in masskeys_ if k.endswith('mA-1p2')]
+    masskeys.sort(key=get_first)
+    hs = []
+    for i, masskey in enumerate(masskeys):
+        massdir = getattr(chandir, masskey)
+        lifetimekeys_ = [k.name for k in massdir.keys()]
+        # lxy=30
+        lifetimekeys = [ k for k in lifetimekeys_ if k.startswith('lxy-30_') ]
+        if not lifetimekeys: continue
+
+        lifetimedir = getattr(massdir, lifetimekeys[0])
+        h = getattr(lifetimedir, 'dppt')
+
+        h.scale(1./h.integral())
+        h.title = 'm_{#chi#chi} = %d GeV' % int(get_first(masskey))
+        h.color = sigCOLORS[i]
+        h.legendstyle = 'LEP'
+        h.markersize = 0.5
+
+        hs.append( h )
+
+    legItems = [h for h in hs]
+    draw(hs, logy=True, ytitle='Normalized counts/1GeV')
+    legheader = 'm_{Z_{d}} = 1.2 GeV, lxy = 30 cm'
+    leg = Legend(legItems, pad=canvas, margin=0.25, topmargin=0.02, entryheight=0.02, entrysep=0.01, textsize=12, header=legheader)
+    leg.Draw()
+
+    htitle = 'Z_{d} p_{T}'
+    title = TitleAsLatex('[{}] '.format(chan.replace('mu', '#mu'))+htitle)
+    title.Draw()
+    draw_labels('59.74 fb^{-1} (13 TeV)', cms_position='left', extra_text='Simulation Preliminary')
+
+    canvas.SaveAs('{}/ch{}_dppt.pdf'.format(outdir, chan))
+    canvas.clear()
+
+
 def plot_dr(chan, obj):
     assert(chan in ['2mu2e', '4mu'])
     assert(obj in ['muon', 'electron'])
@@ -217,6 +259,7 @@ def plot_boundstatemass(chan):
         hs.append( h )
 
     legItems = [h for h in hs]
+    ROOT.gPad.SetLogy(0)
     draw(hs, logy=False, ytitle='Normalized counts/1GeV')
     legheader = 'm_{Z_{d}} = 0.25 GeV, lxy = 150 cm'
     leg = Legend(legItems, pad=canvas, margin=0.25, topmargin=0.02, entryheight=0.02, entrysep=0.01, textsize=12, header=legheader)
@@ -277,6 +320,8 @@ if __name__ == '__main__':
     plot_pt('2mu2e', 'mu')
     plot_pt('2mu2e', 'el')
 
+    plot_dppt('4mu')
+    plot_dppt('2mu2e')
 
     plot_dr('4mu',   'muon')
     plot_dr('2mu2e', 'muon')

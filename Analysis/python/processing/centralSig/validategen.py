@@ -48,6 +48,8 @@ class MyEvents(SignalEvents):
         self.Histos['{}/mu0pt'.format(chan)].Fill(max([p.p4.pt() for p in muons]))
         if electrons:
             self.Histos['{}/el0pt'.format(chan)].Fill(max([p.p4.pt() for p in electrons]))
+        for dp in aux['dp']:
+            self.Histos['%s/dppt'%chan].Fill(dp.p4.pt())
 
     def postProcess(self):
         super(MyEvents, self).postProcess()
@@ -122,6 +124,11 @@ histCollection = [
         'name': 'el0pt',
         'binning': (1000, 0, 1000),
         'title': 'leading electron p_{T};e p_{T} [GeV];counts/1GeV'
+    },
+    {
+        'name': 'dppt',
+        'binning': (1000, 0, 1000),
+        'title': 'Z_{d} p_{T};Z_{d} p_{T} [GeV];counts/1GeV'
     },
 
 ]

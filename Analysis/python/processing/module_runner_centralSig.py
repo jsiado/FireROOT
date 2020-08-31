@@ -2,7 +2,7 @@
 from __future__ import print_function
 import argparse
 import math, numbers
-import os, sys
+import os, sys, fnmatch
 from multiprocessing import Pool
 
 import tqdm
@@ -64,7 +64,13 @@ if __name__ == '__main__':
 
     sampleSig = list(set(sigDS_2mu2e.keys()) | set(sigDS_4mu.keys()))
     if args.sigparam:
-        sampleSig = args.sigparam
+        _selected = []
+        for s in args.sigparam:
+            if '*' in s or '?' in s:
+                _selected.extend( fnmatch.filter(sampleSig, s) )
+            else: _selected.append(s)
+        sampleSig = list(set(_selected))
+        print(sampleSig)
 
     def dofill(pack):
         ds, files, scale, maxevents, channel = pack

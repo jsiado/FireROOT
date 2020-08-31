@@ -2,7 +2,7 @@
 from __future__ import print_function
 import argparse
 import math, numbers
-import os, sys
+import os, sys, fnmatch, json
 from collections import OrderedDict
 from multiprocessing import Pool
 
@@ -29,6 +29,7 @@ parser.add_argument("--maxevents", "-n", type=int, default=-1, help='max number 
 parser.add_argument("--channel", "-ch", nargs='*', default=['2mu2e', '4mu'], choices=['2mu2e', '4mu'], help='channels to run')
 parser.add_argument("--create", "-c", type=str, default='recreate', choices=['recreate', 'update'], help='update output by')
 parser.add_argument("--mbase", "-b", type=str, default='modules', choices=['modules', 'proxy', 'debug', 'centralSig'], help='module base name')
+parser.add_argument("--update-signalsample", type=str, default=None, help='path to updated signal sample json file, will be update to signal DataMap')
 parser.add_argument("--private", action='store_true', help='run private signal sample')
 args = parser.parse_args()
 
@@ -75,7 +76,13 @@ if __name__ == '__main__':
         sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300'.split('|')
         sampleSig.extend( 'mXX-100_mA-5_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|') )
         if args.sigparam:
-            sampleSig = args.sigparam
+            sampleSig = []
+            for s in args.sigparam:
+                if '*' in s or '?' in s:
+                    sampleSig.extend( fnmatch.filter(sdml.get_datasets('4mu').keys(), s) )
+                else: sampleSig.append(s)
+            sampleSig = list(set(sampleSig))
+            print(sampleSig)
 
         def dofill(pack):
             ds, files, scale, maxevents, channel = pack
@@ -113,6 +120,8 @@ if __name__ == '__main__':
         ### signal 4mu
         if '4mu' in args.channel:
             sigDS_4mu_inc, sigSCALE_4mu_inc = sdml.fetch('4mu')
+            if args.update_signalsample: sigDS_4mu_inc.update( json.load(open(args.update_signalsample)) )
+
             sigDS_4mu, sigSCALE_4mu = {}, {}
             for t in sampleSig:
                 for k in sigDS_4mu_inc:
@@ -146,6 +155,8 @@ if __name__ == '__main__':
         ### signal 2mu2e
         if '2mu2e' in args.channel:
             sigDS_2mu2e_inc, sigSCALE_2mu2e_inc = sdml.fetch('2mu2e')
+            if args.update_signalsample: sigDS_2mu2e_inc.update( json.load(open(args.update_signalsample)) )
+
             sigDS_2mu2e, sigSCALE_2mu2e = {}, {}
             for t in sampleSig:
                 for k in sigDS_2mu2e_inc:
@@ -186,7 +197,7 @@ if __name__ == '__main__':
 
         BkgHists = {}
         for ds, files in tqdm(bkgDS.items()):
-            events_ = imp.MyEvents(files=files, type='MC', maxevents=args.maxevents, dtag=ds, channel=args.channel)
+            events_ = imp.MyEvents(files=files, outname=outname, type='MC', maxevents=args.maxevents, dtag=ds, channel=args.channel)
             events_.setScale(bkgSCALE[ds])
             for chan in events_.channel:
                 for hinfo in imp.histCollection:
@@ -227,7 +238,7 @@ if __name__ == '__main__':
 
         def dofill(pack):
             files, maxevents, channel = pack
-            events_ = imp.MyEvents(files=files, type='DATA', maxevents=maxevents, channel=channel)
+            events_ = imp.MyEvents(files=files, outname=outname, type='DATA', maxevents=maxevents, channel=channel)
             for chan in events_.channel:
                 for hinfo in imp.histCollection:
                     if 'class' in hinfo:

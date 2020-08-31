@@ -8,7 +8,7 @@ from rootpy.plotting import Hist, Legend, Canvas
 
 from FireROOT.Analysis.Utils import *
 
-fn = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/isolationVariables.root')
+fn = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/modules/isolationVariables.root')
 outdir = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/etc/plots/leptonjetIsoCutEfficiency')
 if not os.path.isdir(outdir): os.makedirs(outdir)
 

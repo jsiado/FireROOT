@@ -21,6 +21,7 @@ parser.add_argument("--histname", "-t", type=str, default=None, help='only plot 
 parser.add_argument("--logx", action='store_true')
 parser.add_argument("--logy", action='store_true')
 parser.add_argument("--overflow", type=bool, default=True)
+parser.add_argument("--underflow", type=bool, default=True)
 parser.add_argument("--xmin", type=float, default=None, help='min X')
 parser.add_argument("--xmax", type=float, default=None, help='max X')
 parser.add_argument("--ymin", type=float, default=None, help='min Y')
@@ -100,8 +101,10 @@ if __name__ ==  '__main__':
                         h.legendstyle='F'
                         h.fillcolor = bkgCOLORS[h.title]
                         if args.overflow:
-                            h.SetBinContent(h.nbins(), h.GetBinContent(h.nbins())+h.overflow())
-                            h.SetBinError(h.nbins(), math.sqrt(h[h.nbins()].value))
+                            h = h.merge_bins([(-2, -1),])
+                            # h.SetBinContent(h.nbins(), h.GetBinContent(h.nbins())+h.overflow())
+                            # h.SetBinError(h.nbins(), math.sqrt(h[h.nbins()].value))
+                        if args.underflow: h = h.merge_bins([(0, 1),])
 
                     hs.append(hstack)
 
@@ -120,8 +123,10 @@ if __name__ ==  '__main__':
                     hData = getattr(channelDir.data, hname)
                     if not htitle: htitle = hData.title
                     hData.title = 'data'
-                    hData.SetBinContent(hData.nbins(), hData.GetBinContent(hData.nbins())+hData.overflow())
-                    hData.SetBinError(hData.nbins(), math.sqrt(hData[hData.nbins()].value))
+                    # hData.SetBinContent(hData.nbins(), hData.GetBinContent(hData.nbins())+hData.overflow())
+                    # hData.SetBinError(hData.nbins(), math.sqrt(hData[hData.nbins()].value))
+                    if args.overflow:  hData = hData.merge_bins([(-2, -1),])
+                    if args.underflow: hData = hData.merge_bins([(0, 1),])
                     hData.legendstyle = 'LEP'
                     hs.append(hData)
                     legItems.append(hData)
@@ -152,8 +157,10 @@ if __name__ ==  '__main__':
                         if h.integral(overflow=True)>0:
                             h.scale( args.normsigxsec/genxsec[mboundstate] )
                     if args.overflow:
-                        h.SetBinContent(h.nbins(), h.GetBinContent(h.nbins())+h.overflow())
-                        h.SetBinError(h.nbins(), math.sqrt(h[h.nbins()].value))
+                        h = h.merge_bins([(-2, -1),])
+                        # h.SetBinContent(h.nbins(), h.GetBinContent(h.nbins())+h.overflow())
+                        # h.SetBinError(h.nbins(), math.sqrt(h[h.nbins()].value))
+                    if args.underflow: h = h.merge_bins([(0, 1),])
 
                     h.drawstyle = 'hist'
                     h.color = sigCOLORS[i]

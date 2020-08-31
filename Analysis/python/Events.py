@@ -203,15 +203,18 @@ def globalCosmicShower(cosmicMuons, channel):
 
 
 class Events(object):
-    def __init__(self, files=None, type='MC', dtag='', maxevents=-1, channel=['4mu', '2mu2e'], ctau=None, chargedlj=False):
+    def __init__(self, files=None, outname=None, type='MC', dtag='', maxevents=-1, channel=['4mu', '2mu2e'], ctau=None, chargedlj=False):
 
         if type.upper() not in ['MC', 'DATA']: raise ValueError("Argument `type` need to be MC/DATA")
+        self.OutName = outname
         self.Type = type.upper()
         self.ChargedLJ = chargedlj
         self.MaxEvents = maxevents
         self.Channel = channel
         self.Dtag = dtag
         self.Ctau = ctau
+        __signal_sample_param = dict([substr.split('-') for substr in self.Dtag.split('_')])
+        self.SignalParam = {k.upper(): float(v.replace('p', '.')) for k, v in __signal_sample_param.items()}
 
         if not files: raise ValueError("Argument `files` need to be non-empty")
         if isinstance(files, str): files = [files,]
@@ -752,12 +755,21 @@ class CosmicEvents(Events):
 
 
 class SignalEvents(Events):
-    def __init__(self, files=None, type='MC', maxevents=-1, channel=['4mu', '2mu2e'], **kwargs):
+    def __init__(self, files=None, type='MC', maxevents=-1, channel=['4mu', '2mu2e'], tqdm=False, **kwargs):
         super(SignalEvents, self).__init__(files=files, type=type, maxevents=maxevents, channel=channel, **kwargs)
+        self.Tqdm=tqdm
         self.Chain.define_collection('gens', prefix='gen_', size='gen_n')
         # self.Chain.define_object('pfmet', prefix='pfMet')
 
     def process(self):
+
+        if self.Tqdm:
+            if self.MaxEvents>0:
+                pbar = tqdm(total=self.MaxEvents)
+            else:
+                pbar = tqdm(total=self.Chain.GetEntries())
+
+
 
         for i, event in enumerate(self.Chain):
             if self.MaxEvents>0 and i>self.MaxEvents: break
@@ -773,3 +785,10 @@ class SignalEvents(Events):
             if 11 in [abs(p.daupid) for p in aux['dp']]:
                 aux['channel'] = '2mu2e'
             self.processEvent(event, aux)
+
+            if self.Tqdm: pbar.update(1)
+
+
+
+        if self.Tqdm:
+            pbar.close()
