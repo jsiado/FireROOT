@@ -51,6 +51,11 @@ class MyEvents(SignalEvents):
             'pho_haspix': 'I',
             'pho_idbit': 'I',
             'pho_grade': 'I',
+
+            'ljsrc_pt': 'F',
+            'ljsrc_gendr': 'F',
+            'ljsrc_type': 'I', # 2: electron, 4: photon
+
         })
 
 
@@ -202,6 +207,27 @@ class MyEvents(SignalEvents):
                 self._outt.pho_haspix= -999
                 self._outt.pho_idbit = -999
                 self._outt.pho_grade = -999
+
+
+            # matching with ljsrc
+            mindr, matched = 999., None
+            for g in event.ljsources:
+                if g.type not in [2,4]: continue
+                distance = DeltaR(dp.p4, g.p4)
+                if distance > DR_THRESHOLD: continue
+                else:
+                    mindr = distance
+                    matched = g
+
+            if matched:
+                self._outt.ljsrc_gendr = mindr
+                self._outt.ljsrc_pt = matched.p4.pt()
+                self._outt.ljsrc_type = matched.type
+            else:
+                self._outt.ljsrc_gendr = -999.
+                self._outt.ljsrc_pt    = -999.
+                self._outt.ljsrc_type = -999
+
 
 
             self._outt.fill()

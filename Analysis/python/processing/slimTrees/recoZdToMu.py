@@ -64,6 +64,18 @@ class MyEvents(SignalEvents):
             'dsa_m_extrpdr': 'F',
             'dsa_pm_same': 'I',
             'dsa_pm_pt': 'F',
+
+
+            'ljsrc_p_pt': 'F',
+            'ljsrc_p_gendr': 'F',
+            'ljsrc_p_type': 'I', # 3: PFMu, 8: DSAMu
+            'ljsrc_p_samesign': 'I',
+            'ljsrc_m_pt': 'F',
+            'ljsrc_m_gendr': 'F',
+            'ljsrc_m_type': 'I',
+            'ljsrc_m_samesign': 'I',
+            'ljsrc_pm_same': 'I',
+
         })
 
 
@@ -287,6 +299,64 @@ class MyEvents(SignalEvents):
                 self._outt.dsa_pm_pt = -999.
 
 
+            #########################
+            ### LEPTONJETS SOURCE ###
+            #########################
+
+            # match with gen mu+
+            mindr, matched_p, matchedIdx_p = 999., None, -1
+            for i, mu in enumerate(event.ljsources):
+                if mu.type not in [3,8]: continue
+                # if mu.p4.pt() < 5 or abs(mu.p4.eta()) > 2.4: continue
+                distance = DeltaR(_mup.p4, mu.p4)
+                if distance > DR_THRESHOLD_MU: continue
+                if distance < mindr:
+                    mindr = distance
+                    matched_p = mu
+                    matchedIdx_p = i
+
+            if matched_p:
+                self._outt.ljsrc_p_pt = matched_p.p4.pt()
+                self._outt.ljsrc_p_gendr = mindr
+                self._outt.ljsrc_p_type = matched_p.type
+                self._outt.ljsrc_p_samesign = int(matched_p.charge > 0)
+            else:
+                self._outt.ljsrc_p_pt = -999.
+                self._outt.ljsrc_p_gendr = -999.
+                self._outt.ljsrc_p_type = -999
+                self._outt.ljsrc_p_samesign = -999
+
+
+            # match with gen mu-
+            mindr, matched_m, matchedIdx_m = 999., None, -1
+            for i, mu in enumerate(event.ljsources):
+                if mu.type not in [3,8]: continue
+                # if mu.p4.pt() < 5 or abs(mu.p4.eta()) > 2.4: continue
+                distance = DeltaR(_mum.p4, mu.p4)
+                if distance > DR_THRESHOLD_MU: continue
+                if distance < mindr:
+                    mindr = distance
+                    matched_m = mu
+                    matchedIdx_m = i
+
+            if matched_m:
+                self._outt.ljsrc_m_pt = matched_m.p4.pt()
+                self._outt.ljsrc_m_gendr = mindr
+                self._outt.ljsrc_m_type = matched_m.type
+                self._outt.ljsrc_m_samesign = int(matched_m.charge < 0)
+            else:
+                self._outt.ljsrc_m_pt = -999.
+                self._outt.ljsrc_m_gendr = -999.
+                self._outt.ljsrc_m_type = -999
+                self._outt.ljsrc_m_samesign = -999
+
+            # is _mup and _mum matched with the same reco mu?
+            if matchedIdx_p == -1 and matchedIdx_m == -1:
+                self._outt.ljsrc_pm_same = -999
+            elif matchedIdx_p == matchedIdx_m:
+                self._outt.ljsrc_pm_same = 1
+            else:
+                self._outt.ljsrc_pm_same = 0
 
 
             self._outt.fill()
