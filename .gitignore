@@ -1,6 +1,7 @@
 *.pyc
 *.png
 *.pdf
+*.root
 **/.vscode
 **/__init__.py
 **/.ipynb_checkpoints

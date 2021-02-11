@@ -10,15 +10,25 @@ def SignalReWeight(cTauRef, cTauNew, t):
 class MyEvents(SignalEvents):
     def __init__(self, files=None, type='MC', maxevents=-1, channel=['2mu2e', '4mu'], **kwargs):
         super(MyEvents, self).__init__(files=files, type=type, maxevents=maxevents, channel=channel, **kwargs)
-
+    
     def processEvent(self, event, aux):
         if aux['channel'] not in self.Channel: return
         chan = aux['channel']
+        
+        #LJ0 = aux['lj0']
 
         for p in aux['dp']:
             rho = (p.dauvtx-p.vtx).Rho()
             l3d = (p.dauvtx-p.vtx).R()
             t = rho*(p.p4.mass()/p.p4.pt())
+            
+            #for lj in enumerate(event.leptonjets):
+                #LJ0 = event.leptonjets[0]
+                #zdlj =  3#DeltaR(p.p4, LJ0.p4)
+                #if DeltaR<0.4:
+                   #print yes
+            
+            
             self.Histos['{}/dplxy'.format(chan)].Fill(rho)
             self.Histos['{}/dpl3d'.format(chan)].Fill(l3d)
             self.Histos['{}/dptime'.format(chan)].Fill(t)

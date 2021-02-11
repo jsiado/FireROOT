@@ -133,9 +133,9 @@ if __name__ ==  '__main__':
 
             ## sig
             if hasattr(channelDir, 'sig'):
-                sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300'.split('|')
+                sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300|mXX-1000_mA-0p25_lxy-300'.split('|')
                 sampleSig.extend( 'mXX-100_mA-5_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|') )
-
+                                                
                 for i, ds in enumerate(sampleSig):
                     if not hasattr(channelDir.sig, ds): continue
                     dsdir = getattr(channelDir.sig, ds)
@@ -157,10 +157,12 @@ if __name__ ==  '__main__':
                         if h.integral(overflow=True)>0:
                             h.scale( args.normsigxsec/genxsec[mboundstate] )
                     if args.overflow:
-                        h = h.merge_bins([(-2, -1),])
-                        # h.SetBinContent(h.nbins(), h.GetBinContent(h.nbins())+h.overflow())
-                        # h.SetBinError(h.nbins(), math.sqrt(h[h.nbins()].value))
-                    if args.underflow: h = h.merge_bins([(0, 1),])
+#                         h = h.merge_bins([(-2, -1),])
+                         h.SetBinContent(h.nbins(), h.GetBinContent(h.nbins())+h.overflow())#
+                         h.SetBinError(h.nbins(), math.sqrt(h[h.nbins()].value))#
+                    if args.underflow:
+                        h.SetBinContent(1,h.GetBinContent(1)+h.GetBinContent(0))#
+#                        h = h.merge_bins([(0, 1),])
 
                     h.drawstyle = 'hist'
                     h.color = sigCOLORS[i]

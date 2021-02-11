@@ -1,0 +1,10 @@
+nohup: ignoring input
+INFO:rootpy.plotting.style] using ROOT style 'CMSTDR'
+INFO:ROOT.TCanvas.Print] pdf file /uscms_data/d3/jsiado/SIDM_ana/CMSSW_10_2_14/src/FireROOT/Analysis/python/outputs/plots/modules/MuonPtDSA/mc__4mu__DsaPt7.pdf has been created
+INFO:ROOT.TCanvas.Print] pdf file /uscms_data/d3/jsiado/SIDM_ana/CMSSW_10_2_14/src/FireROOT/Analysis/python/outputs/plots/modules/MuonPtDSA/mc__2mu2e__DsaPt7.pdf has been created
+INFO:ROOT.TCanvas.Print] pdf file /uscms_data/d3/jsiado/SIDM_ana/CMSSW_10_2_14/src/FireROOT/Analysis/python/outputs/plots/modules/MuonPtDSA/mc__4mu__Zd_mass.pdf has been created
+INFO:ROOT.TCanvas.Print] pdf file /uscms_data/d3/jsiado/SIDM_ana/CMSSW_10_2_14/src/FireROOT/Analysis/python/outputs/plots/modules/MuonPtDSA/mc__2mu2e__Zd_mass.pdf has been created
+INFO:ROOT.TCanvas.Print] pdf file /uscms_data/d3/jsiado/SIDM_ana/CMSSW_10_2_14/src/FireROOT/Analysis/python/outputs/plots/modules/MuonPtDSA/mc__4mu__DsaPt5.pdf has been created
+INFO:ROOT.TCanvas.Print] pdf file /uscms_data/d3/jsiado/SIDM_ana/CMSSW_10_2_14/src/FireROOT/Analysis/python/outputs/plots/modules/MuonPtDSA/mc__2mu2e__DsaPt5.pdf has been created
+INFO:ROOT.TCanvas.Print] pdf file /uscms_data/d3/jsiado/SIDM_ana/CMSSW_10_2_14/src/FireROOT/Analysis/python/outputs/plots/modules/MuonPtDSA/mc__4mu__DsaPt10.pdf has been created
+INFO:ROOT.TCanvas.Print] pdf file /uscms_data/d3/jsiado/SIDM_ana/CMSSW_10_2_14/src/FireROOT/Analysis/python/outputs/plots/modules/MuonPtDSA/mc__2mu2e__DsaPt10.pdf has been created
