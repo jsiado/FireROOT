@@ -7,7 +7,7 @@ cmsrel CMSSW_10_2_14
 cd CMSSW_10_2_14/src
 cmsenv
 
-git clone https://github.com/phylsix/FireROOT.git
+git clone https://github.com/jsiado/FireROOT.git
 scram b -j4
 ```
 
