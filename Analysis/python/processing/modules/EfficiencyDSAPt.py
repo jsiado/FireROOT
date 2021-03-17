@@ -10,33 +10,38 @@ class MyEvents(SignalEvents):
         if aux['channel'] not in self.Channel: return
         chan = aux['channel']
 
-        gmus = [p for p in event.gens \
+        '''gmus = [p for p in event.gens \
             if abs(p.pid)==13 \
                 and p.p4.pt()>5\
                 and abs(p.p4.eta())<2.4\
                 and p.vtx.Rho()<700]
-        if len(gmus)<2: return
+        if len(gmus)<2: return'''
         
         #pt of dsa
         for i, dsa in enumerate(event.dsamuons):
             if dsa.p4.pt()<5 or abs(dsa.p4.eta())>2.4: continue
             if dsa.p4.pt()>5:
+                self.Histos['%s/EffDsa5'%chan].Fill(dsa.p4.pt(), aux['wgt'])
                 self.Histos['%s/DsaPt5'%chan].Fill(dsa.p4.pt(), aux['wgt'])
-                if dsa.p4.pt()>7:
-                    self.Histos['%s/DsaPt7'%chan].Fill(dsa.p4.pt(), aux['wgt'])
-                    if dsa.p4.pt()>10:
-                        self.Histos['%s/DsaPt10'%chan].Fill(dsa.p4.pt(), aux['wgt'])
+                if dsa.p4.pt()>10:
+                    self.Histos['%s/EffDsa10'%chan].Fill(, aux['wgt'])
+                    self.Histos['%s/DsaPt10'%chan].Fill(dsa.p4.pt(), aux['wgt'])
 
+
+        self.Histos['%s/EffLJ'%chan].Fill(dphilj,aux['wgt'])
+        
         #lepton jets using new pt
         if len(event.leptonjets) == 2:
-            dRlj = DeltaR(event.leptonjets[0].p4, event.leptonjets[1].p4)
+            
+            #dRlj = DeltaR(event.leptonjets[0].p4, event.leptonjets[1].p4)
             dphilj = abs(DeltaPhi(event.leptonjets[0].p4, event.leptonjets[1].p4))
             
-            self.Histos['%s/dRLJ'%chan].Fill(dRlj,aux['wgt'])
+            #self.Histos['%s/dRLJ'%chan].Fill(dRlj,aux['wgt'])
             self.Histos['%s/dPhiLJ'%chan].Fill(dphilj,aux['wgt'])
             
+
         #leading pt
-        for p in aux['dp']:
+'''        for p in aux['dp']:
             rho = (p.dauvtx-p.vtx).Rho()
             l3d = (p.dauvtx-p.vtx).R()
             daus = []
@@ -88,30 +93,34 @@ class MyEvents(SignalEvents):
         for k in self.Histos:
             if 'phi' not in k: continue
             xax = self.Histos[k].axis(0)
-            decorate_axis_pi(xax)
+            decorate_axis_pi(xax)'''
 
 histCollection = [
-    {'name': 'DsaPt5',           'binning': (50, 0, 250.0),    'title': 'DSA p_{T} >5;p_{T};counts'},
-    {'name': 'DsaPt7',           'binning': (50, 0, 250.0),    'title': 'DSA p_{T} >7;p_{T};counts'},
-    {'name': 'DsaPt10',          'binning': (50, 0, 250.0),    'title': 'DSA p_{T} >10;p_{T};counts'},
+    {'name': 'DsaPt5',     'binning': (50, 0, 250.0),  'title': 'DSA p_{T} >5;p_{T};counts'},
+    {'name': 'DsaPt7',     'binning': (50, 0, 250.0),  'title': 'DSA p_{T} >7;p_{T};counts'},
+    {'name': 'DsaPt10',    'binning': (50, 0, 250.0),  'title': 'DSA p_{T} >10;p_{T};counts'},
+    {'name': 'EffLJ',      'binning': (100, 0, 10.0),  'title': 'EfficiencyLJ;NLJ;Efficiency'},
+    #{'name': 'dRLJ',       'binning': (50, -1,5),      'title': '#DeltaR between lepton jet pair;#DeltaR(LJ0LJ1);counts'},
+    {'name': 'dPhiLJ',     'binning': (50, -5.0,5.0),  'title': '|#Delta#phi| between the lepton jet pair;#Delta#phi(LJ0LJ1);counts'},
+    {'name': 'EffDsa5',     'binning': (50, -5.0,5.0),  'title': ' Eff Dsa5; Dsamuons ;Eff'},
+    {'name': 'EffDsa10',     'binning': (50, -5.0,5.0),  'title': 'Eff Dsa10; Dsamuons ;Eff'},
+
     #{'name': 'dpmass',           'binning': (500, 0, 6.5),     'title': 'dark photon invariant mass;mass [GeV];counts/0.01GeV'},
-    {'name': 'leamupt',          'binning': (100, 0, 500.0),   'title': 'Leading muon; p_{T} [GeV];counts/1GeV'},
-    {'name': 'leaelpt',          'binning': (100, 0, 500.0),   'title': 'leading ele;  p_{T} [GeV];counts/1GeV'},
+    #{'name': 'leamupt',          'binning': (100, 0, 500.0),   'title': 'Leading muon; p_{T} [GeV];counts/1GeV'},
+    #{'name': 'leaelpt',          'binning': (100, 0, 500.0),   'title': 'leading ele;  p_{T} [GeV];counts/1GeV'},
     #{'name': 'dplxy',            'binning': (500, 0, 500),     'title': 'dark photon lxy;Lxy [cm];counts/1cm'},
     #{'name': 'dpl3d',            'binning': (750, 0, 750),     'title': 'dark photon l3d;L3d [cm];counts/1cm'},
-    {'name': 'dpmass',           'binning': (750, 0, 7.5),     'title': 'dark photon invariant mass;mass [GeV];counts/0.01GeV'},
-    {'name': 'psmass',           'binning': (1500, 0, 1500),   'title': 'DM bound state invariant mass;mass [GeV];counts/1GeV'},
-    {'name': 'ndp',              'binning': (5, 0, 5),         'title': 'Number of dark photons;N;counts'},
-    {'name': 'nmu',              'binning': (5, 0, 5),         'title': 'Number of muons;N;counts'},
-    {'name': 'nel',              'binning': (5, 0, 5),         'title': 'Number of electrons;N;counts'},
-    {'name': 'nlep',             'binning': (5, 0, 5),         'title': 'Number of leptons(electrons+muons);N;counts'},
-    {'name': 'dpdphi',           'binning': (20, 0, M_PI),     'title': '|#Delta#phi| of dark photon pair;|#Delta#phi|;counts'},
-    {'name': 'electronpairdr',   'binning': (50, 0, 1),        'title': '#DeltaR between electron pair;#DeltaR(ee);counts'},
-    {'name': 'muonpairdr',       'binning': (50, 0, 1),        'title': '#DeltaR between muon pair;#DeltaR(#mu#mu);counts'},
-    {'name': 'mu0pt',            'binning': (1000, 0, 1000),   'title': 'leading #mu p_{T};#mu p_{T} [GeV];counts/1GeV'},
-    {'name': 'el0pt',            'binning': (1000, 0, 1000),   'title': 'leading electron p_{T};e p_{T} [GeV];counts/1GeV'},
-    {'name': 'dppt',             'binning': (1000, 0, 1000),   'title': 'Z_{d} p_{T};Z_{d} p_{T} [GeV];counts/1GeV'},
-    {'name': 'dpdR',             'binning': (50, -1,5),        'title': '#DeltaR between dark photon pair;#DeltaR(Z_{d}Z_{d});counts'},
-    {'name': 'dRLJ',             'binning': (50, -1,5),        'title': '#DeltaR between lepton jet pair;#DeltaR(LJ0LJ1);counts'},
-    {'name': 'dPhiLJ',           'binning': (50, -5.0,5.0),    'title': '|#Delta#phi| between the lepton jet pair;#Delta#phi(LJ0LJ1);counts'},
+    #{'name': 'dpmass',           'binning': (750, 0, 7.5),     'title': 'dark photon invariant mass;mass [GeV];counts/0.01GeV'},
+    #{'name': 'psmass',           'binning': (1500, 0, 1500),   'title': 'DM bound state invariant mass;mass [GeV];counts/1GeV'},
+    #{'name': 'ndp',              'binning': (5, 0, 5),         'title': 'Number of dark photons;N;counts'},
+    #{'name': 'nmu',              'binning': (5, 0, 5),         'title': 'Number of muons;N;counts'},
+    #{'name': 'nel',              'binning': (5, 0, 5),         'title': 'Number of electrons;N;counts'},
+    #{'name': 'nlep',             'binning': (5, 0, 5),         'title': 'Number of leptons(electrons+muons);N;counts'},
+    #{'name': 'dpdphi',           'binning': (20, 0, M_PI),     'title': '|#Delta#phi| of dark photon pair;|#Delta#phi|;counts'},
+    #{'name': 'electronpairdr',   'binning': (50, 0, 1),        'title': '#DeltaR between electron pair;#DeltaR(ee);counts'},
+    #{'name': 'muonpairdr',       'binning': (50, 0, 1),        'title': '#DeltaR between muon pair;#DeltaR(#mu#mu);counts'},
+    #{'name': 'mu0pt',            'binning': (1000, 0, 1000),   'title': 'leading #mu p_{T};#mu p_{T} [GeV];counts/1GeV'},
+    #{'name': 'el0pt',            'binning': (1000, 0, 1000),   'title': 'leading electron p_{T};e p_{T} [GeV];counts/1GeV'},
+    #{'name': 'dppt',             'binning': (1000, 0, 1000),   'title': 'Z_{d} p_{T};Z_{d} p_{T} [GeV];counts/1GeV'},
+    #{'name': 'dpdR',             'binning': (50, -1,5),        'title': '#DeltaR between dark photon pair;#DeltaR(Z_{d}Z_{d});counts'},
 ]

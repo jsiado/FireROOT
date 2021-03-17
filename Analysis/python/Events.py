@@ -309,11 +309,11 @@ class Events(object):
             if self.ChargedLJ:
                 if not LJ0.passChargedSelection(event): continue
                 if not LJ1.passChargedSelection(event): continue
-                if not LJ2.passChargedSelection(event): continue
+                #if not LJ2.passChargedSelection(event): continue
             else:
                 if not LJ0.passSelection(event): continue
                 if not LJ1.passSelection(event): continue
-                if not LJ2.passSelection(event): continue
+                #if not LJ2.passSelection(event): continue
 
             if LJ0.isMuonType() and LJ1.isMuonType():  aux['channel'] = '4mu'
             elif LJ0.isMuonType() and LJ1.isEgmType(): aux['channel'] = '2mu2e'

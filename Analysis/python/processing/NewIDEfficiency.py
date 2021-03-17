@@ -35,6 +35,7 @@ class MyEvents(SignalEvents):
             self.Histos['%s/dRLJ'%chan].Fill(dRlj,aux['wgt'])
             self.Histos['%s/dPhiLJ'%chan].Fill(dphilj,aux['wgt'])
             
+
         #leading pt
         for p in aux['dp']:
             rho = (p.dauvtx-p.vtx).Rho()

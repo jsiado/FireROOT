@@ -2,8 +2,10 @@
 from __future__ import print_function
 import argparse
 import os, sys, math
+#import time
 from functools import reduce
 import ROOT
+from datetime import datetime
 from FireROOT.Analysis.Utils import *
 from FireROOT.Analysis.samples.signalnumbers import genxsec
 from rootpy.plotting import Hist, Legend, Canvas, HistStack, Pad
@@ -133,8 +135,9 @@ if __name__ ==  '__main__':
 
             ## sig
             if hasattr(channelDir, 'sig'):
-                sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300|mXX-1000_mA-0p25_lxy-300'.split('|')
-                sampleSig.extend( 'mXX-100_mA-5_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|') )
+                sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300'.split('|')
+                #sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300'.split('|')
+                #sampleSig.extend( 'mXX-100_mA-5_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|') )
                                                 
                 for i, ds in enumerate(sampleSig):
                     if not hasattr(channelDir.sig, ds): continue
@@ -245,7 +248,8 @@ if __name__ ==  '__main__':
                 ratio_line.linewidth=2
                 ratio_line.Draw()
 
-            c.SaveAs('{}/{}__{}_{}.pdf'.format(outdir, args.dataset, chan, hname))
+            c.SaveAs('{}/{}_{}_{}_{}.pdf'.format(outdir, args.dataset, chan, hname,datetime.now().strftime('%y%m%d')))
+            c.SaveAs('{}/{}_{}_{}_{}.png'.format(outdir, datetime.now().strftime('%y%m%d'), args.dataset, chan, hname,))
             c.Clear()
 
     f.close()
