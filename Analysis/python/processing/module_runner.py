@@ -46,6 +46,7 @@ def args_sanity(args):
 
     ## module
     moduleBase = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/processing/{}'.format(args.mbase))
+    #print ('module base ',moduleBase)
     assert(os.path.isdir(moduleBase))
 
     return bkg, sig, data
@@ -60,6 +61,7 @@ if __name__ == '__main__':
 
     outdir = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/{}/'.format(args.mbase))
     if not os.path.isdir(outdir): os.makedirs(outdir)
+    #print ('outdir', outdir)
 
     if args.outname: outname = os.path.join(outdir, '{}.root'.format(args.outname))
     else:            outname = os.path.join(outdir, '{}.root'.format(args.module))
@@ -72,10 +74,11 @@ if __name__ == '__main__':
         if args.private: sdml = SigDatasetMapLoader()
         else:            sdml = CentralSignalMapLoader()
 
+        sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-500_mA-0p25_lxy-300|mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-1p2_lxy-300'.split('|') #for testing
+        #sampleSig = 'mXX-500_mA-0p25_lxy-300|mXX-100_mA-0p25_lxy-300'.split('|') #for testing
+        #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-0p25_lxy-0p3|mXX-1000_mA-5_lxy-300'.split('|')
+        #sampleSig.extend( 'mXX-200_mA-0p25_lxy-300|mXX-1000_mA-0p25_lxy-300'.split('|') )
 
-        sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300'.split('|')
-        #sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300'.split('|')
-        #sampleSig.extend( 'mXX-100_mA-5_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|') )
         if args.sigparam:
             
             sampleSig = []

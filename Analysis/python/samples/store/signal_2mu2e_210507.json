@@ -1,0 +1,16 @@
+{
+    "mXX-500_mA-0p25_lxy-300": [
+	"root://cmseos.fnal.gov//eos/uscms/store/group/lpcmetx/SIDM/TriggerStudy/newTRG/2018/CRAB_PrivateMC/SIDM_BsTo2DpTo2Mu2e_MBs-500_MDp-0p25_ctau-3p75/210507_142328/ffNtuple_0.root",
+	"root://cmseos.fnal.gov//eos/uscms/store/group/lpcmetx/SIDM/TriggerStudy/newTRG/2018/CRAB_PrivateMC/SIDM_BsTo2DpTo2Mu2e_MBs-500_MDp-0p25_ctau-3p75/210507_142328/ffNtuple_1.root",
+	"root://cmseos.fnal.gov//eos/uscms/store/group/lpcmetx/SIDM/TriggerStudy/newTRG/2018/CRAB_PrivateMC/SIDM_BsTo2DpTo2Mu2e_MBs-500_MDp-0p25_ctau-3p75/210507_142328/ffNtuple_2.root",
+	"root://cmseos.fnal.gov//eos/uscms/store/group/lpcmetx/SIDM/TriggerStudy/newTRG/2018/CRAB_PrivateMC/SIDM_BsTo2DpTo2Mu2e_MBs-500_MDp-0p25_ctau-3p75/210507_142328/ffNtuple_3.root",
+	"root://cmseos.fnal.gov//eos/uscms/store/group/lpcmetx/SIDM/TriggerStudy/newTRG/2018/CRAB_PrivateMC/SIDM_BsTo2DpTo2Mu2e_MBs-500_MDp-0p25_ctau-3p75/210507_142328/ffNtuple_4.root"
+    ],
+    "mXX-500_mA-1p2_lxy-300": [
+	"root://cmseos.fnal.gov//eos/uscms/store/group/lpcmetx/SIDM/TriggerStudy/newTRG/2018/CRAB_PrivateMC/SIDM_BsTo2DpTo2Mu2e_MBs-500_MDp-1p2_ctau-18/210507_142329/ffNtuple_0.root",
+	"root://cmseos.fnal.gov//eos/uscms/store/group/lpcmetx/SIDM/TriggerStudy/newTRG/2018/CRAB_PrivateMC/SIDM_BsTo2DpTo2Mu2e_MBs-500_MDp-1p2_ctau-18/210507_142329/ffNtuple_1.root",
+	"root://cmseos.fnal.gov//eos/uscms/store/group/lpcmetx/SIDM/TriggerStudy/newTRG/2018/CRAB_PrivateMC/SIDM_BsTo2DpTo2Mu2e_MBs-500_MDp-1p2_ctau-18/210507_142329/ffNtuple_2.root",
+	"root://cmseos.fnal.gov//eos/uscms/store/group/lpcmetx/SIDM/TriggerStudy/newTRG/2018/CRAB_PrivateMC/SIDM_BsTo2DpTo2Mu2e_MBs-500_MDp-1p2_ctau-18/210507_142329/ffNtuple_3.root",
+	"root://cmseos.fnal.gov//eos/uscms/store/group/lpcmetx/SIDM/TriggerStudy/newTRG/2018/CRAB_PrivateMC/SIDM_BsTo2DpTo2Mu2e_MBs-500_MDp-1p2_ctau-18/210507_142329/ffNtuple_4.root"
+    ]
+}

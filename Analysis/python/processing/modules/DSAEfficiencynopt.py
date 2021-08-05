@@ -20,12 +20,14 @@ class MyEvents(SignalEvents):
 
         # dp->mu, mu
         for dp in dp_toMu:
-            if dp.p4.pt()<30 or abs(dp.p4.eta())>2.4: continue
-            print (dp.p4.pt())
+            #if dp.p4.pt()<30 or 
+            if abs(dp.p4.eta())>2.4: continue
+
             lxy = (dp.dauvtx - dp.vtx).Rho()
             lz  = (dp.dauvtx - dp.vtx).Z()
             # if abs(lz)>800: continue
             self.Histos['%s/lxyDpToMu__total' % chan].Fill(lxy)
+            self.Histos['%s/ptDpToMu__total' % chan].Fill(dp.p4.pt())
             self.Histos['%s/lepDrDpToMu__total' % chan].Fill(dp.daudr)
 
             mindr, matched = 999., None
@@ -39,6 +41,7 @@ class MyEvents(SignalEvents):
                     matched = lj
 
             if matched:
+                self.Histos['%s/ptDpToMu__match' % chan].Fill(dp.p4.pt())
                 self.Histos['%s/lxyDpToMu__match' % chan].Fill(lxy)
                 self.Histos['%s/lepDrDpToMu__match' % chan].Fill(dp.daudr)
             else:
@@ -62,6 +65,7 @@ class MyEvents(SignalEvents):
             lz  = (dp.dauvtx - dp.vtx).Z()
             # if abs(lz)>550: continue
             self.Histos['%s/lxyDpToEl__total' % chan].Fill(lxy)
+            self.Histos['%s/ptDpToEl__total' % chan].Fill(dp.p4.pt())
             self.Histos['%s/lepDrDpToEl__total' % chan].Fill(dp.daudr)
 
             mindr, matched = 999., None
@@ -76,6 +80,7 @@ class MyEvents(SignalEvents):
 
             if matched is not None:
                 self.Histos['%s/lxyDpToEl__match' % chan].Fill(lxy)
+                self.Histos['%s/ptDpToEl__match' % chan].Fill(dp.p4.pt())
                 self.Histos['%s/lepDrDpToEl__match' % chan].Fill(dp.daudr)
             else:
                 # matching with PFElectrons
@@ -140,8 +145,7 @@ class MyEvents(SignalEvents):
 
 
 histCollection = [
-    {
-        'name'   : 'lxyDpToMu__total',
+    {'name'   : 'lxyDpToMu__total',
         'binning': (100, 0, 500),
         'title'  : 'Z_{d} lxy;lxy [cm];counts/5cm',
     },
@@ -232,7 +236,6 @@ histCollection = [
         'binning': (2, 0, 2),
         'title'  : 'jet id of matched PFAK4Jets (lxy<140cm);pass jet id;counts',
     },
-
     ## matching with PFElectrons
     {
         'name'   : 'lxyDpToEl__matchEle',
@@ -245,26 +248,18 @@ histCollection = [
         'title'  : 'Z_{d} lxy;lxy [cm];counts/2.5cm',
     },
 
-
     ## opening angle
     {
         'name'   : 'lepDrDpToMu__total',
         'binning': (50, 0, 0.5),
         'title'  : 'Z_{d} #DeltaR(#mu^{+}#mu^{-});#DeltaR(#mu^{+}#mu^{-});counts/0.01',
     },
-    {
-        'name'   : 'lepDrDpToMu__match',
-        'binning': (50, 0, 0.5),
-        'title'  : 'Z_{d} #DeltaR(#mu^{+}#mu^{-});#DeltaR(#mu^{+}#mu^{-});counts/0.01',
-    },
-    {
-        'name'   : 'lepDrDpToEl__total',
-        'binning': (50, 0, 0.5),
-        'title'  : 'Z_{d} #DeltaR(e^{+}e^{-});#DeltaR(e^{+}e^{-});counts/0.01',
-    },
-    {
-        'name'   : 'lepDrDpToEl__match',
-        'binning': (50, 0, 0.5),
-        'title'  : 'Z_{d} #DeltaR(e^{+}e^{-});#DeltaR(e^{+}e^{-});counts/0.01',
-    },
+    {'name'   : 'lepDrDpToMu__match', 'binning': (50, 0, 0.5), 'title'  : 'Z_{d} #DeltaR(#mu^{+}#mu^{-});#DeltaR(#mu^{+}#mu^{-});counts/0.01',    },
+    {'name'   : 'lepDrDpToEl__total', 'binning': (50, 0, 0.5), 'title'  : 'Z_{d} #DeltaR(e^{+}e^{-});#DeltaR(e^{+}e^{-});counts/0.01',    },
+    {'name'   : 'lepDrDpToEl__match', 'binning': (50, 0, 0.5), 'title' : 'Z_{d} #DeltaR(e^{+}e^{-});#DeltaR(e^{+}e^{-});counts/0.01',},
+ 
+    {'name'   : 'ptDpToMu__total', 'binning' : (100, 0, 1000), 'title' : 'Z_{d}Mu p_{t};p_{t} [GeV];counts/5GeV',},
+    {'name'   : 'ptDpToMu__match', 'binning' : (100, 0, 1000), 'title' : 'Z_{d}Mu p_{t};p_{t} [GeV];counts/5GeV',},
+    {'name'   : 'ptDpToEl__total', 'binning' : (100, 0, 1000), 'title' : 'Z_{d}El p_{t};p_{t} [GeV];counts/5GeV',},
+    {'name'   : 'ptDpToEl__match', 'binning' : (100, 0, 1000), 'title' : 'Z_{d}El p_{t};p_{t} [GeV];counts/5GeV',},
 ]

@@ -235,17 +235,15 @@ class Events(object):
         self.Chain.define_object('hlt', prefix='HLT_')
         self.Chain.define_object('metfilters', prefix='metfilters_')
         self.Chain.define_object('cosmicveto', prefix='cosmicveto_')
-            
+
         self.Triggers = [
             "DoubleL2Mu23NoVtx_2Cha",
             "DoubleL2Mu23NoVtx_2Cha_NoL2Matched",
             "DoubleL2Mu23NoVtx_2Cha_CosmicSeed",
             "DoubleL2Mu23NoVtx_2Cha_CosmicSeed_NoL2Matched",
             "DoubleL2Mu25NoVtx_2Cha_Eta2p4",
-            "DoubleL2Mu25NoVtx_2Cha_CosmicSeed_Eta2p4",]
-
-        #self.addTRG = [
-           # "DoubleL2Mu23NoVtx_2Cha",]
+            "DoubleL2Mu25NoVtx_2Cha_CosmicSeed_Eta2p4",
+        ]
 
         self.Histos = {}
         for chan in channel:
@@ -288,10 +286,8 @@ class Events(object):
                 else: self.Histos['{}/cutflow'.format(ch)].Fill(0, aux['wgt'])
 
             ## trigger ##
-            #if not any([getattr(event.hlt, t) for t in self.Triggers]): continue
+            if not any([getattr(event.hlt, t) for t in self.Triggers]): continue
 
-            #if not any([getattr(event.hlt, t) for t in self.addTRG]): continue
-            
             for ch in self.Channel:
                 if self.RawCutFlow: self.Histos['{}/cutflow'.format(ch)].Fill(1)
                 else: self.Histos['{}/cutflow'.format(ch)].Fill(1, aux['wgt'])
@@ -341,7 +337,7 @@ class Events(object):
                 aux['sf_pfmuon_up']  = 1.
                 aux['sf_pfmuon_low'] = 1.
 
-                for lj in [LJ0, LJ1]:
+                for lj in [LJ0, LJ1, LJ2]:
                     ## muon scale factor
                     for i in lj.pfcand_pfmuonIdx:
                         _pfmu_p4 = event.muons[i].p4
@@ -371,7 +367,7 @@ class Events(object):
 
                     ## NOTE DSA scale factor, nothing for now
                     for i in lj.pfcand_dsamuonIdx:
-                        #print dsamu.pt.P4()
+                        print dsamu.pt.P4()
                         sf = 1.
                         aux['wgt'] *= sf
 

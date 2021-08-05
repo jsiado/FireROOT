@@ -13,7 +13,7 @@ class MyEvents(SignalEvents):
 
         gmus = [p for p in event.gens \
             if abs(p.pid)==13 \
-                and p.p4.pt()>10\
+                and p.p4.pt()>5\
                 and abs(p.p4.eta())<2.4\
                 and p.vtx.Rho()<700]
         if len(gmus)<2: return

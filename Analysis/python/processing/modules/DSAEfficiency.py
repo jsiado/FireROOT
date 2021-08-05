@@ -21,7 +21,7 @@ class MyEvents(SignalEvents):
         # dp->mu, mu
         for dp in dp_toMu:
             if dp.p4.pt()<30 or abs(dp.p4.eta())>2.4: continue
-            print (dp.p4.pt())
+
             lxy = (dp.dauvtx - dp.vtx).Rho()
             lz  = (dp.dauvtx - dp.vtx).Z()
             # if abs(lz)>800: continue

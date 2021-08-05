@@ -1,6 +1,6 @@
 import json
 import makeSampleSheet_v2
-files = {"EOSPATH_SIG":"/store/group/lpcmetx/SIDM/ffNtupleV3/2018/CRAB_PrivateMC", "EOSPATH_SIG2":{"2mu2e":"/store/group/lpcmetx/SIDM/ffNtupleV3/2018/SIDM_XXTo2ATo2Mu2E"}}
+files = {"EOSPATH_SIG":"/store/group/lpcmetx/SIDM/TriggerStudy/newTRG/2018/CRAB_PrivateMC/", "EOSPATH_SIG2":{"2mu2e":"/store/group/lpcmetx/SIDM/TriggerStudy/newTRG/2018/CRAB_PrivateMC/"}
 ds_4mu, ds_2mu2e = makeSampleSheet_v2.generate_signal_files(files)
 with open("signal_4mu.json", "w") as outf:
     outf.write(json.dumps(ds_4mu, indent=4))

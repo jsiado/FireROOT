@@ -37,6 +37,7 @@ if args.normsig>0 and args.normsigxsec>0:
     sys.exit('You cannot normalize signal to a fixed value and a fixed xsec at the same time.')
 
 inputdir = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/{}/'.format(args.mbase))
+#print ('input dir',inputdir)
 assert(os.path.isdir(inputdir))
 allfiles = [f for f in os.listdir(inputdir) if f.endswith('.root')]
 if args.inname+'.root' not in allfiles:
@@ -73,6 +74,7 @@ if __name__ ==  '__main__':
     outdir = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/plots/{}/'.format(args.mbase))
     outdir = os.path.join(outdir, args.inname)
     if not os.path.isdir(outdir): os.makedirs(outdir)
+    #print ('outdir ',outdir)
 
     from rootpy.plotting.style import set_style
     set_style(MyStyle())
@@ -135,10 +137,10 @@ if __name__ ==  '__main__':
 
             ## sig
             if hasattr(channelDir, 'sig'):
-                sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300'.split('|')
-                #sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300'.split('|')
+                sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-500_mA-0p25_lxy-300|mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-1p2_lxy-300'.split('|') #for testing
+                #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-0p25_lxy-0p3|mXX-1000_mA-5_lxy-300'.split('|')#newTRG
+                #sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300|mXX-200_mA-0p25_lxy-300|mXX-1000_mA-0p25_lxy-300'.split('|')
                 #sampleSig.extend( 'mXX-100_mA-5_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|') )
-                                                
                 for i, ds in enumerate(sampleSig):
                     if not hasattr(channelDir.sig, ds): continue
                     dsdir = getattr(channelDir.sig, ds)
@@ -247,9 +249,12 @@ if __name__ ==  '__main__':
                 ratio_line.color = 'red'
                 ratio_line.linewidth=2
                 ratio_line.Draw()
-
-            c.SaveAs('{}/{}_{}_{}_{}.pdf'.format(outdir, args.dataset, chan, hname,datetime.now().strftime('%y%m%d')))
-            c.SaveAs('{}/{}_{}_{}_{}.png'.format(outdir, datetime.now().strftime('%y%m%d'), args.dataset, chan, hname,))
+            #print (outdir)
+            c.SaveAs('{}/{}_{}_{}.pdf'.format(outdir, args.dataset, chan, hname))
+            c.SaveAs('{}/{}_{}_{}.png'.format(outdir, args.dataset, chan, hname))
+            #c.SaveAs('{}/{}_{}_{}_{}.pdf'.format(outdir, args.dataset, chan, hname,datetime.now().strftime('%y%m%d')))
+            #c.SaveAs('{}/{}_{}_{}_{}.png'.format(outdir, args.dataset, chan, hname,datetime.now().strftime('%y%m%d')))
+            #c.SaveAs('{}/{}_{}_{}_{}.png'.format(outdir, datetime.now().strftime('%y%m%d'), args.dataset, chan, hname,))
             c.Clear()
 
     f.close()
