@@ -73,10 +73,16 @@ if __name__ == '__main__':
     if runsig:
         if args.private: sdml = SigDatasetMapLoader()
         else:            sdml = CentralSignalMapLoader()
+        
+		#sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-30|mXX-1000_mA-5_lxy-30|mXX-1000_mA-5_lxy-300'.split('|')
+		#sampleSig.extend('mXX-1000_mA-5_lxy-150|mXX-1000_mA-5_lxy-3|mXX-1000_mA-5_lxy-0p3|mXX-200_mA-0p25_lxy-300|mXX-100_mA-0p25_lxy-0p3|mXX-100_mA-0p25_lxy-3|mXX-100_mA-0p25_lxy-30|mXX-100_mA-0p25_lxy-150|mXX-500_mA-1p2_lxy-0p3|mXX-500_mA-1p2_lxy-3|mXX-500_mA-1p2_lxy-150|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-1p2_lxy-30|mXX-500_mA-5_lxy-300|mXX-500_mA-5_lxy-0p3|mXX-500_mA-5_lxy-3|mXX-500_mA-5_lxy-30|mXX-500_mA-5_lxy-150'.split('|'))
+        
+        
+        sampleSig = 'mXX-500_mA-0p25_lxy-300|mXX-100_mA-0p25_lxy-300|mXX-1000_mA-5_lxy-300'.split('|') #for testing
+        #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-0p25_lxy-0p3|mXX-1000_mA-5_lxy-300'.split('|')#newTRG
+        #sampleSig = 'mXX-100_mA-5_lxy-0p3|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-5_lxy-300'.split('|')# trig eff 
 
-        sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-500_mA-0p25_lxy-300|mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-1p2_lxy-300'.split('|') #for testing
-        #sampleSig = 'mXX-500_mA-0p25_lxy-300|mXX-100_mA-0p25_lxy-300'.split('|') #for testing
-        #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-0p25_lxy-0p3|mXX-1000_mA-5_lxy-300'.split('|')
+        #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-0p25_lxy-0p3|mXX-1000_mA-5_lxy-300'.split('|') #initials
         #sampleSig.extend( 'mXX-200_mA-0p25_lxy-300|mXX-1000_mA-0p25_lxy-300'.split('|') )
 
         if args.sigparam:
@@ -87,7 +93,6 @@ if __name__ == '__main__':
                     sampleSig.extend( fnmatch.filter(sdml.get_datasets('4mu').keys(), s) )
                 else: sampleSig.append(s)
             sampleSig = list(set(sampleSig))
-            print(sampleSig)
 
         def dofill(pack):
             ds, files, scale, maxevents, channel = pack
@@ -125,10 +130,12 @@ if __name__ == '__main__':
         ### signal 4mu
         if '4mu' in args.channel:
             sigDS_4mu_inc, sigSCALE_4mu_inc = sdml.fetch('4mu')
+            
             if args.update_signalsample: sigDS_4mu_inc.update( json.load(open(args.update_signalsample)) )
 
             sigDS_4mu, sigSCALE_4mu = {}, {}
             for t in sampleSig:
+                #print (sampleSig[t])
                 for k in sigDS_4mu_inc:
                     if not k.startswith(t): continue
                     sigDS_4mu[t] = sigDS_4mu_inc[k]

@@ -18,7 +18,7 @@ class MyEvents(SignalEvents):
 
         DR_THRESHOLD = 0.4 # maximum dR limit between (gen darkphoton, lepton-jets) matching
 
-        # dp->mu, mu
+        # dp-> mu, mu
         for dp in dp_toMu:
             if dp.p4.pt()<30 or abs(dp.p4.eta())>2.4: continue
 
@@ -54,7 +54,7 @@ class MyEvents(SignalEvents):
                     self.Histos['%s/lxyDpToMu__matchAk4' % chan].Fill(lxy)
 
 
-        # dp->el, el
+        # dp-> el, el
         for dp in dp_toEl:
             if dp.p4.pt()<30 or abs(dp.p4.eta())>2.4: continue
 
