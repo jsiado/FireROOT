@@ -83,7 +83,7 @@ class SigDatasetMapLoader:
         if debug:
             print("SigDatasetMapLoader loading...")
             print("+"*80)
-            print("@ 4mu   / scale -->", basename(os.readlink(DATASET_SIG_4MU)), '/', basename(os.readlink(SCALE_SIG_4MU)))
+            print("@ 4mu ---  / scale -->", basename(os.readlink(DATASET_SIG_4MU)), '/', basename(os.readlink(SCALE_SIG_4MU)))
             print("@ 2mu2e / scale -->", basename(os.readlink(DATASET_SIG_2MU2E)), '/', basename(os.readlink(SCALE_SIG_2MU2E)))
             print("@ Lumi set as   --> {}/pb".format(LUMI))
             print("+"*80)

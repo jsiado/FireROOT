@@ -66,6 +66,7 @@ void f1_ch2mu2e(const char *date)
     //can_f1ueta->SaveAs(Form("../outputs/plots/modules/TrEff2mu/%i_%s_mueta.pdf",date,muon));
     
 	can_f1->SaveAs(Form("../outputs/plots/modules/ch2mu2eTrEff/eff_%s_f.pdf",date));
+	can_f1->SaveAs(Form("../outputs/plots/modules/ch2mu2eTrEff/eff_%s_f.png",date));
 }
 
 

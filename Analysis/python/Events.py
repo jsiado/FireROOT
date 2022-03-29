@@ -231,6 +231,9 @@ class Events(object):
         self.Chain.define_collection('leptonjets', prefix='pfjet_', size='pfjet_n', mix=LeptonJetMix)
         self.Chain.define_collection('ljsources', prefix='ljsource_', size='ljsource_n')
         self.Chain.define_collection('cosmicmuons', prefix='cosmicmuon_', size='cosmicmuon_n')
+        
+        self.Chain.define_collection('trigobjs', prefix='trigobj_', size='trigobj_n')
+#        self.Chain.define_collection('',)
 
         self.Chain.define_object('hlt', prefix='HLT_')
         self.Chain.define_object('metfilters', prefix='metfilters_')
@@ -497,6 +500,8 @@ class MuonTypeLJEvents(object):
         self.Chain.define_collection('dsamuons', prefix='dsamuon_', size='dsamuon_n')
         self.Chain.define_collection('ak4jets', prefix='akjet_ak4PFJetsCHS_', size='akjet_ak4PFJetsCHS_n')
         self.Chain.define_collection('leptonjets', prefix='pfjet_', size='pfjet_n', mix=LeptonJetMix)
+        
+        self.Chain.define_collection('trigobjs', prefix='trigobj_', size='trigobj_n')
 
         self.Chain.define_object('hlt', prefix='HLT_')
         self.Chain.define_object('metfilters', prefix='metfilters_')
@@ -779,6 +784,7 @@ class SignalEvents(Events):
         super(SignalEvents, self).__init__(files=files, type=type, maxevents=maxevents, channel=channel, **kwargs)
         self.Tqdm=tqdm
         self.Chain.define_collection('gens', prefix='gen_', size='gen_n')
+        self.Chain.define_collection('trigobjs', prefix='trigobj_', size='trigobj_n')
         # self.Chain.define_object('pfmet', prefix='pfMet')
 
     def process(self):
