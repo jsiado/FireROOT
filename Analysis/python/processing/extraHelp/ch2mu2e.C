@@ -1,4 +1,11 @@
-#include "f1_ch2mu2e.h"
+#include "f1_ch2mu2e_dR.h"
+#include "f1_ch2mu2e_pT.h"
+#include "f1_ch2mu2e_eta.h"
+#include "f1_ch2mu2e_Lxy.h"
+#include "f1_ch2mu2e_ss.h"
+#include "f1_ch2mu2e_mulxy.h"
+#include "f1_ch2mu2e_addplots.h"
+
 //#include "myeff_ptvsdR.h"
 //#include "myeff_dR.h"
 //#include "myeff_trioverlap.h"
@@ -14,12 +21,11 @@
 
 void ch2mu2e(const char *date)
 {
-	//myeff_mueta(date, muon);
-	f1_ch2mu2e(date);
-	//myeff_dR(date, muon);
-	//myeff_pT(date, muon);
-	
-	//myeff_comblogicalOR(num);
-	//myeff_trioverlap(num);
-	//myeff_rebinpT(num);
+	f1_ch2mu2e_dR(date);
+	f1_ch2mu2e_pT(date);
+	f1_ch2mu2e_eta(date);
+	f1_ch2mu2e_mulxy(date);
+	f1_ch2mu2e_addplots(date);
+	//f1_ch2mu2e_Lxy(date, samp);
+	//f1_ch2mu2e_ss(date, samp);
 }
