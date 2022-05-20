@@ -785,6 +785,7 @@ class SignalEvents(Events):
         self.Tqdm=tqdm
         self.Chain.define_collection('gens', prefix='gen_', size='gen_n')
         self.Chain.define_collection('trigobjs', prefix='trigobj_', size='trigobj_n')
+        
         # self.Chain.define_object('pfmet', prefix='pfMet')
 
     def process(self):
