@@ -16,7 +16,7 @@ void el_dR_ch2mu2eTrEff(const char *date, const char *filter, const char *muon)
 	TH1F *num_s3 = (TH1F*)file_1->Get(Form("ch2mu2e/sig/%s/TO_Num_dR",S3));	TH1F *eff_s3 = (TH1F*) num_s3->Clone();
 	TH1F *num_s4 = (TH1F*)file_1->Get(Form("ch2mu2e/sig/%s/TO_Num_dR",S4));	TH1F *eff_s4 = (TH1F*) num_s4->Clone();
 	TH1F *num_s5 = (TH1F*)file_1->Get(Form("ch2mu2e/sig/%s/TO_Num_dR",S5));	TH1F *eff_s5 = (TH1F*) num_s5->Clone();
-	TH1F *num_s6 = (TH1F*)file_1->Get(Form("ch2mu2e/sig/%s/TO_Num_dR",S6));	TH1F *eff_s6 = (TH1F*) num_s6->Clone();
+	//TH1F *num_s6 = (TH1F*)file_1->Get(Form("ch2mu2e/sig/%s/TO_Num_dR",S6));	TH1F *eff_s6 = (TH1F*) num_s6->Clone();
 	
 
     //den all samples
@@ -25,7 +25,7 @@ void el_dR_ch2mu2eTrEff(const char *date, const char *filter, const char *muon)
 	TH1F *den_s3 = (TH1F*)file_1->Get(Form("ch2mu2e/sig/%s/TO_Den_dR",S3));
 	TH1F *den_s4 = (TH1F*)file_1->Get(Form("ch2mu2e/sig/%s/TO_Den_dR",S4));
 	TH1F *den_s5 = (TH1F*)file_1->Get(Form("ch2mu2e/sig/%s/TO_Den_dR",S5));
-	TH1F *den_s6 = (TH1F*)file_1->Get(Form("ch2mu2e/sig/%s/TO_Den_dR",S6));
+	//TH1F *den_s6 = (TH1F*)file_1->Get(Form("ch2mu2e/sig/%s/TO_Den_dR",S6));
     
     
 	eff_s1->Divide(den_s1);
@@ -33,21 +33,21 @@ void el_dR_ch2mu2eTrEff(const char *date, const char *filter, const char *muon)
 	eff_s3->Divide(den_s3);
 	eff_s4->Divide(den_s4);
 	eff_s5->Divide(den_s5);
-	eff_s6->Divide(den_s6);
+	//eff_s6->Divide(den_s6);
     
 	eff_s1->SetLineColor(kBlack); 
 	eff_s2->SetLineColor(kMagenta);
 	eff_s3->SetLineColor(kBlue);
 	eff_s4->SetLineColor(kRed);
 	eff_s5->SetLineColor(kOrange);
-	eff_s6->SetLineColor(kGreen);
+	//eff_s6->SetLineColor(kGreen);
     
 	eff_s1->SetMarkerColor(kBlack);
 	eff_s2->SetMarkerColor(kMagenta);
 	eff_s3->SetMarkerColor(kBlue);
 	eff_s4->SetMarkerColor(kRed);
 	eff_s5->SetMarkerColor(kOrange);
-	eff_s6->SetMarkerColor(kGreen);
+	//eff_s6->SetMarkerColor(kGreen);
 	
 	TCanvas *can_f1 = new TCanvas("can_f1","",800,600);
 	eff_s1->SetTitle(Form("#Delta R of %s muons ; #Delta R; Efficiency",muon));
@@ -56,9 +56,9 @@ void el_dR_ch2mu2eTrEff(const char *date, const char *filter, const char *muon)
 	eff_s1->Draw();
 	eff_s2->Draw("same");
 	eff_s3->Draw("same");
-	eff_s4->Draw("same");
+	//eff_s4->Draw("same");
 	eff_s5->Draw("same");
-	eff_s6->Draw("same");
+	//eff_s6->Draw("same");
     
 	TLegend *leg_f1 = new TLegend(.6, .7, 0.9, .898);    
 	leg_f1->SetHeader("Samples","C");
@@ -71,10 +71,8 @@ void el_dR_ch2mu2eTrEff(const char *date, const char *filter, const char *muon)
 	leg_f1->AddEntry(eff_s3, Form("%s",S3), "P");
 	leg_f1->AddEntry(eff_s4, Form("%s",S4), "P");
 	leg_f1->AddEntry(eff_s5, Form("%s",S5), "P");    
-	leg_f1->AddEntry(eff_s6, Form("%s",S6), "P");    
+	//leg_f1->AddEntry(eff_s6, Form("%s",S6), "P");    
 	leg_f1->Draw();    
 	can_f1->SaveAs(Form("../outputs/plots/modules/el_ch2mu2eTrEff/elte_%s_dR_%s_%s.pdf",date,filter,muon));
 	can_f1->SaveAs(Form("../outputs/plots/modules/el_ch2mu2eTrEff/elte_%s_dR_%s_%s.png",date,filter,muon));
 }
-
-

@@ -15,7 +15,7 @@
 void el_ch2mu2eTrEff(const char *date, const char *filter, const char *muon)
 {
 	el_dR_ch2mu2eTrEff(date, filter, muon);
-	el_pT_ch2mu2eTrEff(date, filter, muon);
-	el_eta_ch2mu2eTrEff(date, filter, muon);
-	el_d0_ch2mu2eTrEff(date, filter, muon);
+	//el_pT_ch2mu2eTrEff(date, filter, muon);
+	//el_eta_ch2mu2eTrEff(date, filter, muon);
+	//el_d0_ch2mu2eTrEff(date, filter, muon);
 }

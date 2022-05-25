@@ -19,40 +19,53 @@ class MyEvents(Events):
         if not passCosmic: return
                 
         #Reco_Mu = [remu for i, remu in enumerate(event.ljsources)]
-        Reco_Mu = [remu for i, remu in enumerate(event.dsamuons)]
-        #Reco_Mu = [remu for i, remu in enumerate(event.muons)]
+        #Reco_Mu = [remu for i, remu in enumerate(event.dsamuons)]
+        Reco_Mu = [remu for i, remu in enumerate(event.muons)]
         matched_Reco = []
         dR_thr = 0.3
-        RMix = []
-        TOix = []
-
+        RMix, TOix = [], []
+        
         if len(Reco_Mu)>2:
-
             TriObj = [TO for TO in event.trigobjs]  # trigger objects in the event
-            self.Histos['%s/TO_n' % chan].Fill(len(TriObj))
-            
+            #print len(TriObj)
+            for y in range(len(TriObj)):
+                for z in range (y+1,len(TriObj)):
+                    TOdR = DeltaR(TriObj[y].p4,TriObj[z].p4)
+                    self.Histos['%s/TOdRall' % chan].Fill(TOdR)
+                    if TOdR < 0.3:
+                        self.Histos['%s/TOdR0p3' % chan].Fill(TOdR)
+                #print y,TriObj[y].p4.pt(),y,y+1,DeltaR(TriObj[y].p4,TriObj[y+1].p4)
+                #if y == (len(TriObj)-2):break
+            #for i, j in enumerate (TriObj):
+                #for m,n in enumerate (TriObj):
+                    #print 'triobj',len(TriObj),i,m, DeltaR(j.p4,n.p4)
+            #self.Histos['%s/TO_n' % chan].Fill(len(TriObj))
+
             for x, TO in enumerate(TriObj):
                 self.Histos['%s/TO_bit' % chan].Fill(TO.bit)
                 self.Histos['%s/TO_pT' % chan].Fill(TO.p4.pt())
                 
-                #if TO.bit != 0 and (abs(TO.bit) & (1<<0) > 0 ):
                 if TO.bit != 0 and (abs(TO.bit) & (1<<0) > 0 or abs(TO.bit) & (1<<1) > 0 or abs(TO.bit) & (1<<2) > 0 or abs(TO.bit) & (1<<3) > 0 or abs(TO.bit) & (1<<4) > 0 or abs(TO.bit)& (1<<5) > 0 or abs(TO.bit) & (1<<6) > 0 or abs(TO.bit) & (1<<7) > 0 or abs(TO.bit) & (1<<8) > 0 or abs(TO.bit) & (1<<9) > 0):     
                     
                     min_dR = 999
                     RMi = -1
+                    #print '----------------------------',len(Reco_Mu), len(TriObj)
                     for i, j in enumerate(Reco_Mu):
                         dR_TO = DeltaR(TO.p4,j.p4)
+                        #print i, x, dR_TO
                         if dR_TO > min_dR: continue
                         if dR_TO < min_dR:
+                            #print len(Reco_Mu), len(TriObj),x, i, dR_TO
                             min_dR = dR_TO
                             RMi = i #muon index
-                            if min_dR < dR_thr and i not in RMix:
-                                #TOin.append(x)
-                                RMix.append(i)
-                                matched_Reco.append(RMi)
-                                
-                        self.Histos['%s/min_dR_RMTO' % chan].Fill(min_dR)
-            self.Histos['%s/RMTO_match' % chan].Fill(len(matched_Reco))
+                    if min_dR < dR_thr and i not in RMix:
+                        #print 'muon index',i
+                        RMix.append(i)
+                        matched_Reco.append(RMi)
+                        #print i, x, min_dR, len(matched_Reco)
+            #print 'len',len(matched_Reco)
+                        #self.Histos['%s/min_dR_RMTO' % chan].Fill(min_dR)
+                #self.Histos['%s/RMTO_match' % chan].Fill(len(matched_Reco))
             
             #loop 1 reco muons 
             for i1, RM1 in enumerate (Reco_Mu):
@@ -92,7 +105,6 @@ class MyEvents(Events):
                 if min_dR<dR_thr:
                     self.Histos['%s/TO_Den_dR'  %chan].Fill(min_dR)
                     self.Histos['%s/TO_Den_pT'  %chan].Fill(mupt)
-                    #self.Histos['%s/TO_Den_pT_zoom'  %chan].Fill(mupt)
                     self.Histos['%s/TO_Den_eta' %chan].Fill(mueta)
                     #self.Histos['%s/TO_Den_lxy' %chan].Fill(mulxy)
                     self.Histos['%s/TO_Den_d0' %chan].Fill(mud0)
@@ -100,14 +112,14 @@ class MyEvents(Events):
                     if (re_mu1 in matched_Reco and re_mu2 in matched_Reco):
                         self.Histos['%s/TO_Num_dR' % chan].Fill(min_dR)
                         self.Histos['%s/TO_Num_pT' % chan].Fill(mupt)
-                        #self.Histos['%s/TO_Num_pT_zoom' % chan].Fill(mupt)
                         self.Histos['%s/TO_Num_eta' % chan].Fill(mueta)
                         #self.Histos['%s/TO_Num_lxy' % chan].Fill(mulxy)
                         self.Histos['%s/TO_Num_d0' %chan].Fill(mud0)
 
 
 histCollection = [
-    {  'name': 'geM_pT',      'binning' : (100, 0.0,500),                   'title': 'Gen muons p_{T}; p_{T} [GeV]; Number of entries'},
+    {  'name': 'TOdRall',      'binning' : (100, 0.0,5.0),                   'title': '#Delta R of all trigger objects; #Delta R; Number of entries'},
+    {  'name': 'TOdR0p3',      'binning' : (100, 0.0,0.5),                   'title': '#Delta R of trigger objects w/in 0.3; #Delta R; Number of entries'},
     
     {  'name': 'RM_dR',
        'binning' : [[0,0.02,0.04,0.06,0.08,0.1,0.15,0.2,.3,.4,]],
@@ -124,12 +136,14 @@ histCollection = [
        'binning' : [[0,0.1,0.2,0.3,0.4]],  
        'title': '# of muon matched to a TO; # of muons; Number of entries'},
     
-    {  'name': 'TO_Num_dR',     
-       'binning' : [[0,0.02,0.04,0.06,0.08,0.11,0.14,0.17,0.2,0.25,0.4]],
+    {  'name': 'TO_Num_dR',
+       'binning' : (50, 0.0, 0.5),
+  #     'binning' : [[0,0.005,0.01,0.015,0.02,0.03,0.04,0.06,0.08,0.11,0.14,0.17,0.2,0.25,0.4]],
        'title' : 'Leading #mu; #Delta R; Number of entries'},
     
-    {  'name': 'TO_Den_dR',     
-       'binning' : [[0,0.02,0.04,0.06,0.08,0.11,0.14,0.17,0.2,0.25,0.4]],
+    {  'name': 'TO_Den_dR',
+       'binning' : (50, 0.0, 0.5),
+       #'binning' : [[0,0.005,0.01,0.015,0.02,0.03,0.04,0.06,0.08,0.11,0.14,0.17,0.2,0.25,0.4]],
        'title': 'Leading #mu; #Delta R; Number of entries'},
 
     {  'name': 'TO_Num_pT',     
@@ -139,14 +153,6 @@ histCollection = [
     {  'name': 'TO_Den_pT',     
        'binning' :  [[0,2,4,6,8,10,15,20,30,40,60,80,100,150,200,250,300,350,400,450,500,600]],  
        'title' : 'Leading #mu p_{T}; p_{T} [GeV]; Number of entries'},
-
-#    {  'name': 'TO_Num_pT_zoom',
- #      'binning' :  [[0,4,8,12,16,20,24,26,28,30,32,34,36,38,40,45,50,55,60]],
-  #     'title' : 'Leading #mu p_{T}; p_{T} [GeV]; Number of entries'},
-
-    #{  'name': 'TO_Den_pT_zoom',
-    #   'binning' :  [[0,4,8,12,16,20,24,26,28,30,32,34,36,38,40,45,50,55,60]],
-    #   'title' : 'Leading #mu p_{T}; p_{T} [GeV]; Number of entries'},
 
     {  'name': 'TO_Num_eta',
        'binning' : (30,-3.5,3.5),#[[-3.5,-3.0,-2.6,-2.2,-1.8,-1.4,-1.0,-0.6,0.2,0.6,1.0,1.4,1.8,2.2,2.6,3.0,3.5]],
@@ -171,6 +177,4 @@ histCollection = [
        #'binning' : (10,0,5),
        'title': 'Leading #mu d_{0}; d_{0}; Number of entries'
    },
-    
-    
 ]
