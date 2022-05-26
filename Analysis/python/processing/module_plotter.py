@@ -259,7 +259,7 @@ if __name__ ==  '__main__':
                 ratio_line.linewidth=2
                 ratio_line.Draw()
             #print (outdir)
-            c.SaveAs('{}/{}_{}_{}.pdf'.format(outdir, args.dataset, chan, hname))
+            #c.SaveAs('{}/{}_{}_{}.pdf'.format(outdir, args.dataset, chan, hname))
             c.SaveAs('{}/{}_{}_{}.png'.format(outdir, args.dataset, chan, hname))
             #c.SaveAs('{}/{}_{}_{}_{}.pdf'.format(outdir, args.dataset, chan, hname,datetime.now().strftime('%y%m%d')))
             #c.SaveAs('{}/{}_{}_{}_{}.png'.format(outdir, args.dataset, chan, hname,datetime.now().strftime('%y%m%d')))

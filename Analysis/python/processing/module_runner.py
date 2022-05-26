@@ -76,12 +76,12 @@ if __name__ == '__main__':
         else:
             sdml = CentralSignalMapLoader()
         
-        #sampleSig = 'mXX-1000_mA-5_lxy-300|mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-30|mXX-1000_mA-5_lxy-30'.split('|')
+        sampleSig = 'mXX-1000_mA-5_lxy-300|mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-30|mXX-1000_mA-5_lxy-30'.split('|')
         #sampleSig = 'mXX-1000_mA-5_lxy-300|mXX-500_mA-0p25_lxy-300|mXX-100_mA-0p25_lxy-300'.split('|')
         #sampleSig.extend('mXX-1000_mA-5_lxy-150|mXX-1000_mA-5_lxy-3|mXX-1000_mA-5_lxy-0p3|mXX-200_mA-0p25_lxy-300|mXX-100_mA-0p25_lxy-0p3|mXX-100_mA-0p25_lxy-3|mXX-100_mA-0p25_lxy-30|mXX-100_mA-0p25_lxy-150|mXX-500_mA-1p2_lxy-0p3|mXX-500_mA-1p2_lxy-3|mXX-500_mA-1p2_lxy-150|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-1p2_lxy-30|mXX-500_mA-5_lxy-300|mXX-500_mA-5_lxy-0p3|mXX-500_mA-5_lxy-3|mXX-500_mA-5_lxy-30|mXX-500_mA-5_lxy-150'.split('|'))
         
         
-        sampleSig = 'mXX-1000_mA-5_lxy-300'.split('|') #for testing
+        #sampleSig = 'mXX-1000_mA-5_lxy-300'.split('|') #for testing
         #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-0p25_lxy-0p3|mXX-1000_mA-5_lxy-300'.split('|')#newTRG
         #sampleSig = 'mXX-100_mA-5_lxy-0p3|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-5_lxy-300'.split('|')# trig eff 
 
