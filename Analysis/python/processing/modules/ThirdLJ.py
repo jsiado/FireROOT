@@ -7,20 +7,20 @@ from FireROOT.Analysis.Utils import *
 class MyEvents(SignalEvents):
     def __init__(self, files=None, type='MC', maxevents=-1, channel=['2mu2e', '4mu'], **kwargs):
         super(MyEvents, self).__init__(files=files, type=type, maxevents=maxevents, channel=channel, **kwargs)
-        #nLJcero = 0
+
     def processEvent(self, event, aux):
         if aux['channel'] not in self.Channel: return
         chan = aux['channel']
         
         #number of LJ in the events
-        self.Histos['%s/nljet_1'%chan].Fill(len(event.leptonjets),aux['wgt'])# hist with # of LJ
+        self.Histos['%s/nljet_1' % chan].Fill(1)# hist with # of LJ
         
         #event with 0, 1, 2 and 3 LJ
         #if len(event.leptonjets) == 0: 
             #print ('cero')
 #            self.Histos['%s/oneLJ_pt'%chan].Fill((event.leptonjets[0].p4),aux['wgt'])
 
-        if len(event.leptonjets) == 1: 
+        '''if len(event.leptonjets) == 1: 
             #print ('uno')
             self.Histos['%s/oneLJ_pt'%chan].Fill((event.leptonjets[0].p4.pt()),aux['wgt'])
             self.Histos['%s/oneLJ_eta'%chan].Fill((event.leptonjets[0].p4.eta()),aux['wgt'])
@@ -59,24 +59,24 @@ class MyEvents(SignalEvents):
                 if zdlj2<0.4:
                     self.Histos['%s/matchLJ_1'%chan].Fill(-1,aux['wgt'])
                 else:
-                    self.Histos['%s/matchLJ_1'%chan].Fill(1,aux['wgt'])
+                    self.Histos['%s/matchLJ_1'%chan].Fill(1,aux['wgt'])'''
 
 histCollection = [
     {'name': 'nljet_1', 'binning':(50,0,10), 'title': 'number of lepton jets'},
-    {'name': 'zdljdR_1', 'binning':(50,-5,5), 'title': '#DeltaR zdlj3'},
-    {'name': 'matchLJ_1', 'binning':(50,-3,3), 'title': 'matching LJ3'},
+#    {'name': 'zdljdR_1', 'binning':(50,-5,5), 'title': '#DeltaR zdlj3'},
+ #%   {'name': 'matchLJ_1', 'binning':(50,-3,3), 'title': 'matching LJ3'},
 
-    {'name': 'dRLJ12_1', 'binning':(50,-10,10), 'title': '#DeltaR LJ12'},
-    {'name': 'dRLJ13_1', 'binning':(50,-10,10), 'title': '#DeltaR LJ13'},
-    {'name': 'dRLJ23_1', 'binning':(50,-10,10), 'title': '#DeltaR LJ23'},
+  #  {'name': 'dRLJ12_1', 'binning':(50,-10,10), 'title': '#DeltaR LJ12'},
+   # {'name': 'dRLJ13_1', 'binning':(50,-10,10), 'title': '#DeltaR LJ13'},
+   # {'name': 'dRLJ23_1', 'binning':(50,-10,10), 'title': '#DeltaR LJ23'},
     
-    {'name': 'delphi12_1', 'binning':(50,-5.0,5.0), 'title': '#Delta #phi LJ12'},
-    {'name': 'delphi13_1', 'binning':(50,-5.0,5.0), 'title': '#Delta #phi LJ13'},
-    {'name': 'delphi23_1', 'binning':(50,-5.0,5.0), 'title': '#Delta #phi LJ23'},
-    {'name': 'zeroLJ_pt', 'binning':(50,0.0,300), 'title': 'Pt for zero LJ'},
+   # {'name': 'delphi12_1', 'binning':(50,-5.0,5.0), 'title': '#Delta #phi LJ12'},
+   # {'name': 'delphi13_1', 'binning':(50,-5.0,5.0), 'title': '#Delta #phi LJ13'},
+   # {'name': 'delphi23_1', 'binning':(50,-5.0,5.0), 'title': '#Delta #phi LJ23'},
+   # {'name': 'zeroLJ_pt', 'binning':(50,0.0,300), 'title': 'Pt for zero LJ'},
     
-    {'name': 'oneLJ_pt', 'binning':(100,0.0,500), 'title': 'Pt for one LJ'},
-    {'name': 'oneLJ_eta', 'binning':(100,-2.5,2.5), 'title': 'eta for one LJ'},
-    {'name': 'oneLJ_phi', 'binning':(100,-3.5,3.5), 'title': 'phi for one LJ'},
+   # {'name': 'oneLJ_pt', 'binning':(100,0.0,500), 'title': 'Pt for one LJ'},
+   # {'name': 'oneLJ_eta', 'binning':(100,-2.5,2.5), 'title': 'eta for one LJ'},
+   # {'name': 'oneLJ_phi', 'binning':(100,-3.5,3.5), 'title': 'phi for one LJ'},
     #{'name': 'oneLJ_pt', 'binning':(100,0.0,500), 'title': 'Pt for one LJ'},
 ]

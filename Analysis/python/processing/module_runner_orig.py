@@ -46,7 +46,6 @@ def args_sanity(args):
 
     ## module
     moduleBase = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/processing/{}'.format(args.mbase))
-    #print ('module base ',moduleBase)
     assert(os.path.isdir(moduleBase))
 
     return bkg, sig, data
@@ -61,7 +60,6 @@ if __name__ == '__main__':
 
     outdir = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/{}/'.format(args.mbase))
     if not os.path.isdir(outdir): os.makedirs(outdir)
-    #print ('outdir', outdir)
 
     if args.outname: outname = os.path.join(outdir, '{}.root'.format(args.outname))
     else:            outname = os.path.join(outdir, '{}.root'.format(args.module))
@@ -71,38 +69,20 @@ if __name__ == '__main__':
     if args.mbase!='proxy' and (runbkg or rundata): dml = DatasetMapLoader()
 
     if runsig:
-        if args.private: 
-            sdml = SigDatasetMapLoader()
-        else:
-            sdml = CentralSignalMapLoader()
-        
-        #sampleSig = 'mXX-500_mA-1p2_lxy-3|mXX-500_mA-1p2_lxy-30|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-5_lxy-3|mXX-1000_mA-5_lxy-30|mXX-1000_mA-5_lxy-300'.split('|')#new for different lxy
-        #sampleSig = 'mXX-500_mA-1p2_lxy-3|mXX-1000_mA-5_lxy-3'.split('|')#new for different lxy
-        #sampleSig = 'mXX-500_mA-1p2_lxy-3'.split('|')#new for different lxy
-        #sampleSig = 'mXX-1000_mA-5_lxy-300|mXX-100_mA-0p25_lxy-300'.split('|')#|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-30|mXX-1000_mA-5_lxy-30'.split('|')
-        #sampleSig = 'mXX-1000_mA-5_lxy-300|mXX-500_mA-0p25_lxy-300|mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-1000_mA-5_lxy-30|mXX-500_mA-1p2_lxy-30'.split('|')
-        #sampleSig.extend('mXX-1000_mA-5_lxy-150|mXX-1000_mA-5_lxy-3|mXX-1000_mA-5_lxy-0p3|mXX-200_mA-0p25_lxy-300|mXX-100_mA-0p25_lxy-0p3|mXX-100_mA-0p25_lxy-3|mXX-100_mA-0p25_lxy-30|mXX-100_mA-0p25_lxy-150|mXX-500_mA-1p2_lxy-0p3|mXX-500_mA-1p2_lxy-3|mXX-500_mA-1p2_lxy-150|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-1p2_lxy-30|mXX-500_mA-5_lxy-300|mXX-500_mA-5_lxy-0p3|mXX-500_mA-5_lxy-3|mXX-500_mA-5_lxy-30|mXX-500_mA-5_lxy-150'.split('|'))
-
-        
-        sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-3|mXX-1000_mA-5_lxy-3|mXX-200_mA-0p25_lxy-300'.split('|')
+        if args.private: sdml = SigDatasetMapLoader()
+    else:            sdml = CentralSignalMapLoader()
 
 
-        #sampleSig = 'mXX-1000_mA-5_lxy-300'.split('|') #for testing
-        #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-0p25_lxy-0p3|mXX-1000_mA-5_lxy-300'.split('|')#newTRG
-        #sampleSig = 'mXX-100_mA-5_lxy-0p3|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-5_lxy-300'.split('|')# trig eff 
-
-        #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|') #initials
-        #sampleSig.extend( 'mXX-200_mA-0p25_lxy-300|mXX-1000_mA-0p25_lxy-300'.split('|') )
-
+        sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300'.split('|')
+        #sampleSig.extend( 'mXX-100_mA-5_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|') )
         if args.sigparam:
-            
             sampleSig = []
             for s in args.sigparam:
                 if '*' in s or '?' in s:
                     sampleSig.extend( fnmatch.filter(sdml.get_datasets('4mu').keys(), s) )
                 else: sampleSig.append(s)
             sampleSig = list(set(sampleSig))
-            #print (sampleSig)
+            print(sampleSig)
 
         def dofill(pack):
             ds, files, scale, maxevents, channel = pack
@@ -140,12 +120,10 @@ if __name__ == '__main__':
         ### signal 4mu
         if '4mu' in args.channel:
             sigDS_4mu_inc, sigSCALE_4mu_inc = sdml.fetch('4mu')
-            
             if args.update_signalsample: sigDS_4mu_inc.update( json.load(open(args.update_signalsample)) )
 
             sigDS_4mu, sigSCALE_4mu = {}, {}
             for t in sampleSig:
-                #print (sampleSig[t])
                 for k in sigDS_4mu_inc:
                     if not k.startswith(t): continue
                     sigDS_4mu[t] = sigDS_4mu_inc[k]
@@ -159,7 +137,7 @@ if __name__ == '__main__':
                 if ds not in sigDS_4mu or not sigDS_4mu[ds]: continue
                 packages = []
                 historesult = []
-                pool = Pool(processes=min(len(sigDS_4mu[ds]), 2))
+                pool = Pool(processes=min(len(sigDS_4mu[ds]), 12))
                 for f in sigDS_4mu[ds]:
                     packages.append((ds, [f], sigSCALE_4mu[ds], args.maxevents, ['4mu',]))
                 for res in tqdm(pool.imap_unordered(dofill, packages), total=len(packages)):
@@ -172,8 +150,8 @@ if __name__ == '__main__':
                         hists[k].Add(res[k])
                 SigHists4mu[ds] = hists
             log.info('channel 4mu filling done')
-        
-    
+
+
         ### signal 2mu2e
         if '2mu2e' in args.channel:
             sigDS_2mu2e_inc, sigSCALE_2mu2e_inc = sdml.fetch('2mu2e')
@@ -181,7 +159,6 @@ if __name__ == '__main__':
 
             sigDS_2mu2e, sigSCALE_2mu2e = {}, {}
             for t in sampleSig:
-                #print (t)
                 for k in sigDS_2mu2e_inc:
                     if not k.startswith(t): continue
                     sigDS_2mu2e[t] = sigDS_2mu2e_inc[k]
@@ -195,7 +172,6 @@ if __name__ == '__main__':
                 if ds not in sigDS_2mu2e or not sigDS_2mu2e[ds]: continue
                 packages = []
                 historesult = []
-                print (sampleSig[i-1]) #sample being processed
                 pool = Pool(processes=min(len(sigDS_2mu2e[ds]), 12))
                 for f in sigDS_2mu2e[ds]:
                     packages.append((ds, [f], sigSCALE_2mu2e[ds], args.maxevents, ['2mu2e',]))
@@ -258,7 +234,7 @@ if __name__ == '__main__':
         _files = []
         for ds in dataDS:
             if isinstance(dataDS[ds], str): _files.append(dataDS[ds])
-            else: _files.extend(dataDS[ds])
+        else: _files.extend(dataDS[ds])
 
         def dofill(pack):
             files, maxevents, channel = pack
@@ -293,7 +269,7 @@ if __name__ == '__main__':
 
         packages = []
         historesult = []
-        pool = Pool(processes=min(len(_files), 2))
+        pool = Pool(processes=min(len(_files), 12))
 
         for f in _files:
             packages.append(([f], args.maxevents, args.channel))
@@ -325,7 +301,7 @@ if __name__ == '__main__':
                 for h in hs.values():
                     h.SetName( h.GetName().replace('{}__4mu__'.format(ds), '') )
                     if args.create=='update': h.Write('', ROOT.TObject.kOverwrite)
-                    else: h.Write()
+                else: h.Write()
         if '2mu2e' in args.channel:
             try: f.mkdir('ch2mu2e/sig', recurse=True)
             except: pass
@@ -337,7 +313,7 @@ if __name__ == '__main__':
                 for h in hs.values():
                     h.SetName( h.GetName().replace('{}__2mu2e__'.format(ds), '') )
                     if args.create=='update': h.Write('', ROOT.TObject.kOverwrite)
-                    else: h.Write()
+                else: h.Write()
 
     if rundata:
         try:
@@ -350,7 +326,7 @@ if __name__ == '__main__':
             getattr(f, 'ch{}'.format(chan)).data.cd()
             h.SetName(name)
             if args.create=='update': h.Write('', ROOT.TObject.kOverwrite)
-            else: h.Write()
+        else: h.Write()
 
     if runbkg:
         try:
@@ -376,5 +352,5 @@ if __name__ == '__main__':
                 CatHists = mergeHistsFromMapping(extractHistByName(BkgHists, histName), bkgMAP, bkgCOLORS)
                 hstack = ROOT.HistStack(list(CatHists.values()), name=n, title=t, drawstyle='HIST')
                 if args.create=='update': hstack.Write('', ROOT.TObject.kOverwrite)
-                else: hstack.Write()
+            else: hstack.Write()
     f.Close()

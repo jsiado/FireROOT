@@ -39,7 +39,7 @@ class MyEvents(SignalEvents):
                 self.Histos['%s/TO_bit' % chan].Fill(TO.bit)
                 #print TO.bit
                 self.Histos['%s/TO_pT' % chan].Fill(TO.p4.pt())
-                
+        
                 '''if TO.pid == 0: continue
                 if TO.pid != 0 and (abs(TO.pid) & (1<<0) > 0 or abs(TO.pid) & (1<<1) > 0 or abs(TO.pid) & (1<<2) > 0 or abs(TO.pid) & (1<<3) > 0):
                     
@@ -52,51 +52,7 @@ class MyEvents(SignalEvents):
                             min_dR = dR_TO
                             RMi = i #muon index
                             if min_dR < dR_thr:
-                                matched_Reco.append(RMi)
-            
-            #loop 1 reco muons 
-            for i1, RM1 in enumerate (Reco_Mu):
-                if RM1.p4.pt()<30:continue
-                if abs(RM1.p4.eta())>2.4: continue
-                
-                min_dR = 999
-                mupt = 0
-                mueta = 0
-                mulxy = 0
-                
-                #loop 2 reco muons
-                for i2, RM2 in enumerate(Reco_Mu):
-                    if RM2.p4.pt()<30: continue
-                    if abs(RM2.p4.eta())>2.4: continue
-                    if i2 == i1: continue
-                    if DeltaR(RM1.p4, RM2.p4) < min_dR:
-                        min_dR = DeltaR(RM1.p4, RM2.p4)
-                        
-                        if RM1.p4.pt()>RM2.p4.pt(): 
-                            re_mu1 = i1
-                            mupt = RM1.p4.pt()
-                            mueta = RM1.p4.eta()
-                            re_mu2 = i2
-                            mulxy = RM1.p4.Rho()
-                        else:
-                            mupt = RM2.p4.pt()
-                            re_mu1 = i2
-                            mueta = RM2.p4.pt()
-                            re_mu2 = i1
-                            mulxy = RM2.p4.Rho()
-                    if mupt!= 0: self.Histos['%s/RM_pT'%chan].Fill(mupt)
-                self.Histos['%s/RM_dR'  %chan].Fill(min_dR)
-                
-                if min_dR<dR_thr:
-                    self.Histos['%s/TO_Den_dR'  %chan].Fill(min_dR)
-                    self.Histos['%s/TO_Den_pT'  %chan].Fill(mupt) 
-                    self.Histos['%s/TO_Den_eta' %chan].Fill(mueta)
-                    self.Histos['%s/TO_Den_lxy' %chan].Fill(mulxy)
-                    if (re_mu1 in matched_Reco and re_mu2 in matched_Reco):
-                        self.Histos['%s/TO_Num_dR' % chan].Fill(min_dR)
-                        self.Histos['%s/TO_Num_pT' % chan].Fill(mupt)
-                        self.Histos['%s/TO_Num_eta' % chan].Fill(mueta)
-                        self.Histos['%s/TO_Num_lxy' % chan].Fill(mulxy)'''
+                                matched_Reco.append(RMi)'''
                         
 
 histCollection = [

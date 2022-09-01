@@ -137,14 +137,16 @@ if __name__ ==  '__main__':
 
             ## sig
             if hasattr(channelDir, 'sig'):
-                sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-30|mXX-1000_mA-5_lxy-30|mXX-1000_mA-5_lxy-300'.split('|')#all posible
+                #sampleSig = 'mXX-500_mA-1p2_lxy-300|mXX-500_mA-1p2_lxy-3|mXX-500_mA-1p2_lxy-30|mXX-1000_mA-5_lxy-3|mXX-1000_mA-5_lxy-30|mXX-1000_mA-5_lxy-300'.split('|')#new for different lxy
+                #sampleSig = 'mXX-500_mA-1p2_lxy-3|mXX-1000_mA-5_lxy-3'.split('|')#new for different lxy
+                #sampleSig = 'mXX-500_mA-1p2_lxy-3'.split('|')
+                #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-30|mXX-1000_mA-5_lxy-30|mXX-1000_mA-5_lxy-300'.split('|')#all posible
                 #sampleSig = 'mXX-500_mA-0p25_lxy-300|mXX-100_mA-0p25_lxy-300'.split('|') #for testing
                 #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-0p25_lxy-0p3|mXX-1000_mA-5_lxy-300'.split('|')#newTRG
                 #sampleSig = 'mXX-100_mA-5_lxy-0p3|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-5_lxy-300'.split('|')# trig eff
-                #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-0p25_lxy-0p3|mXX-1000_mA-5_lxy-300'.split('|')#initials
-                #sampleSig.extend( 'mXX-200_mA-0p25_lxy-300|mXX-1000_mA-0p25_lxy-300'.split('|') )
-                
-
+                #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|') #initials
+		sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-3|mXX-1000_mA-5_lxy-3|mXX-1000_mA-0p25_lxy-0p3'.split('|')
+		
                 #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-30|mXX-1000_mA-5_lxy-30|mXX-1000_mA-5_lxy-300'.split('|')# all samples
                 #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-500_mA-0p25_lxy-300|mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-1p2_lxy-300'.split('|')
                 #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-0p25_lxy-0p3|mXX-1000_mA-5_lxy-300'.split('|')#newTRG
@@ -260,10 +262,10 @@ if __name__ ==  '__main__':
                 ratio_line.Draw()
             #print (outdir)
             #c.SaveAs('{}/{}_{}_{}.pdf'.format(outdir, args.dataset, chan, hname))
-            c.SaveAs('{}/{}_{}_{}.png'.format(outdir, args.dataset, chan, hname))
+            #c.SaveAs('{}/{}_{}_{}.png'.format(outdir, args.dataset, chan, hname))
             #c.SaveAs('{}/{}_{}_{}_{}.pdf'.format(outdir, args.dataset, chan, hname,datetime.now().strftime('%y%m%d')))
             #c.SaveAs('{}/{}_{}_{}_{}.png'.format(outdir, args.dataset, chan, hname,datetime.now().strftime('%y%m%d')))
-            #c.SaveAs('{}/{}_{}_{}_{}.png'.format(outdir, datetime.now().strftime('%y%m%d'), args.dataset, chan, hname,))
+            c.SaveAs('{}/{}_{}_{}_{}.png'.format(outdir, datetime.now().strftime('%y%m%d'), args.dataset,chan, hname,))
             c.Clear()
 
     f.close()
