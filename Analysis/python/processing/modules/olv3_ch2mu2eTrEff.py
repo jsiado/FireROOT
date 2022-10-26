@@ -71,75 +71,89 @@ class MyEvents(Events):
         
         TriObj = [TO for TO in event.trigobjs] # trigger objects in the event
         self.Histos['%s/nTOs' % chan].Fill(len(TriObj))
-        if len(Reco_Mu) == 2: #use events with two muons only, 
-            mindr, to1 = 999, 999
-            if len(TriObj) >1: #discard events with 0 or 1 TO
-                for j, TO in enumerate (TriObj):# loop over all trigger objects in the event
-                    if TO.bit != 0 and (
-                        abs(TO.bit) & (1<<0) > 0 or abs(TO.bit) & (1<<1) > 0 or abs(TO.bit) & (1<<2) > 0 or abs(TO.bit) & (1<<3) > 0 or abs(TO.bit) & (1<<4) > 0
-                            or abs(TO.bit) & (1<<5)  > 0 or abs(TO.bit) & (1<<6)  > 0 or abs(TO.bit) & (1<<7)  > 0 or abs(TO.bit) & (1<<8)  > 0 or abs(TO.bit) & (1<<9)  > 0 
-                            or abs(TO.bit) & (1<<10) > 0 or abs(TO.bit) & (1<<11) > 0 or abs(TO.bit) & (1<<12) > 0 or abs(TO.bit) & (1<<13) > 0 or abs(TO.bit) & (1<<14) > 0 
-                            or abs(TO.bit) & (1<<15) > 0 or abs(TO.bit) & (1<<16) > 0 or abs(TO.bit) & (1<<17) > 0 or abs(TO.bit) & (1<<18) > 0 or abs(TO.bit) & (1<<19) > 0 
-                            or abs(TO.bit) & (1<<20) > 0 or abs(TO.bit) & (1<<21) > 0 or abs(TO.bit) & (1<<22) > 0 or abs(TO.bit) & (1<<23) > 0):
 
-                        drmt = DeltaR(TriObj[j].p4,Reco_Mu[0].p4) #calculate delra R between trigger object "j" and reco mu "0"
-                        
-                        ######################
-                        #find the min delta R between reco mu "0" and all TO
-                        if drmt < mindr:
-                            mindr = drmt
-                            if mindr < dR_thr:
-                                to1 = j
-                                mupt = Reco_Mu[0].p4.pt()
-                                mueta = Reco_Mu[0].p4.eta()
-                                mud0 = Reco_Mu[0].d0
-                        
-                        if to1 != 999:
-                            #self.Histos['%s/TO_Den_dR'  %chan].Fill(mindr)
-                            self.Histos['%s/TO_Den_dR'  %chan].Fill(drmu)
-                            self.Histos['%s/TO_Den_pT'  %chan].Fill(mupt)        
-                            self.Histos['%s/TO_Den_eta' %chan].Fill(mueta)
-                            self.Histos['%s/TO_Den_d0' %chan].Fill(mud0)
-                            #self.Histos['%s/TO_Den_lxy' %chan].Fill(lxy)
-                            for j, to in enumerate (TriObj):
-                                if j != to1:
-                                    dr2 = DeltaR(TriObj[j].p4,Reco_Mu[1].p4)
-                                    if dr2 < dR_thr:
-                                        #self.Histos['%s/TO_Num_dR' % chan].Fill(mindr)
-                                        self.Histos['%s/TO_Num_dR'  %chan].Fill(drmu)
-                                        self.Histos['%s/TO_Num_pT' % chan].Fill(mupt)
-                                        self.Histos['%s/TO_Num_eta' % chan].Fill(mueta)
-                                        self.Histos['%s/TO_Num_d0' %chan].Fill(mud0)
-                                        #self.Histos['%s/TO_Num_lxy' %chan].Fill(lxy)
-                                        break
-                                    
-                        '''mindr, to1 = 999, 999
-                        for j, to in enumerate (TriObj):
-                            drmt = DeltaR(TriObj[j].p4,Reco_Mu[1].p4)
-                            if drmt < mindr:
-                                mindr = drmt
-                                if mindr < dR_thr:
-                                    to1 = j
-                                    mupt = Reco_Mu[1].p4.pt()
-                                    mueta = Reco_Mu[0].p4.eta()
-                                    mud0 = Reco_Mu[0].d0
+        TO_pass = []#list with TO passing a trigger
 
-                        if to1 != 999:
-                            #self.Histos['%s/TO_Den_dR'  %chan].Fill(mindr)
-                            self.Histos['%s/TO_Den_dR'  %chan].Fill(drmu)
-                            self.Histos['%s/TO_Den_pT'  %chan].Fill(mupt)
-                            self.Histos['%s/TO_Den_eta' %chan].Fill(mueta)
-                            self.Histos['%s/TO_Den_d0' %chan].Fill(mud0)
-                            for j, to in enumerate (TriObj):
-                                if j != to1:
-                                    dr2 = DeltaR(TriObj[j].p4,Reco_Mu[0].p4)
-                                    if dr2 < dR_thr:
-                                        #self.Histos['%s/TO_Num_dR' % chan].Fill(mindr)
-                                        self.Histos['%s/TO_Num_dR'  %chan].Fill(drmu)
-                                        self.Histos['%s/TO_Num_pT' % chan].Fill(mupt)
-                                        self.Histos['%s/TO_Num_eta' % chan].Fill(mueta)
-                                        self.Histos['%s/TO_Num_d0' %chan].Fill(mud0)
-                                        break'''
+        for j, TO in enumerate (TriObj):# loop over all trigger objects in the event                                                                                                  
+            if TO.bit != 0 and (
+                    abs(TO.bit) & (1<<0) > 0 or abs(TO.bit) & (1<<1) > 0 or abs(TO.bit) & (1<<2) > 0 or abs(TO.bit) & (1<<3) > 0 or abs(TO.bit) & (1<<4) > 0
+                    or abs(TO.bit) & (1<<5)  > 0 or abs(TO.bit) & (1<<6)  > 0 or abs(TO.bit) & (1<<7)  > 0 or abs(TO.bit) & (1<<8)  > 0 or abs(TO.bit) & (1<<9)  > 0
+                    or abs(TO.bit) & (1<<10) > 0 or abs(TO.bit) & (1<<11) > 0 or abs(TO.bit) & (1<<12) > 0 or abs(TO.bit) & (1<<13) > 0 or abs(TO.bit) & (1<<14) > 0
+                    or abs(TO.bit) & (1<<15) > 0 or abs(TO.bit) & (1<<16) > 0 or abs(TO.bit) & (1<<17) > 0 or abs(TO.bit) & (1<<18) > 0 or abs(TO.bit) & (1<<19) > 0
+                    or abs(TO.bit) & (1<<20) > 0 or abs(TO.bit) & (1<<21) > 0 or abs(TO.bit) & (1<<22) > 0 or abs(TO.bit) & (1<<23) > 0):
+                TO_pass.append(TriObj[j])
+        
+        ###################
+        #Reco_Mu is the list with the reco muons and TO_pass is the TO that passed a trigger
+        
+        ######################
+        #find the min delta R between reco mu "0" and all TO_pass
+        mindr,to1 = 999,999
+        for k, TO in enumerate(TO_pass):
+            drmt = DeltaR(TO_pass[k].p4,Reco_Mu[0].p4) #calculate delra R between trigger object "k" and reco mu "0"
+            if drmt < mindr:
+                mindr = drmt
+                if mindr < dR_thr:#matched
+                    to1 = k   # TO at index k was matched to a RM[0]
+                    mupt = Reco_Mu[0].p4.pt()
+                    mueta = Reco_Mu[0].p4.eta()
+                    mud0 = Reco_Mu[0].d0
+       
+        #if to1 != 999 means RM[0] was matched a TO
+        if to1 != 999:
+            self.Histos['%s/TO_Den_dR'  %chan].Fill(drmu)
+            self.Histos['%s/TO_Den_pT'  %chan].Fill(mupt)        
+            self.Histos['%s/TO_Den_eta' %chan].Fill(mueta)
+            self.Histos['%s/TO_Den_d0' %chan].Fill(mud0)
+
+            for l, to in enumerate(TO_pass): #loop over all TO_pass again now with RM[1] to see if there is a match
+                drmt2 = DeltaR(TO_pass[l].p4,Reco_Mu[1].p4)
+                if l != to1 and drmt2 < dR_thr: #check if the index of the second loop is different that 'to1' index of the TO matched to RM[0]
+                    self.Histos['%s/TO_Num_dR'  %chan].Fill(drmu)
+                    self.Histos['%s/TO_Num_pT' % chan].Fill(mupt)
+                    self.Histos['%s/TO_Num_eta' % chan].Fill(mueta)
+                    self.Histos['%s/TO_Num_d0' %chan].Fill(mud0)
+                    break
+
+        '''for j, to in enumerate (TriObj):
+        if j != to1:
+        dr2 = DeltaR(TriObj[j].p4,Reco_Mu[1].p4)
+        if dr2 < dR_thr:
+        #self.Histos['%s/TO_Num_dR' % chan].Fill(mindr)
+        self.Histos['%s/TO_Num_dR'  %chan].Fill(drmu)
+        self.Histos['%s/TO_Num_pT' % chan].Fill(mupt)
+        self.Histos['%s/TO_Num_eta' % chan].Fill(mueta)
+        self.Histos['%s/TO_Num_d0' %chan].Fill(mud0)
+        #self.Histos['%s/TO_Num_lxy' %chan].Fill(lxy)
+        break'''
+        
+        '''mindr, to1 = 999, 999
+        for j, to in enumerate (TriObj):
+        drmt = DeltaR(TriObj[j].p4,Reco_Mu[1].p4)
+        if drmt < mindr:
+        mindr = drmt
+        if mindr < dR_thr:
+        to1 = j
+        mupt = Reco_Mu[1].p4.pt()
+        mueta = Reco_Mu[0].p4.eta()
+        mud0 = Reco_Mu[0].d0
+        
+        if to1 != 999:
+        #self.Histos['%s/TO_Den_dR'  %chan].Fill(mindr)
+        self.Histos['%s/TO_Den_dR'  %chan].Fill(drmu)
+        self.Histos['%s/TO_Den_pT'  %chan].Fill(mupt)
+        self.Histos['%s/TO_Den_eta' %chan].Fill(mueta)
+        self.Histos['%s/TO_Den_d0' %chan].Fill(mud0)
+        for j, to in enumerate (TriObj):
+        if j != to1:
+        dr2 = DeltaR(TriObj[j].p4,Reco_Mu[0].p4)
+        if dr2 < dR_thr:
+        #self.Histos['%s/TO_Num_dR' % chan].Fill(mindr)
+        self.Histos['%s/TO_Num_dR'  %chan].Fill(drmu)
+        self.Histos['%s/TO_Num_pT' % chan].Fill(mupt)
+        self.Histos['%s/TO_Num_eta' % chan].Fill(mueta)
+        self.Histos['%s/TO_Num_d0' %chan].Fill(mud0)
+        break'''
 
 
 histCollection = [
@@ -148,15 +162,15 @@ histCollection = [
     {  'name': 'dr2',        'binning' : (50, 0.0,0.5),                   'title': '#Delta R pf  muons; #Delta R; Number of entries'},
     {  'name': 'ReMu_do',    'binning' : (10, 0, 50),                     'title': 'd_{o} distribution for reco muons; d_{o}; number of entries'},
     {  'name': 'nMuons',     'binning' : (10, -5.0,5.0),                  'title': 'number of Muons; nMuons; Number of entries'},
-    {  'name': 'nTOs',        'binning' : (20, 0,50),                      'title': 'number of trigger objects; nTOs; Number of entries'},
+    {  'name': 'nTOs',        'binning' : (20, 0,50),                     'title': 'number of trigger objects; nTOs; Number of entries'},
     {  'name': 'ReMu_dz',    'binning' : (50, 0, 20),                     'title': 'd_{z} distribution for reco muons; d_{z}; number of entries'},
     {  'name': 'ReMu_rho',   'binning' : (50, 0, 50),                     'title': '#Rho distribution for reco muons; #Rho; number of entries'},
     {  'name': 'dsaMu_do',   'binning' : (50, 0, 50),                     'title': 'd_{0} distribution for dsa muons; d_{0}; number of entries'},
     {  'name': 'dsaMu_dz',   'binning' : (50, 0, 50),                     'title': 'd_{z} distribution for dsa muons; d_{z}; number of entries'},
     {  'name': 'pfMu_do',    'binning' : (50, 0, 50),                     'title': 'd_{0} distribution for pf muons; d_{0}; number of entries'},
     {  'name': 'pfMu_dz',    'binning' : (50, 0, 50),                     'title': 'd_{z} distribution for pf muons; d_{z}; number of entries'},
-    {  'name': 'mumass',     'binning' : (30, 0, 10),                      'title': 'mass distribution for reco  muons; m [GeV]; number of entries'},
-    {  'name': 'ljmass',     'binning' : (100, 50, 1200),                      'title': 'mass distribution for lj; m [GeV]; number of entries'},
+    {  'name': 'mumass',     'binning' : (30, 0, 10),                     'title': 'mass distribution for reco  muons; m [GeV]; number of entries'},
+    {  'name': 'ljmass',     'binning' : (100, 50, 1200),                 'title': 'mass distribution for lj; m [GeV]; number of entries'},
     
     #{  'name': 'RM_dR',
     #  'binning' : [[0,0.02,0.04,0.06,0.08,0.1,0.15,0.2,.3,.4,]],
@@ -206,11 +220,11 @@ histCollection = [
    },
 
     {  'name': 'TO_Num_d0',
-       'binning' : [[0,0.1,0.2,0.4,0.6,0.8,1.0,1.5,2.0,3,4,5]],
+       'binning' : [[0,0.1,0.2,0.4,0.6,0.8,1.0,1.5,2.0,3,4,5,6,8,12,16,20]],
        'title': '#mu d_{0}; d_{0}; Number of entries'
    },
     {  'name': 'TO_Den_d0',
-       'binning' : [[0,0.1,0.2,0.4,0.6,0.8,1.0,1.5,2.0,3,4,5]],
+       'binning' : [[0,0.1,0.2,0.4,0.6,0.8,1.0,1.5,2.0,3,4,5,6,8,12,16,20]],
        'title': ' #mu d_{0}; d_{0}; Number of entries'
    },
     {  'name': 'TO_Num_lxy',

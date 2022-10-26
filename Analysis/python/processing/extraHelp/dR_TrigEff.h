@@ -22,7 +22,9 @@ void dR_TrigEff(const char *id, const char *file, const char *etype)
 	eff_s2->Divide(den_s2);
 	eff_s3->Divide(den_s3);
 	//eff_s4->Divide(den_s4);
-
+	
+	
+	
 	eff_s1->SetLineColor(kBlack);
 	eff_s2->SetLineColor(kMagenta);
 	eff_s3->SetLineColor(kBlue);
@@ -42,8 +44,14 @@ void dR_TrigEff(const char *id, const char *file, const char *etype)
 	eff_s3->Draw("same");
 	//eff_s4->Draw("same");
 	
-	TLegend *leg_f1 = new TLegend(.6, .7, 0.9, .898);    
-	leg_f1->SetHeader("Samples","C");
+	//eff_s1->SetTitle("bla 1");
+	
+	//TLegend *leg = new TLegend();
+	//leg->AddEntry(eff_s1, Form("%s",S1), "P");
+	
+	//can_dR -> BuildLegend();
+	TLegend *leg_f1 = new TLegend(.6, .1, 0.9, .298);    
+	leg_f1->SetHeader("Samples:","C");
 	leg_f1->SetBorderSize(0);
 	leg_f1->SetLineColor(1);
 	gStyle->SetFillColor(0);

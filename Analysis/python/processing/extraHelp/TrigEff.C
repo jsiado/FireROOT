@@ -17,8 +17,8 @@
 
 void TrigEff(const char *id, const char *file, const char *etype)
 {
-    dR_TrigEff(id, file, etype);
-    pT_TrigEff(id, file, etype);
-    eta_TrigEff(id,file, etype);
-    d0_TrigEff(id, file, etype);
+	dR_TrigEff(id, file, etype);
+	pT_TrigEff(id, file, etype);
+	eta_TrigEff(id,file, etype);
+	d0_TrigEff(id, file, etype);
 }

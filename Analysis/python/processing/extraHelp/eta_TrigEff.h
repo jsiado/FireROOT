@@ -44,7 +44,7 @@ void eta_TrigEff(const char *id, const char *file, const char *etype)
 	eff_s3->Draw("same");
 	//eff_s4->Draw("same");
 	    
-	TLegend *leg_f1 = new TLegend(.6, .7, 0.9, .898);    
+	TLegend *leg_f1 = new TLegend(.6, .1, 0.9, .398);    
 	leg_f1->SetHeader("Samples","C");
 	leg_f1->SetBorderSize(0);    
 	leg_f1->SetLineColor(1);    
