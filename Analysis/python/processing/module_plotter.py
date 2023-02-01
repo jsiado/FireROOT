@@ -2,7 +2,7 @@
 from __future__ import print_function
 import argparse
 import os, sys, math
-#import time
+
 from functools import reduce
 import ROOT
 from datetime import datetime
@@ -31,13 +31,13 @@ parser.add_argument("--ymax", type=float, default=None, help='max Y')
 parser.add_argument("--xdiv", type=int, default=None, help='X ndivisions')
 parser.add_argument("--ydiv", type=int, default=None, help='Y ndivisions')
 parser.add_argument("--vline", "-lx", type=float, default=None, help="draw a vline.")
+parser.add_argument("--number", "-id", type=int, default=None, help="differenciate efficiency plot with new changes.")
 
 args = parser.parse_args()
 if args.normsig>0 and args.normsigxsec>0:
     sys.exit('You cannot normalize signal to a fixed value and a fixed xsec at the same time.')
 
 inputdir = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/rootfiles/{}/'.format(args.mbase))
-#print ('input dir',inputdir)
 assert(os.path.isdir(inputdir))
 allfiles = [f for f in os.listdir(inputdir) if f.endswith('.root')]
 if args.inname+'.root' not in allfiles:
@@ -70,11 +70,12 @@ def get_unique_histnames(fname):
 
 if __name__ ==  '__main__':
 
+    id = args.number
+    print (id)
     infile = os.path.join(inputdir, args.inname+'.root')
     outdir = os.path.join(os.getenv('CMSSW_BASE'), 'src/FireROOT/Analysis/python/outputs/plots/{}/'.format(args.mbase))
     outdir = os.path.join(outdir, args.inname)
     if not os.path.isdir(outdir): os.makedirs(outdir)
-    #print ('outdir ',outdir)
 
     from rootpy.plotting.style import set_style
     set_style(MyStyle())
@@ -137,21 +138,10 @@ if __name__ ==  '__main__':
 
             ## sig
             if hasattr(channelDir, 'sig'):
-                #sampleSig = 'mXX-500_mA-1p2_lxy-300|mXX-500_mA-1p2_lxy-3|mXX-500_mA-1p2_lxy-30|mXX-1000_mA-5_lxy-3|mXX-1000_mA-5_lxy-30|mXX-1000_mA-5_lxy-300'.split('|')#new for different lxy
-                #sampleSig = 'mXX-500_mA-1p2_lxy-3|mXX-1000_mA-5_lxy-3'.split('|')#new for different lxy
-                #sampleSig = 'mXX-500_mA-1p2_lxy-3'.split('|')
-                #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-30|mXX-1000_mA-5_lxy-30|mXX-1000_mA-5_lxy-300'.split('|')#all posible
-                #sampleSig = 'mXX-500_mA-0p25_lxy-300|mXX-100_mA-0p25_lxy-300'.split('|') #for testing
-                #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-0p25_lxy-0p3|mXX-1000_mA-5_lxy-300'.split('|')#newTRG
-                #sampleSig = 'mXX-100_mA-5_lxy-0p3|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-5_lxy-300'.split('|')# trig eff
-                #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|') #initials
-		sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-3|mXX-1000_mA-5_lxy-3|mXX-1000_mA-0p25_lxy-0p3'.split('|')
-		
-                #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-30|mXX-1000_mA-5_lxy-30|mXX-1000_mA-5_lxy-300'.split('|')# all samples
-                #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-500_mA-0p25_lxy-300|mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-1p2_lxy-300'.split('|')
-                #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-0p25_lxy-0p3|mXX-1000_mA-5_lxy-300'.split('|')#newTRG
-                #sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300|mXX-200_mA-0p25_lxy-300|mXX-1000_mA-0p25_lxy-300'.split('|')
+                #sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300'.split('|')
                 #sampleSig.extend( 'mXX-100_mA-5_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|') )
+                sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-5_lxy-300'.split('|')#newTRG
+
                 for i, ds in enumerate(sampleSig):
                     if not hasattr(channelDir.sig, ds): continue
                     dsdir = getattr(channelDir.sig, ds)
@@ -265,7 +255,7 @@ if __name__ ==  '__main__':
             #c.SaveAs('{}/{}_{}_{}.png'.format(outdir, args.dataset, chan, hname))
             #c.SaveAs('{}/{}_{}_{}_{}.pdf'.format(outdir, args.dataset, chan, hname,datetime.now().strftime('%y%m%d')))
             #c.SaveAs('{}/{}_{}_{}_{}.png'.format(outdir, args.dataset, chan, hname,datetime.now().strftime('%y%m%d')))
-            c.SaveAs('{}/{}_{}_{}_{}.png'.format(outdir, datetime.now().strftime('%y%m%d'), args.dataset,chan, hname,))
+            c.SaveAs('{}/{}_{}_{}_{}.png'.format(outdir, id, args.dataset, chan, hname,))
             c.Clear()
 
     f.close()

@@ -16,6 +16,7 @@ void effTE(const char *id)
 {
 	TEffdR(id);
 	TEffpT(id);
-	TEffeta(id);
-	TEffd0(id);
+	//TEffeta(id);
+	//TEffd0(id);
+	//TEffalldR(id);
 }

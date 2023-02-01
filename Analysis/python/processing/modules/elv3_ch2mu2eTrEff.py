@@ -68,9 +68,7 @@ class MyEvents(Events):
             self.Histos['%s/ReMu_rho' % chan].Fill(mu.p4.Rho())
         
         drmu = DeltaR(Reco_Mu[0].p4,Reco_Mu[1].p4)#Delta R of the two muons
-        self.Histos['%s/drmus' % chan].Fill(drmu)
-        if drmu < 0.2:
-             self.Histos['%s/drmus0p2' % chan].Fill(drmu)
+        
         TriObj = [TO for TO in event.trigobjs] # trigger objects in the event
         self.Histos['%s/nTOs' % chan].Fill(len(TriObj))
 
@@ -85,13 +83,12 @@ class MyEvents(Events):
                     or abs(TO.bit) & (1<<20) > 0 or abs(TO.bit) & (1<<21) > 0 or abs(TO.bit) & (1<<22) > 0 or abs(TO.bit) & (1<<23) > 0):
                 TO_pass.append(TriObj[j])
         
+        ##### DR bettern trigger objects
         for i, to in enumerate(TO_pass):
             for j, tov in enumerate (TO_pass):
                 if i != j:
                     drtoall = DeltaR(TO_pass[i].p4,TO_pass[j].p4)
                     self.Histos['%s/drtoall' % chan].Fill(drtoall)
-                    if drtoall<0.2:
-                    	self.Histos['%s/drtoall0p2' % chan].Fill(drtoall)
         
         ###################
         #Reco_Mu is the list with the reco muons and TO_pass is the TO that passed a trigger
@@ -100,16 +97,16 @@ class MyEvents(Events):
         #find the min delta R between reco mu "0" and all TO_pass
         mindr,to1 = 999,999
         for k, TO in enumerate(TO_pass):
-            drtm = DeltaR(TO_pass[k].p4,Reco_Mu[0].p4) #calculate delta R between trigger object "k" and reco mu "0"
-            if drtm < mindr:
-                mindr = drtm
+            drmt = DeltaR(TO_pass[k].p4,Reco_Mu[0].p4) #calculate delra R between trigger object "k" and reco mu "0"
+            if drmt < mindr:
+                mindr = drmt
                 if mindr < dR_thr:#matched
                     to1 = k   # TO at index k was matched to a RM[0]
                     mupt = Reco_Mu[0].p4.pt()
                     mueta = Reco_Mu[0].p4.eta()
                     mud0 = Reco_Mu[0].d0
-                    var = drtm
-                    self.Histos['%s/drtm1'  %chan].Fill(drmu,drtm)
+                    var = drmt
+                    self.Histos['%s/drtm1'  %chan].Fill(drmu,drmt)
         
         #if to1 != 999 means RM[0] was matched a TO
         if to1 != 999:
@@ -119,53 +116,17 @@ class MyEvents(Events):
             self.Histos['%s/TO_Den_d0' %chan].Fill(mud0)
 
             for l, to in enumerate(TO_pass): #loop over all TO_pass again now with RM[1] to see if there is a match
-                drtm2 = DeltaR(TO_pass[l].p4,Reco_Mu[1].p4)
-                if l != to1 and drtm2 < dR_thr: #check if the index of the second loop is different that 'to1' index of the TO matched to RM[0]
+                drmt2 = DeltaR(TO_pass[l].p4,Reco_Mu[1].p4)
+                if l != to1 and drmt2 < dR_thr: #check if the index of the second loop is different that 'to1' index of the TO matched to RM[0]
                 	drt12 = DeltaR(TO_pass[to1].p4,TO_pass[l].p4)
                 	self.Histos['%s/TO_Num_dR'  %chan].Fill(drmu)
                 	self.Histos['%s/TO_Num_pT' % chan].Fill(mupt)
                 	self.Histos['%s/TO_Num_eta' % chan].Fill(mueta)
                 	self.Histos['%s/TO_Num_d0' %chan].Fill(mud0)
-                	self.Histos['%s/drtm2'  %chan].Fill(drmu,drtm2)
-                	#self.Histos['%s/drt12'  %chan].Fill(drt12)
-                	self.Histos['%s/drtm12'  %chan].Fill(var,drtm2)
+                	self.Histos['%s/drtm2'  %chan].Fill(drmu,drmt2)
+                	self.Histos['%s/drtm12'  %chan].Fill(var,drmt2)
                 	self.Histos['%s/drt12'  %chan].Fill(drt12)
                 	break
-
-        #####
-        ## loop for the inversion starting with Muon2 now and looping with mu1
-        #mindr,to1 = 999,999
-        mindr,to1 = 999,999
-        for k, to in enumerate (TO_pass):
-            drtm = DeltaR(TO_pass[k].p4,Reco_Mu[1].p4)
-            if drtm < mindr:
-                mindr = drtm
-                if mindr < dR_thr:
-                    to1 = k
-                    mupt = Reco_Mu[1].p4.pt()
-                    mueta = Reco_Mu[1].p4.eta()
-                    mud0 = Reco_Mu[1].d0
-                    var = drtm
-                    self.Histos['%s/drtm1'  %chan].Fill(drmu,drtm)
-
-        if to1 != 999:
-            self.Histos['%s/TO_Den_dR'  %chan].Fill(drmu)
-            self.Histos['%s/TO_Den_pT'  %chan].Fill(mupt)
-            self.Histos['%s/TO_Den_eta' %chan].Fill(mueta)
-            self.Histos['%s/TO_Den_d0' %chan].Fill(mud0)
-            
-            for l, to in enumerate(TO_pass):
-                drtm2 = DeltaR(TO_pass[l].p4,Reco_Mu[0].p4)
-                if l != to1 and drtm2 < dR_thr:
-                    drt12 = DeltaR(TO_pass[to1].p4,TO_pass[l].p4)
-                    self.Histos['%s/TO_Num_dR'  %chan].Fill(drmu)
-                    self.Histos['%s/TO_Num_pT' % chan].Fill(mupt)
-                    self.Histos['%s/TO_Num_eta' % chan].Fill(mueta)
-                    self.Histos['%s/TO_Num_d0' %chan].Fill(mud0)
-                    self.Histos['%s/drtm2'  %chan].Fill(drmu,drtm2)
-                    self.Histos['%s/drtm12'  %chan].Fill(var,drtm2)
-                    self.Histos['%s/drt12'  %chan].Fill(drt12)
-                    break
 
 
 histCollection = [
@@ -184,22 +145,21 @@ histCollection = [
     {  'name': 'mumass',     'binning' : (30, 0, 10),                     'title': 'mass distribution for reco  muons; m [GeV]; number of entries'},
     {  'name': 'ljmass',     'binning' : (100, 50, 1200),                 'title': 'mass distribution for lj; m [GeV]; number of entries'},
     
-    {  'name': 'drtm1',		'binning': (200,0,0.5, 20,0,0.5),  'title': '#Delta R between TO and #mu_{1}; #Delta R(#mu_{1},#mu_{2}); #Delta R (TO,#mu_{1})'},
-    {  'name': 'drtm2',		'binning': (200,0,0.5, 20,0,0.5),  'title': '#Delta R between TO and #mu_{2}; #Delta R(#mu_{1},#mu_{2}); #Delta R (TO,#mu_{2})'},
-    {  'name': 'drtm12',	'binning': (200,0,0.5, 20,0,0.5),  'title': '#Delta R for the two matches; #Delta R(to,#mu_{2}); #Delta R(to,#mu_{1})'},
-    {  'name': 'drt12',		'binning': (200, 0, 0.5),          'title': '#Delta R between TO; #Delta R(TO_{1},TO_{2}); Number of entries'},
-    {  'name': 'drtoall',	'binning': (200, 0, 0.5),          'title': '#Delta R between TOs; #Delta R(TO_{i},TO_{j}); Number of entries'},
-    {  'name': 'drtoall0p2',       'binning': (200, 0, 0.22),          'title': '#Delta R between TOs; #Delta R(TO_{i},TO_{j}); Number of entries'},
-    {  'name': 'drmus',       'binning': (200, 0, 0.5),          'title': '#Delta R between #mu; #Delta R(#mu_{1},#mu_{2}); Number of entries'},
-    {  'name': 'drmus0p2',       'binning': (200, 0, 0.22),          'title': '#Delta R between #mu; #Delta R(#mu_{1},#mu_{2}); Number of entries'},
+    {  'name': 'drtoall',	'binning': (50,0,0.5),  			'title': '#Delta R between TOs; #Delta R(TO_{i},TO_{j}); #Delta R (TO,#mu_{1})'},
+    {  'name': 'drtm1',		'binning': (50,0,0.5, 20,0,0.5),	'title': '#Delta R between TO and #mu_{1}; #Delta R(#mu_{1},#mu_{2}); #Delta R (TO,#mu_{1})'},
+    {  'name': 'drtm2',		'binning': (50,0,0.5, 20,0,0.5),	'title': '#Delta R between TO and #mu_{2}; #Delta R(#mu_{1},#mu_{2}); #Delta R (TO,#mu_{2})'},
+    {  'name': 'drtm12',	'binning': (50,0,0.5, 20,0,0.5),	'title': '#Delta R for the two matches; #Delta R(to,#mu_{2}); #Delta R(to,#mu_{1})'},
+    {  'name': 'drt12',		'binning': (50, 0, 0.5),			'title': '#Delta R between TO; #Delta R(TO_{1},TO_{2}); Number of entries'},
     
     #{  'name': 'RM_dR',
     #  'binning' : [[0,0.02,0.04,0.06,0.08,0.1,0.15,0.2,.3,.4,]],
     # 'title': '#Delta R of Reco muons; #Delta R; Number of entries'},
 
     #{  'name': 'RM_pT',          'binning' : (100, 0.0,500),                   'title': 'Reco muon p_{T} distribution; p_{T} [GeV]; Number of entries'},
+    #{  'name': 'RM_n',           'binning' : (20, 0.0,20),                     'title': 'Number of Reco #mu ; #mu ; Number of entries'},
     #{  'name': 'TO_n',           'binning' : (30, 0.0,30),                     'title': 'Number of trigger objects; #mu ; Number of entries'},
     #{  'name': 'TO_bit',         'binning' : (100, -50.0,50),                  'title': 'Trigger object ID ; TO ID; Number of entries'},
+    #{  'name': 'TO_pT',          'binning' : (50, 0.0,500),                    'title': 'TO p_{T} distribution;  p_{T} [GeV]; Number of entries'},
     #{  'name': 'RMTO_match',     'binning' : (50, 0.0,50),                     'title': '# of muon matched to a TO; # of muons; Number of entries'},
     
     #{  'name': 'min_dR_RMTO',  
@@ -211,11 +171,13 @@ histCollection = [
       # 'title' : 'd0 for all reco muons; d_0; Number of entries'
     #},    
     {  'name': 'TO_Num_dR',
-       'binning' : [[0,0.0005,0.002,0.005,0.01,0.02,0.03,0.04,0.06,0.08,0.1,0.13,0.16,0.19,0.23,0.27,0.3,0.35,0.4,0.5]],
+       #'binning' : (20, 0.0, 0.5),
+       'binning' : [[0,0.005,0.01,0.02,0.03,0.04,0.06,0.08,0.1,0.13,0.16,0.19,0.23,0.27,0.3,0.35,0.4,0.5]],
        'title' : '#mu; #Delta R(#mu_{1},#mu_{2}); Number of entries'},
     
     {  'name': 'TO_Den_dR',
-       'binning' : [[0,0.0005,0.002,0.005,0.01,0.02,0.03,0.04,0.06,0.08,0.1,0.13,0.16,0.19,0.23,0.27,0.3,0.35,0.4,0.5]],
+       #'binning' : (20, 0.0, 0.5),
+       'binning' : [[0,0.005,0.01,0.02,0.03,0.04,0.06,0.08,0.1,0.13,0.16,0.19,0.23,0.27,0.3,0.35,0.4,0.5]],
        'title': '#mu; #Delta R(#mu_{1},#mu_{2}); Number of entries'},
 
     {  'name': 'TO_Num_pT',

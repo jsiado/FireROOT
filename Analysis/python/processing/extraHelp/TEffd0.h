@@ -11,8 +11,8 @@ void TEffd0(const char *id){
   gStyle->SetCanvasColor(10);
 
   char
-    S1[50] = "mXX-100_mA-0p25_lxy-300",
-    S2[50] = "mXX-500_mA-1p2_lxy-3",
+    S2[50] = "mXX-100_mA-0p25_lxy-300",
+    S1[50] = "mXX-500_mA-1p2_lxy-3",
     S3[50] = "mXX-1000_mA-5_lxy-3";
   
   TH1F *num1 = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TO_Num_d0",S1));
