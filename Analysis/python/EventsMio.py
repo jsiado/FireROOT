@@ -232,15 +232,11 @@ class Events(object):
         self.Chain.define_collection('ljsources', prefix='ljsource_', size='ljsource_n')
         self.Chain.define_collection('cosmicmuons', prefix='cosmicmuon_', size='cosmicmuon_n')
 
-
         self.Chain.define_collection('trigobjs', prefix='trigobj_', size='trigobj_n')
 
         self.Chain.define_object('hlt', prefix='HLT_')
         self.Chain.define_object('metfilters', prefix='metfilters_')
         self.Chain.define_object('cosmicveto', prefix='cosmicveto_')
-
-        #self.Chain.define_collection('gens', prefix='gen_', size='gen_n')#add to sigeve
-
 
         self.Triggers = [
             "DoubleL2Mu23NoVtx_2Cha",
@@ -277,32 +273,6 @@ class Events(object):
         self.Scale = scale
 
     def process(self):
-        #### Sig eve study
-        #if self.Tqdm:
-         #   if self.MaxEvents>0:
-          #      pbar = tqdm(total=self.MaxEvents)
-           # else:
-            #    pbar = tqdm(total=self.Chain.GetEntries())
-        '''for i, event in enumerate(self.Chain):
-            if self.MaxEvents>0 and i>self.MaxEvents: break
-        
-            aux2 = {}
-            aux2['wgt'] = self.Scale
-            if self.Type == 'MC':
-                aux2['wgt'] *= event.weight # gen weight
-
-            aux2['dp'] = [p for p in event.gens if p.pid==32]
-            aux2['channel'] = '4mu'
-            if 11 in [abs(p.daupid) for p in aux2['dp']]:
-                aux2['channel'] = '2mu2e'
-            self.processEvent(event, aux2)'''
-
-    #        if self.Tqdm: pbar.update(1)
-
-        #if self.Tqdm:
-         #   pbar.close()
-        #end sigeve study
-
 
         for i, event in enumerate(self.Chain):
             if self.MaxEvents>0 and i>self.MaxEvents: break
@@ -810,17 +780,17 @@ class SignalEvents(Events):
         for i, event in enumerate(self.Chain):
             if self.MaxEvents>0 and i>self.MaxEvents: break
 
-            var = {}
-            var['wgt'] = self.Scale
+            aux = {}
+            aux['wgt'] = self.Scale
             if self.Type == 'MC':
-                var['wgt'] *= event.weight # gen weight
+                aux['wgt'] *= event.weight # gen weight
                 # aux['wgt'] *= self.LookupWeight.GetBinContent(self.LookupWeight.GetXaxis().FindBin(event.trueInteractionNum)) ## pileup correction
 
-            var['dp'] = [p for p in event.gens if p.pid==32]
-            var['channel'] = '4mu'
-            if 11 in [abs(p.daupid) for p in var['dp']]:
-                var['channel'] = '2mu2e'
-            self.processEvent(event, var)
+            aux['dp'] = [p for p in event.gens if p.pid==32]
+            aux['channel'] = '4mu'
+            if 11 in [abs(p.daupid) for p in aux['dp']]:
+                aux['channel'] = '2mu2e'
+            self.processEvent(event, aux)
 
             if self.Tqdm: pbar.update(1)
 

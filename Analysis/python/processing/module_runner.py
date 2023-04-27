@@ -78,52 +78,13 @@ if __name__ == '__main__':
         
         
         #all samples
+        #sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300'.split('|') # Orig                                                                          
+        #sampleSig.extend( 'mXX-100_mA-5_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|') ) # orig                                                                                        
+
+        sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-5_lxy-300'.split('|')#newTRG Working                                          
         
-        #sampleSig = 'mXX-150_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300'.split('|')
-        #sampleSig.extend( 'mXX-100_mA-5_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|') )
-        #sampleSig = 'mXX-100_mA-0p25_lxy-3|mXX-500_mA-0p25_lxy-3|mXX-1000_mA-5_lxy-3'.split('|')
-
-        #sampleSig = 'mXX-100_mA-0p25_lxy-0p3|mXX-150_mA-0p25_lxy-0p3|mXX-200_mA-0p25_lxy-0p3|mXX-500_mA-0p25_lxy-0p3|mXX-800_mA-0p25_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|')
-        #sampleSig = 'mXX-500_mA-1p2_lxy-3|mXX-500_mA-1p2_lxy-30|mXX-500_mA-1p2_lxy-300'.split('|')#new for different lxy 3 samples
-        #sampleSig = 'mXX-100_mA-5_lxy-3|mXX-150_mA-5_lxy-3|mXX-200_mA-5_lxy-3|mXX-500_mA-5_lxy-3|mXX-800_mA-5_lxy-3|mXX-1000_mA-5_lxy-3'.split('|')#new for different lxy 3 samples
-        
-        #sampleSig = 'mXX-500_mA-1p2_lxy-3|mXX-500_mA-1p2_lxy-30|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-5_lxy-3|mXX-1000_mA-5_lxy-30|mXX-1000_mA-5_lxy-300'.split('|')#new for != lxy 6 samples
-        #sampleSig = 'mXX-500_mA-1p2_lxy-3|mXX-1000_mA-5_lxy-3'.split('|')#new for different lxy
-        #sampleSig = 'mXX-500_mA-1p2_lxy-3'.split('|')#new for different lxy
-        #sampleSig = 'mXX-1000_mA-5_lxy-300|mXX-100_mA-0p25_lxy-300'.split('|')#|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-30|mXX-1000_mA-5_lxy-30'.split('|')
-        '''sampleSig = 'mXX-100_mA-0p25_lxy-0p3|mXX-100_mA-0p25_lxy-3|mXX-100_mA-0p25_lxy-30|mXX-100_mA-0p25_lxy-150|mXX-100_mA-0p25_lxy-300'.split('|')
-        sampleSig.extend('mXX-100_mA-1p2_lxy-0p3|mXX-100_mA-1p2_lxy-3|mXX-100_mA-1p2_lxy-30|mXX-100_mA-1p2_lxy-150|mXX-100_mA-1p2_lxy-300'.split('|'))
-        sampleSig.extend('mXX-100_mA-5_lxy-3|mXX-100_mA-5_lxy-30|mXX-100_mA-5_lxy-150|mXX-100_mA-5_lxy-300'.split('|'))
-
-        sampleSig.extend('mXX-150_mA-0p25_lxy-0p3|mXX-150_mA-0p25_lxy-3|mXX-150_mA-0p25_lxy-30|mXX-150_mA-0p25_lxy-150|mXX-150_mA-0p25_lxy-300'.split('|'))
-        sampleSig.extend('mXX-150_mA-1p2_lxy-0p3|mXX-150_mA-1p2_lxy-3|mXX-150_mA-1p2_lxy-30|mXX-150_mA-1p2_lxy-150|mXX-150_mA-1p2_lxy-300'.split('|'))
-        sampleSig.extend('mXX-150_mA-5_lxy-0p3|mXX-150_mA-5_lxy-3|mXX-150_mA-5_lxy-30|mXX-150_mA-5_lxy-150|mXX-150_mA-5_lxy-300'.split('|'))
-
-        sampleSig.extend('mXX-200_mA-0p25_lxy-0p3|mXX-200_mA-0p25_lxy-3|mXX-200_mA-0p25_lxy-30|mXX-200_mA-0p25_lxy-150|mXX-200_mA-0p25_lxy-300'.split('|'))
-        sampleSig.extend('mXX-200_mA-1p2_lxy-0p3|mXX-200_mA-1p2_lxy-3|mXX-200_mA-1p2_lxy-30|mXX-200_mA-1p2_lxy-150|mXX-200_mA-1p2_lxy-300'.split('|'))
-        sampleSig.extend('mXX-200_mA-5_lxy-0p3|mXX-200_mA-5_lxy-3|mXX-200_mA-5_lxy-30|mXX-200_mA-5_lxy-150|mXX-200_mA-5_lxy-300'.split('|'))
-
-        sampleSig.extend('mXX-500_mA-0p25_lxy-0p3|mXX-500_mA-0p25_lxy-3|mXX-500_mA-0p25_lxy-30|mXX-500_mA-0p25_lxy-150|mXX-500_mA-0p25_lxy-300'.split('|'))
-        sampleSig.extend('mXX-500_mA-1p2_lxy-0p3|mXX-500_mA-1p2_lxy-3|mXX-500_mA-1p2_lxy-30|mXX-500_mA-1p2_lxy-150|mXX-500_mA-1p2_lxy-300'.split('|'))
-        sampleSig.extend('mXX-500_mA-5_lxy-0p3|mXX-500_mA-5_lxy-3|mXX-500_mA-5_lxy-30|mXX-500_mA-5_lxy-150|mXX-500_mA-5_lxy-300'.split('|'))
-
-        sampleSig.extend('mXX-1000_mA-0p25_lxy-0p3|mXX-1000_mA-0p25_lxy-3|mXX-1000_mA-0p25_lxy-30|mXX-1000_mA-0p25_lxy-150|mXX-1000_mA-0p25_lxy-300'.split('|'))
-        sampleSig.extend('mXX-1000_mA-1p2_lxy-0p3|mXX-1000_mA-1p2_lxy-3|mXX-1000_mA-1p2_lxy-30|mXX-1000_mA-1p2_lxy-150|mXX-1000_mA-1p2_lxy-300'.split('|'))
-        sampleSig.extend('mXX-1000_mA-5_lxy-0p3|mXX-1000_mA-5_lxy-3|mXX-1000_mA-5_lxy-30|mXX-1000_mA-5_lxy-150|mXX-1000_mA-5_lxy-300'.split('|'))'''
-
-#mXX-1000_mA-5_lxy-300|mXX-500_mA-0p25_lxy-300|mXX-100_mA-0p25_lxy-300|mXX-1000_mA-5_lxy-30|mXX-500_mA-1p2_lxy-30'.split('|')
- #       sampleSig.extend('mXX-1000_mA-5_lxy-150|mXX-1000_mA-5_lxy-3|mXX-1000_mA-5_lxy-0p3|mXX-200_mA-0p25_lxy-300|mXX-100_mA-0p25_lxy-30|mXX-100_mA-0p25_lxy-30|mXX-100_mA-0p25_lxy-150|mXX-500_mA-1p2_lxy-0p3|mXX-500_mA-1p2_lxy-3|mXX-500_mA-1p2_lxy-150|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-1p2_lxy-30|mXX-500_mA-5_lxy-300|mXX-500_mA-5_lxy-0p3|mXX-500_mA-5_lxy-3|mXX-500_mA-5_lxy-30|mXX-500_mA-5_lxy-150'.split('|'))
-
-        
-        #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-3|mXX-1000_mA-5_lxy-3|mXX-200_mA-0p25_lxy-300'.split('|')
-
-
-        #sampleSig = 'mXX-1000_mA-5_lxy-300'.split('|') #for testing
-        #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-0p25_lxy-0p3|mXX-1000_mA-5_lxy-300'.split('|')#newTRG
-        #sampleSig = 'mXX-100_mA-5_lxy-0p3|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-5_lxy-300'.split('|')# trig eff 
-        sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-500_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-1000_mA-5_lxy-300'.split('|')#newTRG
-        #sampleSig = 'mXX-100_mA-0p25_lxy-300|mXX-500_mA-1p2_lxy-300|mXX-800_mA-5_lxy-300|mXX-100_mA-5_lxy-0p3|mXX-1000_mA-0p25_lxy-0p3'.split('|') #initials
-        #sampleSig.extend( 'mXX-200_mA-0p25_lxy-300|mXX-1000_mA-0p25_lxy-300'.split('|') )
+        #sampleSig = 'mXX-500_mA-1p2_lxy-300|mXX-1000_mA-5_lxy-300'.split('|')#!=lxy samples                                                                                          
+        #sampleSig = 'mXX-500_mA-1p2_lxy-3|mXX-1000_mA-5_lxy-3'.split('|')#!=lxy samples
 
         if args.sigparam:
             

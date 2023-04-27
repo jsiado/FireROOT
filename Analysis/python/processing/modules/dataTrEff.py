@@ -27,12 +27,12 @@ class MyEvents(Events):
         pf, dsa, Reco_Mu = ([] for i in range (3))
         
         #Get the muons from the pf and dsa candidates collection 
-        for lj in [LJ0, LJ1]:
-            if not lj.isMuonType():continue
-            for i in lj.pfcand_pfmuonIdx:
-                pf.append(event.muons[i])
-            for j in lj.pfcand_dsamuonIdx:
-                dsa.append(event.dsamuons[j])
+        #for lj in [LJ0, LJ1]:
+         #   if not lj.isMuonType():continue
+          #  for i in lj.pfcand_pfmuonIdx:
+           #     pf.append(event.muons[i])
+            #for j in lj.pfcand_dsamuonIdx:
+             #   dsa.append(event.dsamuons[j])
         
         ############
         #fill hist of d0 for pf and dsa muons
