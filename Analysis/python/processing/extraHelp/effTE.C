@@ -3,6 +3,9 @@
 #include "TEffeta.h"
 #include "TEffd0.h"
 #include "TEffpl.h"
+#include "TEffdiffd0dR.h"
+#include "TEffdiffd0pT.h"
+
 
 //run as.........
 // root -l
@@ -17,7 +20,9 @@ void effTE(const char *id)
 {
     TEffdR(id);
     TEffpT(id);
-    TEffeta(id);
+    //TEffeta(id);
     TEffd0(id);
-    TEffpl(id);
+    //TEffpl(id);
+    TEffdiffd0dR(id);
+    TEffdiffd0pT(id);
 }

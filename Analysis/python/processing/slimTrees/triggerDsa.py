@@ -17,7 +17,6 @@ class MyEvents(SignalEvents):
         })
         self._outt.create_branches(_branches)
 
-
     def processEvent(self, event, aux):
         if aux['channel'] not in self.Channel: return
         chan = aux['channel']

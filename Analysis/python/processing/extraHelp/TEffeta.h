@@ -51,5 +51,6 @@ void TEffeta(const char *id){
     }  	
 
   leg_->Draw();
-  cane->SaveAs(Form("../outputs/plots/extras/%sTE_eta.png",id));
+  //  cane->SaveAs(Form("../outputs/plots/extras/%sTE_eta.png",id));
+  cane->SaveAs(Form("../outputs/plots/modules/out_%s/%sTE_eta.png",id, id));
 }

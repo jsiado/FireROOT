@@ -11,7 +11,10 @@ void TEffpl(const char *id){
     gStyle->SetCanvasColor(10);
     canl->Draw("0,0,1,100");
     
-    char S1[50] = "mXX-100_mA-0p25_lxy-300",  S4[50] = "mXX-500_mA-0p25_lxy-300", S3[50] = "mXX-500_mA-1p2_lxy-300",   S2[50] = "mXX-1000_mA-5_lxy-300";
+    char S4[50] = "mXX-100_mA-0p25_lxy-300",
+         S2[50] = "mXX-500_mA-0p25_lxy-300",
+         S3[50] = "mXX-500_mA-1p2_lxy-300", 
+         S1[50] = "mXX-1000_mA-5_lxy-300";
 	
     TH1F *num2a = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TOa2_Num_dR",S2));
     TH1F *den2a = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TOa2_Den_dR",S2));
@@ -20,9 +23,8 @@ void TEffpl(const char *id){
 	trEff->SetLineColor(kMagenta);
 	//trEff->SetAxisRange(0.0,0.25,"X");
 	trEff->Draw();
-	
-	trEff->SetTitle(" ; #Delta R(#mu_{1},#mu_{2}); Efficiency (#epsilon)");
-	leg_->AddEntry(trEff, Form("%s",S2), "l");
+	trEff->SetTitle(" bb; #Delta R(#mu_{1},#mu_{2}); Efficiency (#epsilon)");
+	leg_->AddEntry(trEff, "d_0 > 200 ", "l");
     }
 
     TH1F *num2s = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TOs2_Num_dR",S2));
@@ -31,41 +33,11 @@ void TEffpl(const char *id){
       trEff = new TEfficiency(*num2s,*den2s);
       trEff->SetLineColor(kGray);
       //trEff->SetAxisRange(0.0,0.25,"X");                                                                                                                                                  
-      trEff->Draw();
-
+      trEff->Draw("same");
       trEff->SetTitle(" ; #Delta R(#mu_{1},#mu_{2}); Efficiency (#epsilon)");
-      leg_->AddEntry(trEff, Form("%s",S2), "l");
-    }
-
-    /*TH1F *num4 = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TOa2_Num_dR",S4));
-    TH1F *den4 = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TOa2_Den_dR",S4));
-    if(TEfficiency::CheckConsistency(*num4,*den4)){
-        trEff = new TEfficiency(*num4,*den4);
-	trEff->SetLineColor(kGray);
-	trEff->Draw("same");
-	leg_->AddEntry(trEff, Form("%s",S4), "l");
-    }
-  
-    TH1F *num1 = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TOa2_Num_dR",S1));
-    TH1F *den1 = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TOa2_Den_dR",S1));
-    if(TEfficiency::CheckConsistency(*num1,*den1)){
-        trEff = new TEfficiency(*num1,*den1);
-	trEff->SetLineColor(kBlue);
-	trEff->Draw("same");
-	//	trEff->SetTitle(" ; #Delta R(#mu_{1},#mu_{2}); Efficiency (#epsilon)");
-	leg_->AddEntry(trEff, Form("%s",S1), "l");
-    }
-  
-    TH1F *num3 = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TOa2_Num_dR",S3));
-    TH1F *den3 = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TOa2_Den_dR",S3));
-    if(TEfficiency::CheckConsistency(*num3,*den3)){
-        trEff = new TEfficiency(*num3,*den3);
-	trEff->SetLineColor(kBlack);
-	trEff->Draw("same");
-	leg_->AddEntry(trEff, Form("%s",S3), "l");
-	}*/
+      leg_->AddEntry(trEff, "d_0 < 200", "l");
+      }
 
   leg_->Draw();
-  canl->SaveAs(Form("../outputs/plots/extras/%sTE_dRd0cut.png",id));
-  canl->SaveAs(Form("../outputs/plots/modules/out_51/%sTE_dRd0cut.png",id));
+  canl->SaveAs(Form("../outputs/plots/modules/out_%s/%sTE_dRd0cut.png",id, id));
 }
