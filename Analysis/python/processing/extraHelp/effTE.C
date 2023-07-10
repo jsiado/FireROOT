@@ -5,7 +5,7 @@
 #include "TEffpl.h"
 #include "TEffdiffd0dR.h"
 #include "TEffdiffd0pT.h"
-
+#include "TEFirstBin.h"
 
 //run as.........
 // root -l
@@ -16,13 +16,14 @@
 // date --> a number 
 // etype --> either (obj or eve) for storing the outputs
 
-void effTE(const char *id)
+void effTE(const char *id, const char *ch)
 {
-    TEffdR(id);
-    TEffpT(id);
+    TEffdR(id, ch);
+    TEffpT(id, ch);
     //TEffeta(id);
-    TEffd0(id);
+    TEffd0(id, ch);
     //TEffpl(id);
-    TEffdiffd0dR(id);
-    TEffdiffd0pT(id);
+//    TEffdiffd0dR(id);
+//    TEffdiffd0pT(id);
+//    TEFirstBin(id);
 }

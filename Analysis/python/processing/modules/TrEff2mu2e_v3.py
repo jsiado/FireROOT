@@ -78,6 +78,7 @@ class MyEvents(Events):
             self.Histos['%s/drdsa' % chan].Fill(DeltaR(Reco_Mu[0].p4,Reco_Mu[1].p4))
         ############################################################################################################
         
+        #if lpf == 
         
         ##Reco muon variables
         if len(Reco_Mu) == 2:#Reco_Mu[0] is the leading muon
@@ -85,29 +86,30 @@ class MyEvents(Events):
             d01, d02 = abs(Reco_Mu[0].d0), abs(Reco_Mu[1].d0)
             eta1, eta2 = Reco_Mu[0].p4.eta(), Reco_Mu[1].p4.eta()
 
-            self.Histos['%s/leadpt'%chan].Fill(pt1)
-            self.Histos['%s/leadptrb'%chan].Fill(pt1) #rebin the pt plot
-            self.Histos['%s/subleadpt'%chan].Fill(pt2)
+            self.Histos['%s/leadpt'%chan].Fill(pt1) #leading pt
+            self.Histos['%s/leadptrb'%chan].Fill(pt1) #rebin the pt plot for leading
+            self.Histos['%s/subleadpt'%chan].Fill(pt2) #subleading pt
             
             if pt1 < 30:
-                self.Histos['%s/leadptl30'%chan].Fill(pt1)
-            elif pt1 < 100:
+                self.Histos['%s/leadptl30'%chan].Fill(pt1) #check how many leading mu with pt < 10
+            elif pt1 < 100: #check how many leading mu with 30 <= pt < 100
                 self.Histos['%s/leadptl100'%chan].Fill(pt1)
-            else:
+            else: #check how many leading mu with pt > 100
                 self.Histos['%s/leadptm100'%chan].Fill(pt1)
 
-            
             self.Histos['%s/Mumass' % chan].Fill((Reco_Mu[0].p4+Reco_Mu[1].p4).M())#invariant mass of the two muons
-            self.Histos['%s/ReMu_d0' % chan].Fill(d01)
+            
+            #d0 dist for the two muons
+            self.Histos['%s/ReMu_d0' % chan].Fill(d01) 
             self.Histos['%s/ReMu_d0' % chan].Fill(d02)
             
             drmu = DeltaR(Reco_Mu[0].p4,Reco_Mu[1].p4)#Delta R between the two muons
             self.Histos['%s/drmu' % chan].Fill(drmu)
             
-            # trigger objects in the event
+            # get the trigger objects in the event
             TriObj = [TO for TO in event.trigobjs]
             self.Histos['%s/nTOs' % chan].Fill(len(TriObj))
-            TO_pass = []#list with TO passing a trigger
+            TO_pass = []#iniatialize list with TO passing a trigger
                 
             # loop over all trigger objects in the event. If a trigger object pass a trigger filter append it to TO_pass 
             for j, TO in enumerate (TriObj):
@@ -124,23 +126,19 @@ class MyEvents(Events):
                 for j, tov in enumerate (TO_pass):
                     if i != j:
                         drto = DeltaR(TO_pass[i].p4,TO_pass[j].p4)
-                        self.Histos['%s/drto' % chan].Fill(drto)
-                        
-
-
-
-
-
-
-
-
-
-
+                        self.Histos['%s/drto' % chan].Fill(drto) #check that not same TO are used 
 
             #########################################################################
             # At this point there are two lists: Reco_Mu contains the reco muons and TO_pass contains the TO that passed a trigger filter
             ####################################################################
-            
+
+            # To calculate the efficiecny Take the a muon a match it to TO 
+            # Then take the second muon and match it to a different TO
+            #        # of both muons matched
+            # eff = --------------------------
+            #        # of events with 1mu matched
+            #
+
             mu1, mu2 = 1, 0 # index of the muons
             mud0, to1, to2 = None, 9999, 9999
             
@@ -150,7 +148,7 @@ class MyEvents(Events):
                 dr_to1mu1 = DeltaR(TO_pass[k].p4,Reco_Mu[mu1].p4) #calculate delra R between trigger object "k" and reco mu "1"
                 if dr_to1mu1 < mindr:
                     mindr = dr_to1mu1
-                    if mindr < dR_thr:#matched
+                    if mindr < dR_thr:# matched
                         to1 = k   # TO at index k was matched to a RM[1]
                         mupt = pt1
                         mueta = eta1
@@ -159,27 +157,28 @@ class MyEvents(Events):
                         
             if to1 != 9999:#store variables related to muon 1
                 dr12 = DeltaR(TO_pass[to1].p4,Reco_Mu[mu2].p4) #dr(to1,mu2)
-                self.Histos['%s/TO_Den_dR' % chan].Fill(drmu)
-                self.Histos['%s/TO_Den_pT' % chan].Fill(mupt)
-                self.Histos['%s/TO_Den_eta' % chan].Fill(mueta)
-                self.Histos['%s/TO_Den_d0' % chan].Fill(mud0)
-                self.Histos['%s/dr_to1mu1'  % chan].Fill(drmu,dr11) #dr matched (to1,mu1) vs dr(mu1,mu2)
+                self.Histos['%s/Tot_dR'  %chan].Fill(drmu)
+                self.Histos['%s/Tot_pT'  %chan].Fill(mupt)
+                self.Histos['%s/Tot_eta' %chan].Fill(mueta)
+                self.Histos['%s/Tot_d0'  %chan].Fill(mud0)
+                self.Histos['%s/dr_to1mu1'  %chan].Fill(drmu,dr11) #dr matched (to1,mu1) vs dr(mu1,mu2)
                 
                 if mud0 < 10000:
-                    self.Histos['%s/TO_Den_dRfbin' % chan].Fill(drmu)
-
+                    self.Histos['%s/Tot_dRfbin' % chan].Fill(drmu)
+                
+                #fill different ranges of dR
                 if mud0 < 0.02:
-                    self.Histos['%s/TO_Den_dRd0l2' % chan].Fill(drmu)
-                    self.Histos['%s/TO_Den_pTd0l2' % chan].Fill(mupt)
-
+                    self.Histos['%s/Tot_dRd0l2' % chan].Fill(drmu)
+                    self.Histos['%s/Tot_pTd0l2' % chan].Fill(mupt)
+                    
                 elif mud0 < 0.05:
-                    self.Histos['%s/TO_Den_dRd0l5' % chan].Fill(drmu)
-                    self.Histos['%s/TO_Den_pTd0l5' % chan].Fill(mupt)
+                    self.Histos['%s/Tot_dRd0l5' % chan].Fill(drmu)
+                    self.Histos['%s/Tot_pTd0l5' % chan].Fill(mupt)
                 else:
-                    self.Histos['%s/TO_Den_dRd0m5' % chan].Fill(drmu)
-                    self.Histos['%s/TO_Den_pTd0m5' % chan].Fill(mupt) 
+                    self.Histos['%s/Tot_dRd0m5' % chan].Fill(drmu)
+                    self.Histos['%s/Tot_pTd0m5' % chan].Fill(mupt) 
 
-
+                    
                 #find min dr between the second muon and its closest TO
                 mindr2, to2 = 9999, 9999
                 for l, to in enumerate(TO_pass): #loop over all TO_pass again now with RM[2] to see if there is a match
@@ -193,36 +192,36 @@ class MyEvents(Events):
                 if to2 != 9999 and to1 != to2: #check if the index of the second loop is different that 'to1' index of the TO matched to RM[1]
                     dr_to1to2 = DeltaR(TO_pass[to1].p4,TO_pass[to2].p4)  #dR(to1,to2)
                     dr21 = DeltaR(TO_pass[to2].p4,Reco_Mu[mu1].p4) #dr(to2,mu1)
-                    self.Histos['%s/TO_Num_dR'  % chan].Fill(drmu)
-                    self.Histos['%s/TO_Num_pT'  % chan].Fill(mupt)
-                    self.Histos['%s/TO_Num_eta' % chan].Fill(mueta)
-                    self.Histos['%s/TO_Num_d0'  % chan].Fill(mud0)
+                    self.Histos['%s/Mat_dR'  % chan].Fill(drmu)
+                    self.Histos['%s/Mat_pT'  % chan].Fill(mupt)
+                    self.Histos['%s/Mat_eta' % chan].Fill(mueta)
+                    self.Histos['%s/Mat_d0'  % chan].Fill(mud0)
                     self.Histos['%s/dr_to2mu2'  % chan].Fill(drmu,dr22) #to2 match to mu2 vs dr (mu1,mu2)
                     self.Histos['%s/dr_to1to2'  % chan].Fill(dr_to1to2) #1d hist
                     self.Histos['%s/dr_to1mu1vto2mu2'  % chan].Fill(dr11,dr22) #dr(to1mu1) vs dr(to2mu2)
                     self.Histos['%s/dr_to1mu2vto2mu1'  % chan].Fill(dr12,dr21) #
                     
                     if mud0< 10000:
-                        self.Histos['%s/TO_Num_dRfbin' % chan].Fill(drmu)
+                        self.Histos['%s/Mat_dRfbin' % chan].Fill(drmu)
 
                     if mud0 < 0.02:
-                        self.Histos['%s/TO_Num_dRd0l2' % chan].Fill(drmu)
-                        self.Histos['%s/TO_Num_pTd0l2' % chan].Fill(mupt)
+                        self.Histos['%s/Mat_dRd0l2' % chan].Fill(drmu)
+                        self.Histos['%s/Mat_pTd0l2' % chan].Fill(mupt)
                     elif mud0 < 0.05:
-                        self.Histos['%s/TO_Num_dRd0l5' % chan].Fill(drmu)
-                        self.Histos['%s/TO_Num_pTd0l5' % chan].Fill(mupt)
+                        self.Histos['%s/Mat_dRd0l5' % chan].Fill(drmu)
+                        self.Histos['%s/Mat_pTd0l5' % chan].Fill(mupt)
                     else:
-                        self.Histos['%s/TO_Num_dRd0m5' % chan].Fill(drmu)
-                        self.Histos['%s/TO_Num_pTd0m5' % chan].Fill(mupt)
+                        self.Histos['%s/Mat_dRd0m5' % chan].Fill(drmu)
+                        self.Histos['%s/Mat_pTd0m5' % chan].Fill(mupt)
 
 
 
 
 histCollection = [
-    { 'name': 'dsaMu_d0',           'binning': (20, 0, 70),          'title': '|d_{0}| dsa muons; |d_{0}|[cm]; Events'},
+    { 'name': 'dsaMu_d0',           'binning': (20, 0, 70),            'title': '|d_{0}| dsa muons; |d_{0}|[cm]; Events'},
     { 'name': 'dsaMu_pT',           'binning': (100, 0,800),           'title': 'p_{T}  dsa muons; p_{T} [GeV]; Entries'},
     { 'name': 'dsaMu_eta',          'binning': (30,-3.5,3.5),          'title': '#eta dsa muons; #eta_{dsa}; Entries'},
-    { 'name': 'pfMu_d0',            'binning': (10, 0, 25),          'title': '|d_{0}| pf muons; |d_{0}|[cm]; Entries'},
+    { 'name': 'pfMu_d0',            'binning': (10, 0, 25),            'title': '|d_{0}| pf muons; |d_{0}|[cm]; Entries'},
     { 'name': 'pfMu_pT',            'binning': (100, 0,800),           'title': 'p_{T}  pf muons; p_{T} [GeV]; Entries'},
     { 'name': 'pfMu_eta',           'binning': (25,-3.5,3.5),          'title': '#eta pf muons; #eta_{pf}; Entries'},
     #{ 'name': 'nMuons',             'binning': (5, -5.0,5.0),          'title': 'number of Muons; nMuons; Entries'},
@@ -232,35 +231,36 @@ histCollection = [
     { 'name': 'leadpt',             'binning': (100, 0,600),           'title': 'p_{T} Leading muon; p_{T} [GeV]; Entries'},
     { 'name': 'subleadpt',          'binning': (100, 0,600),           'title': 'p_{T} subleading muon; p_{T} [GeV]; Entries'},
     { 'name': 'Mumass',             'binning': (30, 0, 10),            'title': 'mass distribution for reco  muons; m [GeV]; Entries'},
-    { 'name': 'ReMu_d0',            'binning': (20, 0, 70),          'title': '|d_{0}| reco muons; |d_{0}|[cm]; Entries'},
+    { 'name': 'ReMu_d0',            'binning': (20, 0, 70),            'title': '|d_{0}| reco muons; |d_{0}|[cm]; Entries'},
     { 'name': 'drmu',               'binning': (100, 0, 0.4),          'title': '#Delta R between #mu; #Delta R(#mu_{1},#mu_{2}); Entries'},
     { 'name': 'nTOs',               'binning': (20, 0,50),             'title': 'number of trigger objects; nTOs; Entries'},
     { 'name': 'drto',               'binning': (50,0,0.4),  	       'title': '#Delta R between all TOs; #Delta R(TO_{i},TO_{j}); #Delta R (TO,#mu_{1})'},
      
-    { 'name': 'TO_Num_dR',          'binning': [[0.0, 0.02, 0.04, 0.06, 0.08, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4,]],         'title': '#Delta R matched; #Delta R(#mu_{1},#mu_{2}); Entries'},
-    { 'name': 'TO_Den_dR',          'binning': [[0.0, 0.02, 0.04, 0.06, 0.08, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4,]],         'title': '#Delta R total; #Delta R(#mu_{1},#mu_{2}); Entries'},
-    { 'name': 'TO_Num_pT',          'binning': [[0,30,60,90,120,160,200, 300]],         'title': 'p_{T} matched; p_{T} [GeV]; Entries'},
-    { 'name': 'TO_Den_pT',          'binning': [[0,30,60,90,120,160,200, 300]],         'title': 'p_{T} total; p_{T} [GeV]; Entries'},
-    { 'name': 'TO_Num_eta',         'binning': (25,-3.5,3.5),          'title': '#eta matched ; #eta; Entries'},
-    { 'name': 'TO_Den_eta',         'binning': (25,-3.5,3.5),          'title': '#eta total; #eta; Entries'},
-    { 'name': 'TO_Num_d0',   	    'binning': (20, 0, 70),          'title': '|d_{0}| matched; |d_{0}|[cm]; Entries'},
-    { 'name': 'TO_Den_d0',          'binning': (20, 0, 70),          'title': '|d_{0}| total; |d_{0}|[cm]; Entries'},
-    
-    { 'name': 'TO_Num_dRd0l2',          'binning': (16, 0.0, 0.4),         'title': '#Delta R matched for d_{0}<200; #Delta R(#mu_{1},#mu_{2}); Entries'},
-    { 'name': 'TO_Den_dRd0l2',          'binning': (16, 0.0, 0.4),         'title': '#Delta R total for d_{0}<200; #Delta R(#mu_{1},#mu_{2}); Entries'},
-    { 'name': 'TO_Num_dRd0l5',          'binning': (16, 0.0, 0.4),         'title': '#Delta R matched for d_{0} > 200 and <500; #Delta R(#mu_{1},#mu_{2}); Entries'},
-    { 'name': 'TO_Den_dRd0l5',          'binning': (16, 0.0, 0.4),         'title': '#Delta R total for d_{0} > 200 and <500; #Delta R(#mu_{1},#mu_{2}); Entries'},
-    { 'name': 'TO_Num_dRd0m5',          'binning': (16, 0.0, 0.4),         'title': '#Delta R matched for d_{0}>500; #Delta R(#mu_{1},#mu_{2}); Entries'},
-    { 'name': 'TO_Den_dRd0m5',          'binning': (16, 0.0, 0.4),         'title': '#Delta R total for d_{0}>500; #Delta R(#mu_{1},#mu_{2}); Entries'},
-    { 'name': 'TO_Num_dRfbin',          'binning': (16, 0.0, 0.4),         'title': '#Delta R matched for d_{0} extended; #Delta R(#mu_{1},#mu_{2}); Entries'},
-    { 'name': 'TO_Den_dRfbin',          'binning': (16, 0.0, 0.4),         'title': '#Delta R total for d_{0} extended; #Delta R(#mu_{1},#mu_{2}); Entries'},
 
-    { 'name': 'TO_Num_pTd0l2',          'binning': [[0,5,10,15,20,25,30,35,40,50,60,70,80, 90, 100, 150, 200]],         'title': 'p_{T} matched for d_{0}<200; p_{T} [GeV]; Entries'},
-    { 'name': 'TO_Den_pTd0l2',          'binning': [[0,5,10,15,20,25,30,35,40,50,60,70,80, 90, 100, 150, 200]],         'title': 'p_{T} total for d_{0}<200; p_{T} [GeV]; Entries'},
-    { 'name': 'TO_Num_pTd0l5',          'binning': [[0,5,10,15,20,25,30,35,40,50,60,70,80, 90, 100, 150, 200]],         'title': 'p_{T} matched for d_{0}<500; p_{T} [GeV]; Entries'},
-    { 'name': 'TO_Den_pTd0l5',          'binning': [[0,5,10,15,20,25,30,35,40,50,60,70,80, 90, 100, 150, 200]],         'title': 'p_{T} total for d_{0}<500; p_{T} [GeV]; Entries'},
-    { 'name': 'TO_Num_pTd0m5',          'binning': [[0,5,10,15,20,25,30,35,40,50,60,70,80, 90, 100, 150, 200]],         'title': 'p_{T} matched for d_{0}>500; p_{T} [GeV]; Entries'},
-    { 'name': 'TO_Den_pTd0m5',          'binning': [[0,5,10,15,20,25,30,35,40,50,60,70,80, 90, 100, 150, 200]],         'title': 'p_{T} total for d_{0}>500; p_{T} [GeV]; Entries'},
+    { 'name': 'Mat_pT',          'binning': [[0,30,60,90,120,160,200, 300, 400, 500, 600, 700]],         'title': 'p_{T} matched; p_{T} [GeV]; Entries'},
+    { 'name': 'Tot_pT',          'binning': [[0,30,60,90,120,160,200, 300, 400, 500, 600, 700]],         'title': 'p_{T} total; p_{T} [GeV]; Entries'},
+    { 'name': 'Mat_eta',         'binning': (25,-3.5,3.5),          'title': '#eta matched ; #eta; Entries'},
+    { 'name': 'Tot_eta',         'binning': (25,-3.5,3.5),          'title': '#eta total; #eta; Entries'},
+    { 'name': 'Mat_d0',   	    'binning': (20, 0, 70),          'title': '|d_{0}| matched; |d_{0}|[cm]; Entries'},
+    { 'name': 'Tot_d0',          'binning': (20, 0, 70),          'title': '|d_{0}| total; |d_{0}|[cm]; Entries'},
+    
+    { 'name': 'Mat_dR',        'binning': [[0.,0.02,0.04, 0.06,0.08,0.1, 0.15,0.2,0.25, 0.3,0.4,]],  'title':'#Delta R matched; #Delta R(#mu_{1},#mu_{2}); Entries'},
+    { 'name': 'Tot_dR',        'binning': [[0.,0.02,0.04, 0.06,0.08,0.1, 0.15,0.2,0.25, 0.3,0.4,]],  'title':'#Delta R total; #Delta R(#mu_{1},#mu_{2}); Entries'},
+    { 'name': 'Mat_dRd0l2',    'binning': [[0.,0.02,0.04, 0.06,0.08,0.1, 0.15,0.2,0.25, 0.3,0.4,]],  'title':'#Delta R matched d_{0}<200; #Delta R(#mu_{1},#mu_{2}); Entries'},
+    { 'name': 'Tot_dRd0l2',    'binning': [[0.,0.02,0.04, 0.06,0.08,0.1, 0.15,0.2,0.25, 0.3,0.4,]],  'title':'#Delta R total d_{0}<200; #Delta R(#mu_{1},#mu_{2}); Entries'},
+    { 'name': 'Mat_dRd0l5',    'binning': [[0.,0.02,0.04, 0.06,0.08,0.1, 0.15,0.2,0.25, 0.3,0.4,]],  'title':'#Delta R matched d_{0} > 200 and <500; #Delta R(#mu_{1},#mu_{2}); Entries'},
+    { 'name': 'Tot_dRd0l5',    'binning': [[0.,0.02,0.04, 0.06,0.08,0.1, 0.15,0.2,0.25, 0.3,0.4,]],  'title':'#Delta R total d_{0} > 200 and <500; #Delta R(#mu_{1},#mu_{2}); Entries'},
+    { 'name': 'Mat_dRd0m5',    'binning': [[0.,0.02,0.04, 0.06,0.08,0.1, 0.15,0.2,0.25, 0.3,0.4,]],  'title':'#Delta R matched d_{0}>500; #Delta R(#mu_{1},#mu_{2}); Entries'},
+    { 'name': 'Tot_dRd0m5',    'binning': [[0.,0.02,0.04, 0.06,0.08,0.1, 0.15,0.2,0.25, 0.3,0.4,]],  'title':'#Delta R total d_{0}>500; #Delta R(#mu_{1},#mu_{2}); Entries'},
+    { 'name': 'Mat_dRfbin',    'binning': [[0.,0.02,0.04, 0.06,0.08,0.1, 0.15,0.2,0.25, 0.3,0.4,]],  'title':'#Delta R matched d_{0} extended; #Delta R(#mu_{1},#mu_{2}); Entries'},
+    { 'name': 'Tot_dRfbin',    'binning': [[0.,0.02,0.04, 0.06,0.08,0.1, 0.15,0.2,0.25, 0.3,0.4,]],  'title':'#Delta R total d_{0} extended; #Delta R(#mu_{1},#mu_{2}); Entries'},
+
+    { 'name': 'Mat_pTd0l2',          'binning': [[0,5,10,15,20,25,30,35,40,50,60,70,80, 90, 100, 150, 200]],         'title': 'p_{T} matched for d_{0}<200; p_{T} [GeV]; Entries'},
+    { 'name': 'Tot_pTd0l2',          'binning': [[0,5,10,15,20,25,30,35,40,50,60,70,80, 90, 100, 150, 200]],         'title': 'p_{T} total for d_{0}<200; p_{T} [GeV]; Entries'},
+    { 'name': 'Mat_pTd0l5',          'binning': [[0,5,10,15,20,25,30,35,40,50,60,70,80, 90, 100, 150, 200]],         'title': 'p_{T} matched for d_{0}<500; p_{T} [GeV]; Entries'},
+    { 'name': 'Tot_pTd0l5',          'binning': [[0,5,10,15,20,25,30,35,40,50,60,70,80, 90, 100, 150, 200]],         'title': 'p_{T} total for d_{0}<500; p_{T} [GeV]; Entries'},
+    { 'name': 'Mat_pTd0m5',          'binning': [[0,5,10,15,20,25,30,35,40,50,60,70,80, 90, 100, 150, 200]],         'title': 'p_{T} matched for d_{0}>500; p_{T} [GeV]; Entries'},
+    { 'name': 'Tot_pTd0m5',          'binning': [[0,5,10,15,20,25,30,35,40,50,60,70,80, 90, 100, 150, 200]],         'title': 'p_{T} total for d_{0}>500; p_{T} [GeV]; Entries'},
 
     { 'name': 'leadptrb',              'binning': [[0, 10, 15, 20, 30, 40, 60, 80, 100]],           'title': 'p_{T} Leading muon; p_{T} [GeV]; Entries'},
     { 'name': 'leadptl30',             'binning': (10, 0.0, 35), 'title': 'p_{T} < 30 Leading muon; p_{T} [GeV]; Entries'},

@@ -11,23 +11,18 @@ void TEffdiffd0pT(const char *id){
     gStyle->SetCanvasColor(10);
     candpt->Draw("0,0,1,100");
     
-    char S4[50] = "mXX-100_mA-0p25_lxy-300",
-         S2[50] = "mXX-500_mA-0p25_lxy-300",
-         S3[50] = "mXX-500_mA-1p2_lxy-300", 
-         S1[50] = "mXX-1000_mA-5_lxy-300";
+	char S1[50] = "mXX-100_mA-0p25_lxy-300",  S4[50] = "mXX-500_mA-0p25_lxy-300", S3[50] = "mXX-500_mA-1p2_lxy-300",   S2[50] = "mXX-1000_mA-5_lxy-300";
 	
     TH1F *numl2 = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TO_Num_pTd0l2",S3));
     TH1F *denl2 = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TO_Den_pTd0l2",S3));
-    if(TEfficiency::CheckConsistency(*numl2,*denl2))
-    {
+    if(TEfficiency::CheckConsistency(*numl2,*denl2)){
         trEff = new TEfficiency(*numl2,*denl2);
-		trEff->SetLineColor(kMagenta);
+		trEff->SetLineColor(kRed);
 		trEff->Draw();
 		gPad->Update();
 		auto graph = trEff->GetPaintedGraph();
 		graph->SetMinimum(0);
 		graph->SetMaximum(1.4);
-		//graph->GetXaxis()->SetRangeUser(0., 500.);
 		gPad->Update();
 		trEff->SetTitle(Form(" %s ; p_{T} [GeV]; Efficiency (#epsilon)",S3));
 		leg_->AddEntry(trEff, "d_{0} < 200 ", "l");
@@ -35,8 +30,7 @@ void TEffdiffd0pT(const char *id){
 
     TH1F *numl5 = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TO_Num_pTd0l5",S3));
     TH1F *denl5 = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TO_Den_pTd0l5",S3));
-    if(TEfficiency::CheckConsistency(*numl5,*denl5))
-    {
+    if(TEfficiency::CheckConsistency(*numl5,*denl5)){
     	trEff = new TEfficiency(*numl5,*denl5);
     	trEff->SetLineColor(kBlue);
     	trEff->Draw("same");
@@ -46,8 +40,7 @@ void TEffdiffd0pT(const char *id){
     
     TH1F *numm5 = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TO_Num_pTd0m5",S3));
     TH1F *denm5 = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TO_Den_pTd0m5",S3));
-    if(TEfficiency::CheckConsistency(*numm5,*denm5))
-    {
+    if(TEfficiency::CheckConsistency(*numm5,*denm5)){
     	trEff = new TEfficiency(*numm5,*denm5);
     	trEff->SetLineColor(kBlack);
     	trEff->Draw("same");
@@ -56,5 +49,5 @@ void TEffdiffd0pT(const char *id){
     }
 
   leg_->Draw();
-  candpt->SaveAs(Form("../outputs/plots/modules/out_%s/%sTE_dRdiffd0pT.png",id, id));
+  candpt->SaveAs(Form("../outputs/plots/modules/out_%s/%sTE_dRdiffd0pT_S3.png",id, id));
 }

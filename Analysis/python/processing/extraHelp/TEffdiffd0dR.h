@@ -11,24 +11,19 @@ void TEffdiffd0dR(const char *id){
     gStyle->SetCanvasColor(10);
     canddr->Draw("0,0,1,100");
     
-    char S4[50] = "mXX-100_mA-0p25_lxy-300",
-         S2[50] = "mXX-500_mA-0p25_lxy-300",
-         S3[50] = "mXX-500_mA-1p2_lxy-300", 
-         S1[50] = "mXX-1000_mA-5_lxy-300";
-	
+    char S1[50] = "mXX-100_mA-0p25_lxy-300",  S4[50] = "mXX-500_mA-0p25_lxy-300", S3[50] = "mXX-500_mA-1p2_lxy-300",   S2[50] = "mXX-1000_mA-5_lxy-300";
+    
     TH1F *numl2 = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TO_Num_dRd0l2",S3));
     TH1F *denl2 = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TO_Den_dRd0l2",S3));
     if(TEfficiency::CheckConsistency(*numl2,*denl2))
     {
         trEff = new TEfficiency(*numl2,*denl2);
-		trEff->SetLineColor(kMagenta);
-		//trEff->SetTitle(
+		trEff->SetLineColor(kRed);
 		trEff->Draw();
 		gPad->Update();
 		auto graph = trEff->GetPaintedGraph();
 		graph->SetMinimum(0);
 		graph->SetMaximum(1.4);
-		//graph->GetXaxis()->SetRange(0., 1.);
 		gPad->Update();
 		trEff->SetTitle(Form(" %s; #Delta R(#mu_{1},#mu_{2}); Efficiency (#epsilon)",S3));
 		leg_->AddEntry(trEff, "d_{0} < 200 ", "l");
@@ -47,30 +42,16 @@ void TEffdiffd0dR(const char *id){
     
     TH1F *numm5 = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TO_Num_dRd0m5",S3));
     TH1F *denm5 = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TO_Den_dRd0m5",S3));
-    if(TEfficiency::CheckConsistency(*numm5,*denm5))
-    {
-    	trEff = new TEfficiency(*numm5,*denm5);
-    	trEff->SetLineColor(kBlack);
-    	trEff->Draw("same");
+    if(TEfficiency::CheckConsistency(*numm5,*denm5)){
+		trEff = new TEfficiency(*numm5,*denm5);
+		trEff->SetLineColor(kBlack);
+		trEff->Draw("same");
     	trEff->SetTitle(" ; #Delta R(#mu_{1},#mu_{2}); Efficiency (#epsilon)");
     	leg_->AddEntry(trEff, "d_{0} > 500", "l");
     }
-
-  leg_->Draw();
-  // canddr->SaveAs(Form("../outputs/plots/modules/out_%s/%sTE_dRdiffd0dR.png",id, id));
-
-  TH1F *numf = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TO_Num_dRfbin",S3));
-  TH1F *denf = (TH1F*)f->Get(Form("ch2mu2e/sig/%s/TO_Den_dRfbin",S3));
-  if(TEfficiency::CheckConsistency(*numf,*denf))
-    {
-      trEff = new TEfficiency(*numf,*denf);
-      trEff->SetLineColor(kOrange);
-      trEff->Draw("same");
-      trEff->SetTitle(" ; #Delta R(#mu_{1},#mu_{2}); Efficiency (#epsilon)");
-      leg_->AddEntry(trEff, "d_{0} extended", "l");
-    }
-
-  leg_->Draw();
-  canddr->SaveAs(Form("../outputs/plots/modules/out_%s/%sTE_dRdiffd0dR.png",id, id));
-
+	
+	leg_->Draw();
+	canddr->SaveAs(Form("../outputs/plots/modules/out_%s/%sTE_dRdiffd0dR_S3.png",id, id));
 }
+
+
