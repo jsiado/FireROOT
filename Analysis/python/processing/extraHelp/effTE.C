@@ -6,6 +6,7 @@
 #include "TEffdiffd0dR.h"
 #include "TEffdiffd0pT.h"
 #include "TEFirstBin.h"
+#include "TEffLxy.h"
 
 //run as.........
 // root -l
@@ -26,4 +27,5 @@ void effTE(const char *id, const char *ch)
 //    TEffdiffd0dR(id);
 //    TEffdiffd0pT(id);
 //    TEFirstBin(id);
+	TEffLxy(id, ch);
 }

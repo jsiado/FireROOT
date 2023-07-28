@@ -19,6 +19,9 @@ class MyEvents(Events):
         if aux['channel'] not in self.Channel: return
         chan = aux['channel']
 
+        #for p in aux['dp']:
+            #rho = (p.dauvtx-p.vtx).Rho()
+            #print (rho)
 
         LJ0, LJ1 = aux['lj0'], aux['lj1']
         passCosmic = all(map(lambda lj: lj.passCosmicVeto(event), [LJ0, LJ1]))
@@ -38,7 +41,6 @@ class MyEvents(Events):
             for j in lj.pfcand_dsamuonIdx:
                 dsa.append(event.dsamuons[j])
         
-        ############
         #fill hist for != variables for dsa and pf muons
         for dsamu in dsa:
             self.Histos['%s/dsaMu_d0' % chan].Fill(abs(dsamu.d0))
@@ -51,19 +53,17 @@ class MyEvents(Events):
             self.Histos['%s/pfMu_eta' % chan].Fill(pfmu.p4.eta())
 
         lpf, ldsa = len(pf),len(dsa)
-        #self.Histos['%s/nMuons' % chan].Fill(-3)
-        #print(lpf+ldsa)
-        
+        #self.Histos['%s/nMuons' % chan].Fill(lpf+ldsa)
 
         #############################################################################################
-        #Join pf and dsa muons in a single list, Reco_Mu
+        #Join pf and dsa muons in a single list, Reco_Mu 
         #############################################################################################
         if lpf ==2:
             Reco_Mu.append(pf[0])
             Reco_Mu.append(pf[1])
             self.Histos['%s/drpf' % chan].Fill(DeltaR(Reco_Mu[0].p4,Reco_Mu[1].p4))
 
-        elif lpf == 1:#order by pt instead of which collection the muon is drawn from
+        elif lpf == 1:
             if pf[0].p4.pt()> dsa[0].p4.pt():
                 Reco_Mu.append(pf[0])
                 Reco_Mu.append(dsa[0])
@@ -71,17 +71,92 @@ class MyEvents(Events):
                 Reco_Mu.append(dsa[0])
                 Reco_Mu.append(pf[0])
             self.Histos['%s/drboth' % chan].Fill(DeltaR(Reco_Mu[0].p4,Reco_Mu[1].p4))
-            
+
         elif ldsa == 2:
             Reco_Mu.append(dsa[0])
             Reco_Mu.append(dsa[1])
             self.Histos['%s/drdsa' % chan].Fill(DeltaR(Reco_Mu[0].p4,Reco_Mu[1].p4))
         ############################################################################################################
+
+        #================================================================
+        # lxy study and variables
+        for p in aux['dp']:
+
+            arho = (p.dauvtx-p.vtx).Rho()
+            jzd = p.vtx.Rho()
+ 
+            if abs(p.daupid)==13:
+                mrho = (p.dauvtx-p.vtx).Rho()
+                self.Histos['{}/ztomlxy'.format(chan)].Fill(mrho)
+                self.Histos['{}/mlxy'.format(chan)].Fill(p.dauvtx.Rho())
+            if abs(p.daupid)==11:
+                erho = (p.dauvtx-p.vtx).Rho()
+                self.Histos['{}/ztoelxy'.format(chan)].Fill(erho)
+                self.Histos['{}/elxy'.format(chan)].Fill(p.dauvtx.Rho())
+            self.Histos['{}/ztoalxy'.format(chan)].Fill(arho)
+
+        gmus = [p for p in event.gens \
+            if abs(p.pid)==13 \
+                and p.p4.pt()>10\
+                and abs(p.p4.eta())<2.4\
+                and p.vtx.Rho()<700]
         
-        #if lpf == 
+        gele = [p for p in event.gens \
+            if abs(p.pid)==11 \
+                and p.p4.pt()>10\
+                and abs(p.p4.eta())<2.4\
+                and p.vtx.Rho()<700]
         
+        dp_Mu = [p for p in aux['dp'] if abs(p.daupid)==13]
+        dp_ele = [p for p in aux['dp'] if abs(p.daupid)==11]
+                
+        #################################################################################################################
+        ### test displacement
+        #################################################################################################################
+        '''print('len gmus ',len(gmus))
+        for g, gen in enumerate(gmus):
+            print('genmu', gen.vtx.Rho(), ' charge ',gen.charge, ' dark photon  ', dp_Mu[0].vtx.Rho(), 'pT  ', gen.p4.pt())
+  
+        for e, ele in enumerate(gele):
+            print('genele', ele.vtx.Rho(), ' charge ',ele.charge, ' dark photon ', dp_ele[0].vtx.Rho())'''
+
+        ##################
+        ##################
+        #print('-' *80)
+        miin, gen_m = 9999, None
+        for g, gen in enumerate(gmus):
+            if gen.vtx.Rho() == dp_Mu[0].dauvtx.Rho():
+                zdlxy = dp_Mu[0].dauvtx.Rho() - dp_Mu[0].vtx.Rho()
+                for r, re in enumerate(Reco_Mu):
+                    drmr = DeltaR(gen.p4,re.p4)
+                    #print(g,r,drmr)
+                    if drmr < miin:
+                        gen_m = g
+                        reco_m = r
+                        miin = drmr
+        #if gen_m is not None:
+            #print ('**',gen_m,reco_m)
+        #print ('=' *80)
+
+        '''    loop over gen muons
+        if (gen muon vtx. Rho == dark photon vtx. Rho)
+        then you fill the lxy of that dark photon
+        loop over the reco muons
+        if (delta R match reco muon and the gen muon)
+        check the trigger matching
+        fill zd lxy'''
+        
+        
+        '''for r, reco in enumerate(Reco_Mu):
+            for g, gen in enumerate(gmus):
+                dR_gr = DeltaR(reco.p4,gen.p4)
+                if dR_gr <0.2:
+        print (r, g, dR_gr)'''
+        #here both gen muons and reco muons are very close to each other dR<0.06 for each combination (0,0), (0,1), (1,0), and (1,1)
+        #=========================================================================
+
         ##Reco muon variables
-        if len(Reco_Mu) == 2:#Reco_Mu[0] is the leading muon
+        if len(Reco_Mu) == 2 and gen_m is not None:#Reco_Mu[0] is the leading muon
             pt1, pt2 = Reco_Mu[0].p4.pt(), Reco_Mu[1].p4.pt() # leading and sub pt
             d01, d02 = abs(Reco_Mu[0].d0), abs(Reco_Mu[1].d0)
             eta1, eta2 = Reco_Mu[0].p4.eta(), Reco_Mu[1].p4.eta()
@@ -161,10 +236,14 @@ class MyEvents(Events):
                 self.Histos['%s/Tot_pT'  %chan].Fill(mupt)
                 self.Histos['%s/Tot_eta' %chan].Fill(mueta)
                 self.Histos['%s/Tot_d0'  %chan].Fill(mud0)
+                self.Histos['%s/Tot_lxy' %chan].Fill(dp_Mu[0].dauvtx.Rho() - dp_Mu[0].vtx.Rho())
+                #self.histos['%s/Tot_zxy' %chan].Fill((dp_Mu[0].dau.vtx - dp_Mu[0].vtx).Rho())
+                #print(dp_Mu[0].vtx.Rho())
                 self.Histos['%s/dr_to1mu1'  %chan].Fill(drmu,dr11) #dr matched (to1,mu1) vs dr(mu1,mu2)
                 
-                if mud0 < 10000:
-                    self.Histos['%s/Tot_dRfbin' % chan].Fill(drmu)
+                
+                #if mud0 < 10000:
+                 #   self.Histos['%s/Tot_dRfbin' % chan].Fill(drmu)
                 
                 #fill different ranges of dR
                 if mud0 < 0.02:
@@ -196,13 +275,15 @@ class MyEvents(Events):
                     self.Histos['%s/Mat_pT'  % chan].Fill(mupt)
                     self.Histos['%s/Mat_eta' % chan].Fill(mueta)
                     self.Histos['%s/Mat_d0'  % chan].Fill(mud0)
+                    self.Histos['%s/Mat_lxy' %chan].Fill(dp_Mu[0].dauvtx.Rho() - dp_Mu[0].vtx.Rho())
+                    #self.histos['%s/Mat_zxy' %chan].Fill((dp_Mu[0].dau.vtx - dp_Mu[0].vtx).Rho())
                     self.Histos['%s/dr_to2mu2'  % chan].Fill(drmu,dr22) #to2 match to mu2 vs dr (mu1,mu2)
                     self.Histos['%s/dr_to1to2'  % chan].Fill(dr_to1to2) #1d hist
                     self.Histos['%s/dr_to1mu1vto2mu2'  % chan].Fill(dr11,dr22) #dr(to1mu1) vs dr(to2mu2)
                     self.Histos['%s/dr_to1mu2vto2mu1'  % chan].Fill(dr12,dr21) #
                     
-                    if mud0< 10000:
-                        self.Histos['%s/Mat_dRfbin' % chan].Fill(drmu)
+                    #if mud0< 10000:
+                     #   self.Histos['%s/Mat_dRfbin' % chan].Fill(drmu)
 
                     if mud0 < 0.02:
                         self.Histos['%s/Mat_dRd0l2' % chan].Fill(drmu)
@@ -255,6 +336,23 @@ histCollection = [
     { 'name': 'Mat_dRfbin',    'binning': [[0.,0.02,0.04, 0.06,0.08,0.1, 0.15,0.2,0.25, 0.3,0.4,]],  'title':'#Delta R matched d_{0} extended; #Delta R(#mu_{1},#mu_{2}); Entries'},
     { 'name': 'Tot_dRfbin',    'binning': [[0.,0.02,0.04, 0.06,0.08,0.1, 0.15,0.2,0.25, 0.3,0.4,]],  'title':'#Delta R total d_{0} extended; #Delta R(#mu_{1},#mu_{2}); Entries'},
 
+    { 'name': 'ztoalxy',          'binning': (100, 0., 700),         'title': 'z_{d} all l_{xy}; l_{xy} [cm]; Entries'},
+    { 'name': 'ztomlxy',          'binning': (100, 0., 700),         'title': 'z_{d} -> #mu l_{xy}; l_{xy} [cm]; Entries'},
+    { 'name': 'ztoelxy',          'binning': (100, 0., 700),         'title': 'z_{d} -> e l_{xy}; l_{xy} [cm]; Entries'},
+    { 'name': 'mlxy',          'binning': (100, 0., 700),         'title': 'm l_{xy}; l_{xy} [cm]; Entries'},
+    { 'name': 'elxy',          'binning': (100, 0., 700),         'title': 'e l_{xy}; l_{xy} [cm]; Entries'},
+    { 'name': 'Tot_zxy',          'binning': (30, 0., 800),         'title': 'Total; z l_{xy} [cm]; Entries'},
+    { 'name': 'Mat_zxy',          'binning': (30, 0., 800),         'title': 'Matched; z l_{xy} [cm]; Entries'},
+
+    { 'name': 'genpt',          'binning': (30, 0., 800),         'title': 'muon gen pt; p_{T} [GeV]; Entries'},
+    #{ 'name': 'gend0',          'binning': (30, 0., 30),         'title': 'muon gen d_{0}; d_{0} [cm]; Entries'},
+    { 'name': 'Tot_lxy',          'binning': (30, 0., 800),         'title': '; l_{xy} [cm]; Entries'},
+    { 'name': 'Mat_lxy',          'binning': (30, 0., 800),         'title': '; l_{xy} [cm]; Entries'},
+    { 'name': 'mulxy',          'binning': (30, 0., 800),         'title': 'muon l_{xy}; l_{xy} [cm]; Entries'},
+    { 'name': 'dpgmass',         'binning': (18, 0., 6.),         'title': 'dp mass1; mass [GeV]; Entries'},
+    { 'name': 'dauid',          'binning': (45, -15.0, 30.0),         'title': 'daugther id; id; Entries'},
+    { 'name': 'dpmass',          'binning': (18, 0.0, 6.0),         'title': 'dp mass ; mass [GeV]; Entries'},
+    
     { 'name': 'Mat_pTd0l2',          'binning': [[0,5,10,15,20,25,30,35,40,50,60,70,80, 90, 100, 150, 200]],         'title': 'p_{T} matched for d_{0}<200; p_{T} [GeV]; Entries'},
     { 'name': 'Tot_pTd0l2',          'binning': [[0,5,10,15,20,25,30,35,40,50,60,70,80, 90, 100, 150, 200]],         'title': 'p_{T} total for d_{0}<200; p_{T} [GeV]; Entries'},
     { 'name': 'Mat_pTd0l5',          'binning': [[0,5,10,15,20,25,30,35,40,50,60,70,80, 90, 100, 150, 200]],         'title': 'p_{T} matched for d_{0}<500; p_{T} [GeV]; Entries'},

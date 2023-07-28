@@ -7,7 +7,7 @@ import numpy as np
 from FireROOT.Analysis.Events import *
 from FireROOT.Analysis.Utils import *
 
-class MyEvents(Events):
+class MyEvents(SignalEvents):
     def __init__(self, files=None, type='MC', maxevents=-1, channel=['2mu2e', '4mu'], **kwargs):
         super(MyEvents, self).__init__(files=files, type=type, maxevents=maxevents, channel=channel, **kwargs)
 
@@ -27,12 +27,17 @@ class MyEvents(Events):
         for dp in dp_toMu:
             if dp.p4.pt()<30 or abs(dp.p4.eta())>2.4: continue
             lxy = (dp.dauvtx - dp.vtx).Rho()
-            #print (lxy)
             lz  = (dp.dauvtx - dp.vtx).Z()
             # if abs(lz)>800: continue
             self.Histos['%s/lxyDpToMu' % chan].Fill(lxy)
             self.Histos['%s/lepDrDpToMu' % chan].Fill(dp.daudr)
             self.Histos['%s/lzDpToMu' % chan].Fill(dp.daudr)
+        
+        for lj in enumerate(event.leptonjets):                                                                                                                                           
+            LJ0 = event.leptonjets[0]                                                                                                                                                    
+            zdlj =  DeltaR(l.p4, LJ0.p4)                                                                                                                                               
+            #if DeltaR<0.4:
+                
 
 
 histCollection = [

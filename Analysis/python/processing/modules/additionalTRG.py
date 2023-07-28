@@ -167,4 +167,4 @@ class MyEvents(SignalEvents):
 
 histCollection = [
     {'name': 'oneTRG',        'binning': (300, 0, 300.0),        'title': 'Number of events;Trigger path;counts'},
-                 ]
+]

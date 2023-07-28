@@ -199,13 +199,29 @@ class MyEvents(Events):
                 self.Histos['%s/Tot_eta' % chan].Fill(mueta)
                 self.Histos['%s/Tot_d0' % chan].Fill(mud0)
 
-                if (to2 != 9999 and to2 != to1) or (to3!=9999 and to3!=to1) or (to4!=9999 and to4!=to1): #check if any of the other muons were matched to a TO
+                if (to2 != 9999 and to2 != to1): #check if mu4 was matched to a TO
                     self.Histos['%s/Mat_dR'  % chan].Fill(drmu)
                     self.Histos['%s/Mat_pT'  % chan].Fill(mupt)
                     self.Histos['%s/Mat_eta' % chan].Fill(mueta)
                     self.Histos['%s/Mat_d0'  % chan].Fill(mud0)
                     
+                    self.Histos['%s/Mat12' % chan].Fill(dr12)
+
+                elif (to3!=9999 and to3!=to1): #check if mu4 was matched to a TO
+                    self.Histos['%s/Mat_dR'  % chan].Fill(drmu)
+                    self.Histos['%s/Mat_pT'  % chan].Fill(mupt)
+                    self.Histos['%s/Mat_eta' % chan].Fill(mueta)
+                    self.Histos['%s/Mat_d0'  % chan].Fill(mud0)
                     
+                    self.Histos['%s/Mat13' % chan].Fill(dr13)
+
+                elif (to4!=9999 and to4!=to1): #check if mu4 was matched to a TO
+                    self.Histos['%s/Mat_dR'  % chan].Fill(drmu)
+                    self.Histos['%s/Mat_pT'  % chan].Fill(mupt)
+                    self.Histos['%s/Mat_eta' % chan].Fill(mueta)
+                    self.Histos['%s/Mat_d0'  % chan].Fill(mud0)
+                    
+                    self.Histos['%s/Mat14' % chan].Fill(dr14)
                     
 histCollection = [
     { 'name': 'dsaMu_d0',           'binning': (20, 0, 70),          'title': '|d_{0}| dsa muons; |d_{0}|[cm]; Events'},
@@ -236,6 +252,10 @@ histCollection = [
     { 'name': 'dr24',               'binning': (25, 0, 5),           'title': '#Delta R (2,4); #Delta R; Entries'},
     { 'name': 'dr34',               'binning': (25, 0, 5),           'title': '#Delta R (3,4); #Delta R; Entries'},
     { 'name': 'drmu',               'binning': (25, 0, 0.5),         'title': 'Min #Delta R; #Delta R; Entries'},
+
+    { 'name': 'Mat12',              'binning': (25, 0, 5),           'title': '#Delta R (1,2); #Delta R; Entries'},
+    { 'name': 'Mat13',              'binning': (25, 0, 5),           'title': '#Delta R (1,3); #Delta R; Entries'},
+    { 'name': 'Mat14',              'binning': (25, 0, 5),           'title': '#Delta R (1,4); #Delta R; Entries'},
 
     { 'name': 'nTOspass',           'binning': (20, 0,50),           'title': 'number of trigger objects; nTOs; Entries'},
 

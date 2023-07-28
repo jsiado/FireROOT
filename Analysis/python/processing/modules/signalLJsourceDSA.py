@@ -32,7 +32,6 @@ class MyEvents(SignalEvents):
             dR23 = DeltaR(event.leptonjets[1].p4, event.leptonjets[2].p4)
             self.Histos['%s/dRLJ23'%chan].Fill(dR23,aux['wgt'])
 
-           # print 'dR12: ',dR12,' dR13: ',dR13,' dR23: ',dR23
 
             dphi12 = abs(DeltaPhi(event.leptonjets[0].p4, event.leptonjets[1].p4))
             self.Histos['%s/delphi12'%chan].Fill(dphi12,aux['wgt'])
@@ -43,16 +42,13 @@ class MyEvents(SignalEvents):
             dphi23 = abs(DeltaPhi(event.leptonjets[1].p4, event.leptonjets[2].p4))
             self.Histos['%s/delphi23'%chan].Fill(dphi23,aux['wgt'])
             
-           # print 'dphi12: ',dphi12,' dphi13: ',dphi13,' dphi23: ',dphi23
-            
+
             for p in aux['dp']:
                 zdlj2 = DeltaR(p.p4, event.leptonjets[2].p4)
                 self.Histos['%s/zdljdR'%chan].Fill(zdlj2,aux['wgt'])
                 if zdlj2<0.4:
-                    #print 'no'
                     self.Histos['%s/matchLJ'%chan].Fill(-1,aux['wgt'])
                 else:
-                    #print 'yes'
                     self.Histos['%s/matchLJ'%chan].Fill(1,aux['wgt'])
         
         dsaToGenmuMap = {}
@@ -71,7 +67,6 @@ class MyEvents(SignalEvents):
                 self.Histos['{}/ljsrcdsasameq'.format(chan)].Fill(metric, aux['wgt'])
 
         self.Histos['%s/pfmet'%chan].Fill(event.pfMet.r(), aux['wgt'])
-       # print (nLJ0,' ',nLJ1)
 
 histCollection = [
     {

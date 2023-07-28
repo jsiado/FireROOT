@@ -28,6 +28,7 @@ if __name__ == "__main__":
 
     #var = ["Mat_dR", "Tot_dR", "Mat_pT", "Tot_pT", "Mat_d0", "Tot_d0", "Mat_lxy", "Tot_lxy"]
     var = ["dR", "pT"]
+    colors = [1,2,3,4]
 
     for v in var:
         print ('=======',v)
@@ -52,7 +53,7 @@ if __name__ == "__main__":
 #            print(sam + s + "/Mat_" + v)
     
             '''eff = ROOT.TEfficiency(num, den)
-            eff.SetLineColor(ROOT.kRed)
+            eff.SetLineColor(colors[i])
             eff.SetMarkerColor(ROOT.kRed)
     
             leg.AddEntry(eff, S2, "l")

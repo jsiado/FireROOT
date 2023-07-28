@@ -239,7 +239,9 @@ class Events(object):
         self.Chain.define_object('metfilters', prefix='metfilters_')
         self.Chain.define_object('cosmicveto', prefix='cosmicveto_')
 
-        #self.Chain.define_collection('gens', prefix='gen_', size='gen_n')#add to sigeve
+        
+
+        self.Chain.define_collection('gens', prefix='gen_', size='gen_n')#add to sigeve july13
 
 
         self.Triggers = [
@@ -317,6 +319,11 @@ class Events(object):
             for ch in self.Channel:
                 if self.RawCutFlow: self.Histos['{}/cutflow'.format(ch)].Fill(0)
                 else: self.Histos['{}/cutflow'.format(ch)].Fill(0, aux['wgt'])
+            
+            #####new lines 
+            aux['dp'] = [p for p in event.gens if p.pid==32]
+            aux['channel'] = '4mu'
+
 
             ## trigger ##
             if not any([getattr(event.hlt, t) for t in self.Triggers]): continue

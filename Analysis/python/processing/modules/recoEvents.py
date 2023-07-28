@@ -24,20 +24,22 @@ class MyEvents(Events):
             if not lj.isMuonType():continue
             for i in lj.pfcand_pfmuonIdx:
                 pf.append(event.muons[i])
-                self.Histos['%s/pf_pt'%chan].Fill(event.muons[i].p4.pt())
             for i in lj.pfcand_dsamuonIdx:
                 dsa.append(event.dsamuons[i])
-                self.Histos['%s/dsa_pt'%chan].Fill(event.dsamuons[i].p4.pt())
         
-        #for j, mu in enumerate ()
+        dp_toMu = [p for p in aux['dp'] if p.daupid==13] #select muons from Zd
 
         lpf, ldsa = len(pf),len(dsa)
         if lpf == 1:
             remu.append(pf[0])
             remu.append(dsa[0])
+            #print remu[0].p4.pt(),"==========",pf[0].p4.pt()
+            #print remu[1].p4.pt(),"==========",dsa[0].p4.pt()
         elif lpf ==2:
             remu.append(pf[0])
             remu.append(pf[1])
+            #print remu[0].p4.pt(),"+++++",pf[0].p4.pt()
+            #print remu[1].p4.pt(),"+++++",pf[1].p4.pt()
         elif lpf ==0:
             remu.append(dsa[0])
             remu.append(dsa[1])
@@ -104,18 +106,16 @@ histCollection = [
     #{  'name': 'LJ1',      'binning' : (100, 0.0,300),                   'title': 'LJ1 p_{T}; p_{T} [GeV]; Number of entries'},
     {  'name': 'dphiLJ',     'binning' : (50, -4.0,4.0),                 'title': '#Delta #phi between LJ; #Delta #phi; Number of entries'},
     {  'name': 'drLJ',     'binning' : (50, -5.0,5.0),                 'title': '#Delta R between LJ; #Delta R; Number of entries'},
-    {  'name': 'pf_pt',     'binning' : (50, 0,500.0),                 'title': 'p_T for pf muons; p_T [GeV]; Number of entries'},
-    {  'name': 'dsa_pt',     'binning' : (50, 0,500.0),                 'title': 'p_T for dsa muons; p_T [GeV]; Number of entries'},
     
-    #{  'name': 'ptmupf',     'binning' : (100, 0.0,500.0),                 'title': 'p_{T} of pf muons; p_{T} [GeV]; Number of entries'},
-    #{  'name': 'ptmupf2',     'binning' : (100, 0.0,500.0),                 'title': 'p_{T} of pf muons2; p_{T} [GeV]; Number of entries'},
-    #{  'name': 'd0mupf',     'binning' : (100, 0.0,20.0),                 'title': 'd_{0} of pf muons; d_{0} [cm]; Number of entries'},
+    {  'name': 'ptmupf',     'binning' : (100, 0.0,500.0),                 'title': 'p_{T} of pf muons; p_{T} [GeV]; Number of entries'},
+    {  'name': 'ptmupf2',     'binning' : (100, 0.0,500.0),                 'title': 'p_{T} of pf muons2; p_{T} [GeV]; Number of entries'},
+    {  'name': 'd0mupf',     'binning' : (100, 0.0,20.0),                 'title': 'd_{0} of pf muons; d_{0} [cm]; Number of entries'},
 
-    #{  'name': 'ptmudsa',     'binning' : (100, 0.0,500.0),                 'title': 'p_{T} of dsa muons; p_{T} [GeV]; Number of entries'},
-    #{  'name': 'ptmudsa2',     'binning' : (100, 0.0,500.0),                 'title': 'p_{T} of dsa muons; p_{T} [GeV]; Number of entries'},
-    #{  'name': 'd0mudsa',     'binning' : (100, 0.0,50.0),                 'title': 'd_{0} of dsa muons; d_{0} [cm]; Number of entries'},
+    {  'name': 'ptmudsa',     'binning' : (100, 0.0,500.0),                 'title': 'p_{T} of dsa muons; p_{T} [GeV]; Number of entries'},
+    {  'name': 'ptmudsa2',     'binning' : (100, 0.0,500.0),                 'title': 'p_{T} of dsa muons; p_{T} [GeV]; Number of entries'},
+    {  'name': 'd0mudsa',     'binning' : (100, 0.0,50.0),                 'title': 'd_{0} of dsa muons; d_{0} [cm]; Number of entries'},
 
-    #{  'name': 'mass',     'binning' : (100, 0.0,500.0),                 'title': 'p_{T} of pf muons; p_{T} [GeV]; Number of entries'},
+    {  'name': 'mass',     'binning' : (100, 0.0,500.0),                 'title': 'p_{T} of pf muons; p_{T} [GeV]; Number of entries'},
 
 
 
