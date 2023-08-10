@@ -2,11 +2,11 @@ void allTrEff(const char *rf, const char *ch, const char *var){
     TEfficiency* trEff = 0;//new TEfficiency("eff","my efficiency; x; y;#epsilon", 10,0,10,20,-5,15);
     TFile* f = TFile::Open(Form("../outputs/rootfiles/modules/%s.root",rf));
   
-  	char S1[50] = "mXX-100_mA-0p25_lxy-300",  
-	     S2[50] = "mXX-500_mA-0p25_lxy-300", 
-	     S3[50] = "mXX-500_mA-1p2_lxy-300",   
-	     S4[50] = "mXX-1000_mA-5_lxy-300";
-
+    char S1[50] = "mXX-100_mA-0p25_lxy-300",  
+         S2[50] = "mXX-500_mA-0p25_lxy-300", 
+         S3[50] = "mXX-500_mA-1p2_lxy-300",   
+         S4[50] = "mXX-1000_mA-5_lxy-300";
+    
     TCanvas *canr = new TCanvas("canr","",800,600);
     TLegend *leg_ = new TLegend(.2, .1, 0.45, .35);
     leg_->SetHeader("Samples:","C");
@@ -59,6 +59,6 @@ void allTrEff(const char *rf, const char *ch, const char *var){
     }  	
 
   leg_->Draw();
-  canr->SaveAs(Form("../outputs/plots/TrEff/%s_TrEff_%s.png",ch, var));
+  canr->SaveAs(Form("../outputs/plots/TrEff/TrEff_%s_%s.png",ch, var));
 
 }

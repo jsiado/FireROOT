@@ -1,4 +1,4 @@
-#include "TEffdR.h"
+#include "allTrEff.h"
 #include "TEffpT.h"
 #include "TEffeta.h"
 #include "TEffd0.h"
@@ -17,15 +17,15 @@
 // date --> a number 
 // etype --> either (obj or eve) for storing the outputs
 
-void effTE(const char *id, const char *ch)
+void effTE(const char *rf, const char *ch, const char *var)
 {
-    TEffdR(id, ch);
-    TEffpT(id, ch);
+    allTrEff(rf, ch, var);
+    //  TEffpT(id, ch);
     //TEffeta(id);
-    TEffd0(id, ch);
+    //    TEffd0(id, ch);
     //TEffpl(id);
 //    TEffdiffd0dR(id);
 //    TEffdiffd0pT(id);
 //    TEFirstBin(id);
-	TEffLxy(id, ch);
+//	TEffLxy(id, ch);
 }
