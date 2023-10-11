@@ -122,7 +122,7 @@ class MyEvents(SignalEvents):
             ### LEPTON-JET ###
             ##################
 
-            mindr, matched = 999., None
+            mind, matched = 999., None
             for lj in event.leptonjets:
                 if not lj.isMuonType(): continue
                 if not lj.passSelection(event): continue

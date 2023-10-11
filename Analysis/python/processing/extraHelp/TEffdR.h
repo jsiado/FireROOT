@@ -8,7 +8,8 @@ void allTrEff(const char *rf, const char *ch, const char *var){
 	     S4[50] = "mXX-1000_mA-5_lxy-300";
 
     TCanvas *canr = new TCanvas("canr","",800,600);
-    TLegend *leg_ = new TLegend(.2, .1, 0.45, .35);
+    TLegend *leg_ = new TLegend(.50, .72, .88, .88);
+    
     leg_->SetHeader("Samples:","C");
     leg_->SetBorderSize(0);
     leg_->SetLineColor(1);
